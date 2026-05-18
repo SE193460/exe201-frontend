@@ -1,14 +1,48 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../api/services/auth";
+import { fetchProfile } from "../api/services/user";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [isAuthed, setIsAuthed] = useState(false);
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setIsAuthed(Boolean(localStorage.getItem("access_token")));
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const token = params.get("accessToken");
+    const errorParam = params.get("error");
+
+    if (success === "google" && token) {
+      localStorage.setItem("access_token", token);
+      setIsAuthed(true);
+      setStatus("Đăng nhập Google thành công.");
+      fetchProfile()
+        .then((profile) => {
+          if (profile.roleName === "admin") {
+            navigate("/admin/users");
+          }
+        })
+        .catch(() => {
+          // ignore profile error
+        })
+        .finally(() => {
+          navigate("/", { replace: true });
+        });
+      return;
+    }
+
+    if (errorParam) {
+      setError(errorParam === "inactive" ? "Tài khoản đã bị vô hiệu hóa." : "Đăng nhập Google thất bại.");
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
 
   const handleLogout = async () => {
     try {
@@ -59,6 +93,11 @@ export default function HomePage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-12 px-6 pb-16 pt-10">
+        {(status || error) && (
+          <div className="rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm">
+            <span className={error ? "text-red-600" : "text-green-700"}>{error || status}</span>
+          </div>
+        )}
         <section className="rounded-[32px] bg-gradient-to-br from-[#fff2e8] via-[#fff7f3] to-[#ffece1] px-6 py-12 text-center shadow-[0_25px_60px_-45px_rgba(255,115,0,0.45)] md:px-14">
           <span className="mx-auto inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-semibold text-orange-700">
             ✨ Mới ra mắt
