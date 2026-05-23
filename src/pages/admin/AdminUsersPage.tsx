@@ -88,6 +88,12 @@ export default function AdminUsersPage() {
             >
               Quản lý người dùng
             </button>
+            <button
+              onClick={() => navigate("/admin/listings")}
+              className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
+            >
+              Quản lý bài đăng
+            </button>
           </div>
           <button
             onClick={handleLogout}

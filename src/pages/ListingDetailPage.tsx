@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getMyListingDetail, resolveListingImageUrl } from "../api/services/listings";
+import { getMyListingDetail, resolveListingImageUrl, submitMyListingForApproval } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
 
@@ -24,6 +24,21 @@ export default function ListingDetailPage() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [status, setStatus] = useState("Đang tải...");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmitForApproval = async () => {
+    if (!id) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const updated = await submitMyListingForApproval(id);
+      setListing(updated);
+    } catch {
+      setError("Không thể gửi duyệt bài đăng. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -54,18 +69,27 @@ export default function ListingDetailPage() {
               Quay lại danh sách
             </button>
             <button
-              onClick={() => navigate(`/my-listings/${id}/edit`)}
-              className="rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
-            >
-              Chỉnh sửa
-            </button>
-            <button
-              onClick={() => navigate("/my-listings/new")}
-              className="rounded-full bg-[#ff6a3d] px-4 py-2 text-sm font-semibold text-white"
-            >
-              Tạo mới
-            </button>
-          </div>
+               onClick={() => navigate(`/my-listings/${id}/edit`)}
+               className="rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+             >
+               Chỉnh sửa
+             </button>
+            {(listing?.status === "DRAFT" || listing?.status === "REJECTED") && (
+              <button
+                disabled={submitting}
+                onClick={handleSubmitForApproval}
+                className="rounded-full bg-[#ff6a3d] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 disabled:opacity-50"
+              >
+                {submitting ? "Đang gửi..." : "Gửi duyệt"}
+              </button>
+            )}
+             <button
+               onClick={() => navigate("/my-listings/new")}
+               className="rounded-full bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900"
+             >
+               Tạo mới
+             </button>
+           </div>
         </header>
 
         {status && (
@@ -104,9 +128,28 @@ export default function ListingDetailPage() {
                       <h2 className="text-2xl font-semibold text-slate-800">{listing.title}</h2>
                       <p className="mt-2 text-sm text-slate-500">{location || "Chưa cập nhật"}</p>
                     </div>
-                    <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700">
-                      {listing.status}
-                    </span>
+                    {(() => {
+                      let badgeClass = "bg-slate-100 text-slate-700";
+                      let badgeText = listing.status;
+                      if (listing.status === "DRAFT") {
+                        badgeClass = "bg-slate-100 text-slate-700";
+                        badgeText = "Bản nháp";
+                      } else if (listing.status === "PENDING") {
+                        badgeClass = "bg-amber-100 text-amber-700";
+                        badgeText = "Chờ duyệt";
+                      } else if (listing.status === "APPROVED") {
+                        badgeClass = "bg-green-100 text-green-700";
+                        badgeText = "Đã duyệt";
+                      } else if (listing.status === "REJECTED") {
+                        badgeClass = "bg-red-100 text-red-700";
+                        badgeText = "Từ chối";
+                      }
+                      return (
+                        <span className={`rounded-full px-4 py-2 text-xs font-semibold ${badgeClass}`}>
+                          {badgeText}
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   <p className="mt-4 text-sm text-slate-600">{listing.description}</p>

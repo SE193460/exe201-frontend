@@ -25,15 +25,23 @@ export default function Navbar() {
   return (
     <header className="border-b border-orange-100 bg-white/70 backdrop-blur">
       <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between px-6 py-4">
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-lg font-semibold"
-        >
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ff6a3d] text-white">
-            🏠
-          </span>
-          RoomMate
-        </button>
+        <div className="flex items-center gap-6">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-lg font-semibold"
+          >
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ff6a3d] text-white">
+              🏠
+            </span>
+            RoomMate
+          </button>
+          <button
+            onClick={() => navigate("/listings")}
+            className="rounded-full px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 hover:text-[#ff6a3d] transition"
+          >
+            Phòng ở ghép
+          </button>
+        </div>
         <div className="flex items-center gap-3 text-sm font-semibold">
           {isAuthed ? (
             <>
