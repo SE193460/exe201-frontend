@@ -1,17 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../api/services/auth";
 import { fetchProfile } from "../api/services/user";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [isAuthed, setIsAuthed] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    setIsAuthed(Boolean(localStorage.getItem("access_token")));
-  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -21,7 +17,6 @@ export default function HomePage() {
 
     if (success === "google" && token) {
       localStorage.setItem("access_token", token);
-      setIsAuthed(true);
       setStatus("Đăng nhập Google thành công.");
       fetchProfile()
         .then((profile) => {
@@ -44,55 +39,11 @@ export default function HomePage() {
     }
   }, [navigate]);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch {
-      // ignore logout errors
-    } finally {
-      localStorage.removeItem("access_token");
-      setIsAuthed(false);
-      navigate("/");
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#fff7f2] text-slate-800">
-      <header className="border-b border-orange-100 bg-white/70 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2 text-lg font-semibold">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ff6a3d] text-white">🏠</span>
-            RoomMate
-          </div>
-          <div className="flex items-center gap-3 text-sm font-semibold">
-            {isAuthed ? (
-              <>
-                <button
-                  onClick={() => navigate("/profile")}
-                  className="rounded-full px-4 py-2 text-slate-700 hover:bg-orange-50"
-                >
-                  Cập nhật hồ sơ
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="rounded-full border border-orange-200 bg-white px-4 py-2 text-slate-700 shadow-sm"
-                >
-                  Đăng xuất
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => navigate("/auth")}
-                className="rounded-full bg-[#ff6a3d] px-4 py-2 text-white shadow-sm"
-              >
-                Đăng nhập
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#fff7f2] text-slate-800 flex flex-col">
+      <Navbar />
 
-      <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-12 px-6 pb-16 pt-10">
+      <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-12 px-6 pb-16 pt-10">
         {(status || error) && (
           <div className="rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm">
             <span className={error ? "text-red-600" : "text-green-700"}>{error || status}</span>
@@ -136,6 +87,8 @@ export default function HomePage() {
           ))}
         </section>
       </main>
+
+      <Footer />
     </div>
   );
 }

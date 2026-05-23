@@ -1,0 +1,42 @@
+export const CITY_OPTIONS = ["TP Hồ Chí Minh"];
+export const DISTRICT_OPTIONS = ["Quận 2", "Quận 9", "Thủ Đức"];
+export const WARD_OPTIONS: Record<string, string[]> = {
+  "Quận 2": [
+    "Thảo Điền",
+    "An Phú",
+    "Bình An",
+    "Bình Khánh",
+    "Cát Lái",
+    "Thạnh Mỹ Lợi",
+    "An Khánh",
+    "Bình Trưng Tây",
+    "Bình Trưng Đông",
+    "Thủ Thiêm",
+  ],
+  "Quận 9": [
+    "Phước Long A",
+    "Phước Long B",
+    "Phước Bình",
+    "Tăng Nhơn Phú A",
+    "Tăng Nhơn Phú B",
+    "Long Bình",
+    "Long Phước",
+    "Long Thạnh Mỹ",
+    "Trường Thạnh",
+    "Hiệp Phú",
+    "Phú Hữu",
+  ],
+  "Thủ Đức": [
+    "Linh Trung",
+    "Linh Chiểu",
+    "Linh Tây",
+    "Linh Đông",
+    "Linh Xuân",
+    "Hiệp Bình Chánh",
+    "Hiệp Bình Phước",
+    "Tam Phú",
+    "Tam Bình",
+    "Trường Thọ",
+    "Bình Thọ",
+  ],
+};
