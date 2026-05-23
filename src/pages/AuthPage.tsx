@@ -122,10 +122,15 @@ export default function AuthPage() {
         username: values.username || undefined,
       });
       setStatus("Đã gửi email xác nhận. Vui lòng kiểm tra hộp thư.");
-    } catch (err) {
-      setError("Đăng ký thất bại. Vui lòng thử lại.");
-    }
-  });
+    }catch (err: any) {
+        console.error(err);
+
+        setError(
+          err?.response?.data?.message ||
+          "Đăng ký thất bại. Vui lòng thử lại."
+        );
+      }
+    });
 
   return (
     <div className="min-h-screen bg-[#fff7f2] text-slate-800">
@@ -176,18 +181,16 @@ export default function AuthPage() {
           <div className="w-full max-w-md rounded-[24px] border border-orange-100 bg-white/90 p-8 shadow-[0_20px_50px_-30px_rgba(255,136,0,0.5)]">
             <div className="mb-8 flex rounded-full bg-[#f3efe9] p-1 text-sm font-semibold text-slate-600">
               <button
-                className={`flex-1 rounded-full px-4 py-2 transition ${
-                  mode === "login" ? "bg-white text-slate-900 shadow" : "opacity-70"
-                }`}
+                className={`flex-1 rounded-full px-4 py-2 transition ${mode === "login" ? "bg-white text-slate-900 shadow" : "opacity-70"
+                  }`}
                 onClick={() => setMode("login")}
                 type="button"
               >
                 Đăng nhập
               </button>
               <button
-                className={`flex-1 rounded-full px-4 py-2 transition ${
-                  mode === "register" ? "bg-white text-slate-900 shadow" : "opacity-70"
-                }`}
+                className={`flex-1 rounded-full px-4 py-2 transition ${mode === "register" ? "bg-white text-slate-900 shadow" : "opacity-70"
+                  }`}
                 onClick={() => setMode("register")}
                 type="button"
               >

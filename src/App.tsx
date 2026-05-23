@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import HomePage from "./pages/HomePage";
-import ProfilePage from "./pages/ProfilePage.tsx";
+import ProfilePage from "./pages/ProfilePage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 
