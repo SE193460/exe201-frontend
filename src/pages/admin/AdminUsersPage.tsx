@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchUserDetail, fetchUsers, updateUserStatus, type AdminUser } from "../../api/services/admin";
+import { resolveAvatarUrl } from "../../api/services/user";
 import { logout } from "../../api/services/auth";
 
 const statusLabels: Record<string, string> = {
@@ -154,7 +155,11 @@ export default function AdminUsersPage() {
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 overflow-hidden rounded-full bg-orange-100">
                         {user.avatarUrl ? (
-                          <img src={user.avatarUrl} alt={user.fullName} className="h-full w-full object-cover" />
+                          <img
+                            src={resolveAvatarUrl(user.avatarUrl)}
+                            alt={user.fullName}
+                            className="h-full w-full object-cover"
+                          />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-orange-500">
                             {user.fullName.slice(0, 1).toUpperCase()}
@@ -186,7 +191,11 @@ export default function AdminUsersPage() {
                   <div className="flex items-center gap-3">
                     <div className="h-16 w-16 overflow-hidden rounded-full bg-orange-100">
                       {selected.avatarUrl ? (
-                        <img src={selected.avatarUrl} alt={selected.fullName} className="h-full w-full object-cover" />
+                        <img
+                          src={resolveAvatarUrl(selected.avatarUrl)}
+                          alt={selected.fullName}
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-orange-500">
                           {selected.fullName.slice(0, 1).toUpperCase()}
