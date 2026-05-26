@@ -94,3 +94,19 @@ export async function uploadListingImages(listingId: string, files: File[]) {
   });
   return response.data as { listingId: string; images: ListingImage[] };
 }
+
+export async function submitMyListingForApproval(id: string) {
+  const response = await axiosInstance.put(`/api/users/me/listings/${id}/submit`);
+  return response.data as Listing;
+}
+
+export async function fetchPublicListings() {
+  const response = await axiosInstance.get("/api/listings");
+  return response.data as Listing[];
+}
+
+export async function fetchPublicListingDetail(id: string) {
+  const response = await axiosInstance.get(`/api/listings/${id}`);
+  return response.data as Listing;
+}
+
