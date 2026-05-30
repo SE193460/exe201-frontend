@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getMyListingDetail, updateMyListing, uploadListingImages, resolveListingImageUrl } from "../api/services/listings";
+import { getMyListingDetail, updateMyListing, uploadListingImages, resolveListingImageUrl, deleteListingImage } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "./listingFormOptions";
 import type { Listing } from "../api/services/listings";
@@ -78,9 +78,38 @@ export default function EditListingPage() {
       setImagePreviews([]);
       return;
     }
-    const selected = Array.from(files).slice(0, 10);
-    setImageFiles(selected);
-    setImagePreviews(selected.map((file) => URL.createObjectURL(file)));
+    setImageFiles((prevFiles) => {
+      const merged = [...prevFiles, ...Array.from(files)];
+      const limited = merged.slice(0, 10);
+      setImagePreviews(limited.map((file) => URL.createObjectURL(file)));
+      return limited;
+    });
+  };
+
+  const handleRemoveImagePreview = (indexToRemove: number) => {
+    setImageFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+    setImagePreviews((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const handleDeleteExistingImage = async (imageId: string) => {
+    if (!id || !listing) return;
+    if (listing.images.length <= 1) {
+      setError("Bài đăng phải có ít nhất 1 hình ảnh.");
+      return;
+    }
+    setError("");
+    try {
+      await deleteListingImage(id, imageId);
+      setListing((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          images: prev.images.filter((img) => img.id !== imageId),
+        };
+      });
+    } catch {
+      setError("Không thể xóa hình ảnh. Vui lòng thử lại.");
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -163,13 +192,21 @@ export default function EditListingPage() {
               {listing.images.map((image) => (
                 <div
                   key={image.id}
-                  className="aspect-[4/3] overflow-hidden rounded-2xl border border-orange-100 bg-white"
+                  className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-orange-100 bg-white"
                 >
                   <img
                     src={resolveListingImageUrl(image.imageUrl)}
                     alt={listing.title}
                     className="h-full w-full object-cover"
                   />
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteExistingImage(image.id)}
+                    className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow hover:bg-red-600 transition"
+                    title="Xóa ảnh"
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
             </div>
@@ -373,9 +410,16 @@ export default function EditListingPage() {
                 {imagePreviews.map((preview, index) => (
                   <div
                     key={`${preview}-${index}`}
-                    className="aspect-[4/3] overflow-hidden rounded-2xl border border-orange-100 bg-white"
+                    className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-orange-100 bg-white"
                   >
                     <img src={preview} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImagePreview(index)}
+                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow hover:bg-red-600 transition"
+                    >
+                      ×
+                    </button>
                   </div>
                 ))}
               </div>
