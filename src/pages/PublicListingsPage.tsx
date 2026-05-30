@@ -11,6 +11,7 @@ export default function PublicListingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("all");
 
   useEffect(() => {
     fetchPublicListings()
@@ -25,8 +26,9 @@ export default function PublicListingsPage() {
   }, []);
 
   const filteredListings = listings.filter((item) => {
-    const text = `${item.title} ${item.description} ${item.city} ${item.district} ${item.ward} ${item.address}`.toLowerCase();
-    return text.includes(search.toLowerCase());
+    const matchesSearch = `${item.title} ${item.description} ${item.city} ${item.district} ${item.ward} ${item.address}`.toLowerCase().includes(search.toLowerCase());
+    const matchesDistrict = selectedDistrict === "all" ? true : item.district === selectedDistrict;
+    return matchesSearch && matchesDistrict;
   });
 
   return (
@@ -52,6 +54,36 @@ export default function PublicListingsPage() {
             />
           </div>
         </header>
+
+        {/* District Filter Buttons */}
+        <section className="bg-white rounded-3xl p-5 border border-orange-100 shadow-[0_15px_40px_-25px_rgba(255,115,0,0.25)]">
+          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            🗺️ Khu vực nổi bật
+          </h2>
+          <div className="flex flex-wrap gap-2.5">
+            {[
+              { id: "all", label: "Tất cả", desc: "Toàn thành phố" },
+              { id: "Quận 2", label: "Quận 2", desc: "Thảo Điền, An Phú..." },
+              { id: "Quận 9", label: "Quận 9", desc: "Phước Long, Hiệp Phú..." },
+              { id: "Thủ Đức", label: "Thủ Đức", desc: "Linh Trung, Tam Phú..." }
+            ].map((dist) => (
+              <button
+                key={dist.id}
+                onClick={() => setSelectedDistrict(dist.id)}
+                className={`flex-1 min-w-[120px] max-w-[200px] text-left p-3.5 rounded-2xl border transition ${
+                  selectedDistrict === dist.id
+                    ? "bg-gradient-to-br from-[#ff6a3d] to-[#ff8c64] border-[#ff6a3d] text-white shadow-lg shadow-orange-100"
+                    : "bg-orange-50/20 border-orange-100 hover:bg-orange-50/50 hover:border-orange-200 text-slate-700"
+                }`}
+              >
+                <p className="text-sm font-extrabold">{dist.label}</p>
+                <p className={`text-[10px] mt-1 ${selectedDistrict === dist.id ? "text-orange-100" : "text-slate-400"}`}>
+                  {dist.desc}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
 
         {loading && (
           <div className="flex h-64 items-center justify-center rounded-[24px] border border-orange-100 bg-white shadow-sm">

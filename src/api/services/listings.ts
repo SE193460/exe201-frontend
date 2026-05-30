@@ -27,6 +27,10 @@ export type Listing = {
   createdAt: string;
   updatedAt: string;
   images: ListingImage[];
+  ownerName?: string | null;
+  ownerPhone?: string | null;
+  ownerAvatar?: string | null;
+  ownerEmail?: string | null;
 };
 
 export type ListingImage = {
@@ -108,5 +112,10 @@ export async function fetchPublicListings() {
 export async function fetchPublicListingDetail(id: string) {
   const response = await axiosInstance.get(`/api/listings/${id}`);
   return response.data as Listing;
+}
+
+export async function deleteListingImage(listingId: string, imageId: string) {
+  const response = await axiosInstance.delete(`/api/users/me/listings/${listingId}/images/${imageId}`);
+  return response.data as { message: string; imageId: string; listingId: string };
 }
 

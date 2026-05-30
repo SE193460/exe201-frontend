@@ -53,6 +53,11 @@ export default function CreateListingPage() {
     });
   };
 
+  const handleRemoveImagePreview = (indexToRemove: number) => {
+    setImageFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+    setImagePreviews((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus("");
@@ -321,9 +326,16 @@ export default function CreateListingPage() {
                 {imagePreviews.map((preview, index) => (
                   <div
                     key={`${preview}-${index}`}
-                    className="aspect-[4/3] overflow-hidden rounded-2xl border border-orange-100 bg-white"
+                    className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-orange-100 bg-white"
                   >
                     <img src={preview} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImagePreview(index)}
+                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow hover:bg-red-600 transition"
+                    >
+                      ×
+                    </button>
                   </div>
                 ))}
               </div>
