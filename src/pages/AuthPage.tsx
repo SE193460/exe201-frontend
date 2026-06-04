@@ -14,7 +14,7 @@ const loginSchema = z.object({
 const registerSchema = z
   .object({
     fullName: z.string().min(2, "Nhập họ và tên"),
-    username: z.string().min(3, "Tên đăng nhập tối thiểu 3 ký tự").optional(),
+    username: z.string().refine((val) => val === "" || val.length >= 3, { message: "Tên đăng nhập tối thiểu 3 ký tự" }).optional(),
     email: z.string().email("Email không hợp lệ"),
     password: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự"),
     confirmPassword: z.string().min(6, "Nhập lại mật khẩu"),
@@ -50,7 +50,7 @@ export default function AuthPage() {
           }
           navigate("/");
         }, 300);
-        return "Đăng nhập Google thành công.";
+        return "";
       }
     }
     if (params.get("error") === "google") {
@@ -203,24 +203,34 @@ export default function AuthPage() {
 
             {mode === "login" ? (
               <form onSubmit={handleLogin} className="space-y-4">
-                <label className="block text-sm font-medium text-slate-700">
-                  Email
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Email</label>
                   <input
                     type="email"
-                    className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-orange-300 ${
+                      loginForm.formState.errors.email ? "border-red-300 bg-red-50/30" : "border-orange-100 bg-white"
+                    }`}
                     placeholder="ban@example.com"
                     {...loginForm.register("email")}
                   />
-                </label>
-                <label className="block text-sm font-medium text-slate-700">
-                  Mật khẩu
+                  {loginForm.formState.errors.email && (
+                    <p className="mt-1 text-xs text-red-500">⚠ {loginForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Mật khẩu</label>
                   <input
                     type="password"
-                    className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-orange-300 ${
+                      loginForm.formState.errors.password ? "border-red-300 bg-red-50/30" : "border-orange-100 bg-white"
+                    }`}
                     placeholder="••••••••"
                     {...loginForm.register("password")}
                   />
-                </label>
+                  {loginForm.formState.errors.password && (
+                    <p className="mt-1 text-xs text-red-500">⚠ {loginForm.formState.errors.password.message}</p>
+                  )}
+                </div>
                 <button
                   type="submit"
                   className="mt-2 w-full rounded-2xl bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200"
@@ -230,51 +240,78 @@ export default function AuthPage() {
               </form>
             ) : (
               <form onSubmit={handleRegister} className="space-y-4">
-                <label className="block text-sm font-medium text-slate-700">
-                  Tên đăng nhập
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Tên đăng nhập <span className="text-slate-400 font-normal">(tuỳ chọn)</span>
+                  </label>
                   <input
                     type="text"
-                    className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-orange-300 ${
+                      registerForm.formState.errors.username ? "border-red-300 bg-red-50/30" : "border-orange-100 bg-white"
+                    }`}
                     placeholder="vd: minh_hanoi"
                     {...registerForm.register("username")}
                   />
-                </label>
-                <label className="block text-sm font-medium text-slate-700">
-                  Họ và tên
+                  {registerForm.formState.errors.username && (
+                    <p className="mt-1 text-xs text-red-500">⚠ {registerForm.formState.errors.username.message}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Họ và tên <span className="text-red-400">*</span></label>
                   <input
                     type="text"
-                    className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-                    placeholder="Tran Minh"
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-orange-300 ${
+                      registerForm.formState.errors.fullName ? "border-red-300 bg-red-50/30" : "border-orange-100 bg-white"
+                    }`}
+                    placeholder="Trần Minh"
                     {...registerForm.register("fullName")}
                   />
-                </label>
-                <label className="block text-sm font-medium text-slate-700">
-                  Email
+                  {registerForm.formState.errors.fullName && (
+                    <p className="mt-1 text-xs text-red-500">⚠ {registerForm.formState.errors.fullName.message}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Email <span className="text-red-400">*</span></label>
                   <input
                     type="email"
-                    className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-orange-300 ${
+                      registerForm.formState.errors.email ? "border-red-300 bg-red-50/30" : "border-orange-100 bg-white"
+                    }`}
                     placeholder="ban@example.com"
                     {...registerForm.register("email")}
                   />
-                </label>
-                <label className="block text-sm font-medium text-slate-700">
-                  Mật khẩu
+                  {registerForm.formState.errors.email && (
+                    <p className="mt-1 text-xs text-red-500">⚠ {registerForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Mật khẩu <span className="text-red-400">*</span></label>
                   <input
                     type="password"
-                    className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-orange-300 ${
+                      registerForm.formState.errors.password ? "border-red-300 bg-red-50/30" : "border-orange-100 bg-white"
+                    }`}
                     placeholder="••••••••"
                     {...registerForm.register("password")}
                   />
-                </label>
-                <label className="block text-sm font-medium text-slate-700">
-                  Nhập lại mật khẩu
+                  {registerForm.formState.errors.password && (
+                    <p className="mt-1 text-xs text-red-500">⚠ {registerForm.formState.errors.password.message}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Nhập lại mật khẩu <span className="text-red-400">*</span></label>
                   <input
                     type="password"
-                    className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+                    className={`mt-2 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-orange-300 ${
+                      registerForm.formState.errors.confirmPassword ? "border-red-300 bg-red-50/30" : "border-orange-100 bg-white"
+                    }`}
                     placeholder="••••••••"
                     {...registerForm.register("confirmPassword")}
                   />
-                </label>
+                  {registerForm.formState.errors.confirmPassword && (
+                    <p className="mt-1 text-xs text-red-500">⚠ {registerForm.formState.errors.confirmPassword.message}</p>
+                  )}
+                </div>
                 <button
                   type="submit"
                   className="mt-2 w-full rounded-2xl bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200"

@@ -17,7 +17,6 @@ export default function HomePage() {
 
     if (success === "google" && token) {
       localStorage.setItem("access_token", token);
-      setStatus("Đăng nhập Google thành công.");
       fetchProfile()
         .then((profile) => {
           if (profile.roleName === "admin") {

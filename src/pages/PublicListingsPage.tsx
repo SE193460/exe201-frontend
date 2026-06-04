@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchPublicListings, resolveListingImageUrl } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
+import { fetchProfile } from "../api/services/user";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Pagination from "../components/Pagination";
@@ -15,6 +16,33 @@ export default function PublicListingsPage() {
   const [selectedDistrict, setSelectedDistrict] = useState("all");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 9;
+
+  // Handle Google OAuth callback params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const token = params.get("accessToken");
+    const errorParam = params.get("error");
+
+    if (success === "google" && token) {
+      localStorage.setItem("access_token", token);
+      fetchProfile()
+        .then((profile) => {
+          if (profile.roleName === "admin") {
+            navigate("/admin/dashboard", { replace: true });
+            return;
+          }
+          navigate("/", { replace: true });
+        })
+        .catch(() => navigate("/", { replace: true }));
+      return;
+    }
+
+    if (errorParam) {
+      setError(errorParam === "inactive" ? "Tài khoản đã bị vô hiệu hóa." : "Đăng nhập Google thất bại.");
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     fetchPublicListings()

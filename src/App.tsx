@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
-import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminListingsPage from "./pages/admin/AdminListingsPage";
@@ -17,7 +16,7 @@ import PublicListingDetailPage from "./pages/PublicListingDetailPage";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<PublicListingsPage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/home" element={<Navigate to="/" replace />} />
       <Route path="/profile" element={<ProfilePage />} />

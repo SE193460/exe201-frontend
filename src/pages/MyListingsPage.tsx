@@ -62,12 +62,7 @@ export default function MyListingsPage() {
             >
               Tạo bài đăng mới
             </button>
-            <button
-              onClick={() => navigate("/")}
-              className="rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
-            >
-              Về trang chủ
-            </button>
+
           </div>
         </header>
 
