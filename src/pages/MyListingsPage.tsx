@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { listMyListings, resolveListingImageUrl } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
+import Pagination from "../components/Pagination";
 
 function formatDate(value: string | null) {
   if (!value) return "";
@@ -31,6 +32,8 @@ export default function MyListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [status, setStatus] = useState("Đang tải...");
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 6;
 
   useEffect(() => {
     listMyListings()
@@ -84,7 +87,7 @@ export default function MyListingsPage() {
         )}
 
         <div className="grid gap-4 md:grid-cols-2">
-          {listings.map((listing) => {
+          {listings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((listing) => {
             const badge = statusLabel(listing.status);
             const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
             const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
@@ -123,6 +126,11 @@ export default function MyListingsPage() {
             );
           })}
         </div>
+        <Pagination
+          currentPage={page}
+          totalPages={Math.ceil(listings.length / PAGE_SIZE)}
+          onPageChange={setPage}
+        />
       </div>
     </UserShell>
   );

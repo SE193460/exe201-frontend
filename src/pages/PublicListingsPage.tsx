@@ -4,6 +4,7 @@ import { fetchPublicListings, resolveListingImageUrl } from "../api/services/lis
 import type { Listing } from "../api/services/listings";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Pagination from "../components/Pagination";
 
 export default function PublicListingsPage() {
   const navigate = useNavigate();
@@ -12,6 +13,8 @@ export default function PublicListingsPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("all");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 9;
 
   useEffect(() => {
     fetchPublicListings()
@@ -31,6 +34,9 @@ export default function PublicListingsPage() {
     return matchesSearch && matchesDistrict;
   });
 
+  const totalPages = Math.ceil(filteredListings.length / PAGE_SIZE);
+  const pagedListings = filteredListings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div className="min-h-screen bg-[#fff7f2] text-slate-800 flex flex-col">
       <Navbar />
@@ -48,7 +54,7 @@ export default function PublicListingsPage() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder="Tìm kiếm khu vực, quận huyện, tên phòng..."
               className="w-full rounded-full border border-orange-100 bg-white px-5 py-2.5 text-sm shadow-sm outline-none focus:border-orange-300 transition-all"
             />
@@ -69,7 +75,7 @@ export default function PublicListingsPage() {
             ].map((dist) => (
               <button
                 key={dist.id}
-                onClick={() => setSelectedDistrict(dist.id)}
+                onClick={() => { setSelectedDistrict(dist.id); setPage(1); }}
                 className={`flex-1 min-w-[120px] max-w-[200px] text-left p-3.5 rounded-2xl border transition ${
                   selectedDistrict === dist.id
                     ? "bg-gradient-to-br from-[#ff6a3d] to-[#ff8c64] border-[#ff6a3d] text-white shadow-lg shadow-orange-100"
@@ -107,8 +113,9 @@ export default function PublicListingsPage() {
         )}
 
         {!loading && !error && filteredListings.length > 0 && (
+          <>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredListings.map((listing) => {
+            {pagedListings.map((listing) => {
               const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
               const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
               return (
@@ -166,6 +173,8 @@ export default function PublicListingsPage() {
               );
             })}
           </div>
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+          </>
         )}
       </main>
 

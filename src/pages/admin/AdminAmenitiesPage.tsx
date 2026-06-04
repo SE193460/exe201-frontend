@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createAmenity, deleteAmenity, fetchAdminAmenities, updateAmenity, type Amenity } from "../../api/services/amenities";
 import { logout } from "../../api/services/auth";
+import Pagination from "../../components/Pagination";
 
 export default function AdminAmenitiesPage() {
   const navigate = useNavigate();
@@ -12,6 +13,8 @@ export default function AdminAmenitiesPage() {
   const [name, setName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 8;
 
   const loadAmenities = async () => {
     setLoading(true);
@@ -39,6 +42,7 @@ export default function AdminAmenitiesPage() {
     try {
       await createAmenity(trimmed);
       setName("");
+      setPage(1);
       await loadAmenities();
     } catch (err: any) {
       const status = err?.response?.status;
@@ -190,7 +194,7 @@ export default function AdminAmenitiesPage() {
                 {amenities.length === 0 ? (
                   <p className="text-sm text-slate-500">Chưa có tiện nghi nào.</p>
                 ) : (
-                  amenities.map((amenity) => (
+                  amenities.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((amenity) => (
                     <div key={amenity.id} className="flex items-center justify-between rounded-2xl border border-orange-100 px-4 py-3">
                       {editingId === amenity.id ? (
                         <form onSubmit={handleSaveEdit} className="flex w-full items-center gap-2">
@@ -237,6 +241,11 @@ export default function AdminAmenitiesPage() {
                   ))
                 )}
               </div>
+              <Pagination
+                currentPage={page}
+                totalPages={Math.ceil(amenities.length / PAGE_SIZE)}
+                onPageChange={setPage}
+              />
             </div>
           </section>
         </main>

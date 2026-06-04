@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchUserDetail, fetchUsers, updateUserStatus, type AdminUser } from "../../api/services/admin";
 import { resolveAvatarUrl } from "../../api/services/user";
 import { logout } from "../../api/services/auth";
+import Pagination from "../../components/Pagination";
 
 const statusLabels: Record<string, string> = {
   all: "Tất cả",
@@ -17,6 +18,8 @@ export default function AdminUsersPage() {
   const [status, setStatus] = useState("all");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [userPage, setUserPage] = useState(1);
+  const USER_PAGE_SIZE = 8;
 
   const filteredLabel = useMemo(() => statusLabels[status] || "Tất cả", [status]);
 
@@ -37,11 +40,13 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
+    setUserPage(1);
     loadUsers();
   }, [status]);
 
   const handleSearch = (event: React.FormEvent) => {
     event.preventDefault();
+    setUserPage(1);
     loadUsers();
   };
 
@@ -160,7 +165,7 @@ export default function AdminUsersPage() {
                 {loading && <span className="text-xs text-slate-400">Đang tải...</span>}
               </div>
               <div className="mt-4 space-y-3">
-                {users.map((user) => (
+                {users.slice((userPage - 1) * USER_PAGE_SIZE, userPage * USER_PAGE_SIZE).map((user) => (
                   <button
                     key={user.id}
                     onClick={() => handleSelect(user)}
@@ -200,6 +205,11 @@ export default function AdminUsersPage() {
                   </button>
                 ))}
               </div>
+              <Pagination
+                currentPage={userPage}
+                totalPages={Math.ceil(users.length / USER_PAGE_SIZE)}
+                onPageChange={setUserPage}
+              />
             </div>
 
             <div className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">

@@ -4,13 +4,6 @@ import { getMyListingDetail, resolveListingImageUrl, submitMyListingForApproval 
 import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
 
-function formatDateTime(value: string | null) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("vi-VN");
-}
-
 function formatDate(value: string | null) {
   if (!value) return "";
   const date = new Date(value);
