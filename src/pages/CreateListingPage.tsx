@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createMyListingDraft, uploadListingImages } from "../api/services/listings";
+import { fetchAmenities, type Amenity } from "../api/services/amenities";
 import UserShell from "../layouts/UserShell";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "./listingFormOptions";
 
@@ -8,6 +9,9 @@ export default function CreateListingPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [amenities, setAmenities] = useState<Amenity[]>([]);
+  const [amenitiesError, setAmenitiesError] = useState("");
+  const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [form, setForm] = useState({
@@ -35,6 +39,22 @@ export default function CreateListingPage() {
     }
   }, [form.district, form.ward]);
 
+  useEffect(() => {
+    let isMounted = true;
+    fetchAmenities()
+      .then((data) => {
+        if (!isMounted) return;
+        setAmenities(data);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setAmenitiesError("Khong the tai danh sach tien nghi.");
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleChange = (key: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
@@ -51,6 +71,12 @@ export default function CreateListingPage() {
       setImagePreviews(limited.map((file) => URL.createObjectURL(file)));
       return limited;
     });
+  };
+
+  const toggleAmenity = (amenityId: string) => {
+    setSelectedAmenityIds((prev) =>
+      prev.includes(amenityId) ? prev.filter((id) => id !== amenityId) : [...prev, amenityId]
+    );
   };
 
   const handleRemoveImagePreview = (indexToRemove: number) => {
@@ -97,6 +123,7 @@ export default function CreateListingPage() {
         currentOccupants: form.currentOccupants ? Number(form.currentOccupants) : 0,
         smokingAllowed: form.smokingAllowed,
         petAllowed: form.petAllowed,
+        amenityIds: selectedAmenityIds,
       });
 
       if (imageFiles.length > 0) {
@@ -337,6 +364,32 @@ export default function CreateListingPage() {
                       ×
                     </button>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="md:col-span-2 rounded-[22px] border border-orange-100 bg-orange-50/40 px-5 py-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-orange-500">Tiện nghi</h2>
+            {amenitiesError ? (
+              <p className="mt-2 text-xs text-red-500">{amenitiesError}</p>
+            ) : amenities.length === 0 ? (
+              <p className="mt-2 text-xs text-slate-500">Chưa có tiện nghi nào.</p>
+            ) : (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {amenities.map((amenity) => (
+                  <label
+                    key={amenity.id}
+                    className="flex items-center gap-2 rounded-2xl border border-orange-100 bg-white px-3 py-2 text-sm text-slate-700"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedAmenityIds.includes(amenity.id)}
+                      onChange={() => toggleAmenity(amenity.id)}
+                      className="h-4 w-4 rounded border-orange-200 text-orange-500"
+                    />
+                    {amenity.name}
+                  </label>
                 ))}
               </div>
             )}

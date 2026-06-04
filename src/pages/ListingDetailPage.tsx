@@ -310,6 +310,17 @@ export default function ListingDetailPage() {
                   </span>
                 </div>
 
+                {listing.amenities && listing.amenities.length > 0 && (
+                  <div className="flex flex-wrap gap-2.5 pt-4 border-t border-slate-100">
+                    <h3 className="w-full text-base font-bold text-slate-800">Tiện nghi</h3>
+                    {listing.amenities.map((amenity) => (
+                      <span key={amenity.id} className="rounded-full px-3 py-1 text-xs font-semibold border bg-orange-50 border-orange-100 text-orange-700">
+                        {amenity.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 {listing.rejectionReason && (
                   <div className="rounded-2xl border border-red-100 bg-red-50/50 p-4 text-sm text-red-600">
                     <strong>Lý do từ chối duyệt bài:</strong> {listing.rejectionReason}

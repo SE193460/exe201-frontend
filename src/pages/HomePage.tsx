@@ -21,15 +21,15 @@ export default function HomePage() {
       fetchProfile()
         .then((profile) => {
           if (profile.roleName === "admin") {
-            navigate("/admin/users");
+            navigate("/admin/dashboard", { replace: true });
+            return;
           }
+          navigate("/", { replace: true });
         })
         .catch(() => {
           // ignore profile error
-        })
-        .finally(() => {
           navigate("/", { replace: true });
-        });
+        })
       return;
     }
 

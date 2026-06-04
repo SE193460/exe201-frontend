@@ -253,6 +253,23 @@ export default function PublicListingDetailPage() {
                   </span>
                 </div>
 
+                {/* Amenities */}
+                {listing.amenities && listing.amenities.length > 0 && (
+                  <div className="space-y-3 pt-4 border-t border-slate-100">
+                    <h3 className="text-base font-bold text-slate-800">Tiện nghi</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {listing.amenities.map((amenity) => (
+                        <span
+                          key={amenity.id}
+                          className="rounded-full px-3 py-1 text-xs font-semibold border bg-orange-50 border-orange-100 text-orange-700"
+                        >
+                          ✓ {amenity.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Embedded Map Section */}
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <h3 className="text-base font-bold text-slate-800">Vị trí & bản đồ</h3>

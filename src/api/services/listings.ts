@@ -27,6 +27,7 @@ export type Listing = {
   createdAt: string;
   updatedAt: string;
   images: ListingImage[];
+  amenities?: { id: string; name: string }[];
   ownerName?: string | null;
   ownerPhone?: string | null;
   ownerAvatar?: string | null;
@@ -68,6 +69,7 @@ export type CreateListingPayload = {
   smokingAllowed?: boolean;
   petAllowed?: boolean;
   expiresAt?: string | null;
+  amenityIds?: string[];
 };
 
 export async function createMyListingDraft(payload: CreateListingPayload) {

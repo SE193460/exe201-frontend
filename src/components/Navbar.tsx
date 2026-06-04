@@ -1,13 +1,27 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../api/services/auth";
+import { fetchProfile } from "../api/services/user";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const [isAuthed, setIsAuthed] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    setIsAuthed(Boolean(localStorage.getItem("access_token")));
+    const token = localStorage.getItem("access_token");
+    setIsAuthed(Boolean(token));
+    if (!token) {
+      setIsAdmin(false);
+      return;
+    }
+    fetchProfile()
+      .then((profile) => {
+        setIsAdmin(profile.roleName === "admin");
+      })
+      .catch(() => {
+        setIsAdmin(false);
+      });
   }, []);
 
   const handleLogout = async () => {
@@ -18,6 +32,7 @@ export default function Navbar() {
     } finally {
       localStorage.removeItem("access_token");
       setIsAuthed(false);
+      setIsAdmin(false);
       navigate("/");
     }
   };
@@ -45,6 +60,14 @@ export default function Navbar() {
         <div className="flex items-center gap-3 text-sm font-semibold">
           {isAuthed ? (
             <>
+              {isAdmin && (
+                <button
+                  onClick={() => navigate("/admin/dashboard")}
+                  className="rounded-full px-4 py-2 text-slate-700 hover:bg-orange-50"
+                >
+                  Dashboard
+                </button>
+              )}
               <button
                 onClick={() => navigate("/profile")}
                 className="rounded-full px-4 py-2 text-slate-700 hover:bg-orange-50"

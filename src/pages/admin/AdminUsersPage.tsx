@@ -74,7 +74,7 @@ export default function AdminUsersPage() {
         <aside className="w-full max-w-[250px] rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
           <div className="flex items-center gap-2 text-lg font-semibold">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ff6a3d] text-white">🏠</span>
-            RoomMate
+            RoomMate Admin
           </div>
           <div className="mt-8 space-y-2 text-sm font-semibold">
             <button
@@ -82,6 +82,12 @@ export default function AdminUsersPage() {
               className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
             >
               Trang chủ
+            </button>
+            <button
+              onClick={() => navigate("/admin/dashboard")}
+              className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
+            >
+              Dashboard
             </button>
             <button
               className="w-full rounded-full bg-orange-100 px-4 py-2 text-left text-orange-700"
@@ -94,10 +100,16 @@ export default function AdminUsersPage() {
             >
               Quản lý bài đăng
             </button>
+            <button
+              onClick={() => navigate("/admin/amenities")}
+              className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
+            >
+              Quản lý tiện nghi
+            </button>
           </div>
           <button
             onClick={handleLogout}
-            className="mt-10 w-full rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+            className="w-full rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-orange-50"
           >
             Đăng xuất
           </button>

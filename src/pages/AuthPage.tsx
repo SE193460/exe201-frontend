@@ -42,7 +42,7 @@ export default function AuthPage() {
           try {
             const profile = await fetchProfile();
             if (profile.roleName === "admin") {
-              navigate("/admin/users");
+              navigate("/admin/dashboard");
               return;
             }
           } catch {
@@ -94,7 +94,7 @@ export default function AuthPage() {
       try {
         const profile = await fetchProfile();
         if (profile.roleName === "admin") {
-          navigate("/admin/users");
+          navigate("/admin/dashboard");
           return;
         }
       } catch {
