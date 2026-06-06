@@ -12,6 +12,7 @@ import ListingDetailPage from "./pages/ListingDetailPage";
 import EditListingPage from "./pages/EditListingPage";
 import PublicListingsPage from "./pages/PublicListingsPage";
 import PublicListingDetailPage from "./pages/PublicListingDetailPage";
+import AdminImportedListingsPage from "./pages/admin/AdminImportedListingsPage";
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
       <Route path="/admin/users" element={<AdminUsersPage />} />
       <Route path="/admin/listings" element={<AdminListingsPage />} />
       <Route path="/admin/amenities" element={<AdminAmenitiesPage />} />
+      <Route path="/admin/imported-listings" element={<AdminImportedListingsPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

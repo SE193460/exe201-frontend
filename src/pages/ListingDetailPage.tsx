@@ -323,7 +323,7 @@ export default function ListingDetailPage() {
                 {/* Embedded Map Section */}
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <h3 className="text-base font-bold text-slate-800">Vị trí & bản đồ</h3>
-                  <p className="text-xs text-slate-500">📍 Địa điểm thực tế phòng trọ dựa trên thông tin địa chỉ:</p>
+                  <p className="text-xs text-slate-500">📍 Địa chỉ: <span className="font-semibold text-slate-700">{listing.address || [listing.ward, listing.district, listing.city].filter(Boolean).join(", ")}</span></p>
                   <div className="h-72 w-full overflow-hidden rounded-2xl border border-orange-100">
                     <iframe
                       title="Google Maps"

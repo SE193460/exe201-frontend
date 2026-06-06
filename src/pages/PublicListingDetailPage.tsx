@@ -228,10 +228,12 @@ export default function PublicListingDetailPage() {
                       <span className="text-slate-500">Đối tượng ưu tiên:</span>
                       <strong className="text-slate-800">{listing.preferredGender || "Không yêu cầu"}</strong>
                     </div>
+                    {!listing.source && (
                     <div className="flex justify-between py-1.5 border-b border-slate-50">
                       <span className="text-slate-500">Số lượng:</span>
                       <strong className="text-slate-800">{listing.currentOccupants || 0} / {listing.maxOccupants || 0} người</strong>
                     </div>
+                    )}
                   </div>
                 </div>
 
@@ -244,6 +246,7 @@ export default function PublicListingDetailPage() {
                 </div>
 
                 {/* Features Badges */}
+                {!listing.source && (
                 <div className="flex flex-wrap gap-2.5 pt-4 border-t border-slate-100">
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold border ${listing.smokingAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
                     {listing.smokingAllowed ? "✓ Cho phép hút thuốc" : "✗ Không hút thuốc"}
@@ -252,6 +255,7 @@ export default function PublicListingDetailPage() {
                     {listing.petAllowed ? "✓ Nuôi thú cưng" : "✗ Không nuôi thú cưng"}
                   </span>
                 </div>
+                )}
 
                 {/* Amenities */}
                 {listing.amenities && listing.amenities.length > 0 && (
@@ -292,85 +296,114 @@ export default function PublicListingDetailPage() {
               {/* Mobile Contact Info Card (renders at the end, hidden on desktop) */}
               <div className="lg:hidden rounded-[24px] border border-orange-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] text-center space-y-4">
                 <h3 className="text-base font-bold text-slate-800">Thông tin liên hệ</h3>
-                <div className="flex flex-col items-center gap-3">
-                  <div className="h-16 w-16 overflow-hidden rounded-full border border-orange-200 bg-orange-100">
-                    <div className="flex h-full w-full items-center justify-center text-xl font-bold text-orange-600">
-                      {listing.ownerName?.slice(0, 1).toUpperCase() || "C"}
+                {listing.source ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-slate-500 leading-relaxed">Thông tin liên hệ được quản lý tại bài đăng gốc.</p>
+                    <p className="text-xs text-slate-400">Xem chi tiết và liên hệ người đăng tại:</p>
+                    <a href={listing.source} target="_blank" rel="noopener noreferrer"
+                      className="block w-full rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-sm font-bold shadow-sm transition text-center">
+                      🔗 Xem bài đăng gốc
+                    </a>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-16 w-16 overflow-hidden rounded-full border border-orange-200 bg-orange-100">
+                      <div className="flex h-full w-full items-center justify-center text-xl font-bold text-orange-600">
+                        {listing.ownerName?.slice(0, 1).toUpperCase() || "C"}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-slate-800 text-base">{listing.ownerName || "Chủ phòng trọ"}</h4>
+                      <p className="text-xs text-slate-400 mt-0.5">📧 {listing.ownerEmail || "Không có email"}</p>
+                    </div>
+                    <div className="flex gap-2 w-full">
+                      <a href={`tel:${listing.ownerPhone || "0966883171"}`}
+                        className="flex-1 rounded-full bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-2.5 text-sm font-bold shadow-sm transition text-center">
+                        📞 {listing.ownerPhone || "0966883171"}
+                      </a>
+                      <a href={`https://zalo.me/${listing.ownerPhone || "0966883171"}`} target="_blank" rel="noopener noreferrer"
+                        className="flex-1 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition text-center">
+                        💬 Nhắn Zalo
+                      </a>
                     </div>
                   </div>
-                  <div>
-                    <h4 className="font-extrabold text-slate-800 text-base">{listing.ownerName || "Chủ phòng trọ"}</h4>
-                    <p className="text-xs text-slate-400 mt-0.5">📧 {listing.ownerEmail || "Không có email"}</p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <a
-                    href={`tel:${listing.ownerPhone || "0966883171"}`}
-                    className="flex-1 rounded-full bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-2.5 text-sm font-bold shadow-sm transition text-center"
-                  >
-                    📞 {listing.ownerPhone || "0966883171"}
-                  </a>
-                  <a
-                    href={`https://zalo.me/${listing.ownerPhone || "0966883171"}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition text-center"
-                  >
-                    💬 Nhắn Zalo
-                  </a>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Right Column: Sticky Contact Sidebar (Desktop Only) */}
             <aside className="hidden lg:block sticky top-6 space-y-6">
-              <div className="rounded-[24px] border border-orange-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] text-center space-y-5">
-                <div>
-                  <span className="inline-flex h-2.5 w-2.5 rounded-full bg-green-500 mr-2 animate-ping"></span>
-                  <span className="text-xs font-bold text-slate-500">CHỦ BÀI ĐĂNG</span>
-                </div>
-
-                <div className="flex flex-col items-center gap-3">
-                  <div className="h-20 w-20 overflow-hidden rounded-full border border-orange-200 bg-orange-100">
-                    <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-orange-600">
-                      {listing.ownerName?.slice(0, 1).toUpperCase() || "C"}
-                    </div>
-                  </div>
+              {listing.source ? (
+                <div className="rounded-[24px] border border-blue-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] text-center space-y-5">
                   <div>
-                    <h4 className="font-black text-slate-800 text-lg">{listing.ownerName || "Chủ phòng trọ"}</h4>
-                    <span className="inline-block rounded-full bg-green-50 px-3 py-1 text-[10px] font-bold text-green-700 border border-green-100 mt-1">
-                      ● Đang hoạt động
-                    </span>
+                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-blue-400 mr-2"></span>
+                    <span className="text-xs font-bold text-slate-500">THÔNG TIN LIÊN HỆ</span>
                   </div>
-                </div>
-
-                <hr className="border-orange-50" />
-
-                <div className="space-y-3">
+                  <div className="space-y-2 text-sm text-slate-600">
+                    <p className="leading-relaxed">Thông tin liên hệ được quản lý tại bài đăng gốc.</p>
+                    <p className="text-xs text-slate-400">Xem chi tiết và liên hệ người đăng tại:</p>
+                  </div>
                   <a
-                    href={`tel:${listing.ownerPhone || "0966883171"}`}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-3 text-base font-black shadow-md shadow-orange-100 transition"
-                  >
-                    📞 {listing.ownerPhone || "0966883171"}
-                  </a>
-                  <a
-                    href={`https://zalo.me/${listing.ownerPhone || "0966883171"}`}
+                    href={listing.source}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-base font-bold shadow-md shadow-blue-100 transition"
                   >
-                    💬 Nhắn Zalo
+                    🔗 Xem bài đăng gốc
                   </a>
+                  <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
+                    <p className="font-bold text-slate-700 text-center">💡 Lưu ý quan trọng:</p>
+                    <p>• Thông tin từ bài đăng được thu thập từ nguồn bên ngoài, vui lòng kiểm tra kỹ trước khi liên hệ.</p>
+                    <p>• Không đặt cọc khi chưa xác thực danh tính chủ nhà.</p>
+                  </div>
                 </div>
+              ) : (
+                <div className="rounded-[24px] border border-orange-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] text-center space-y-5">
+                  <div>
+                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-green-500 mr-2 animate-ping"></span>
+                    <span className="text-xs font-bold text-slate-500">CHỦ BÀI ĐĂNG</span>
+                  </div>
 
-                {/* Notice Box */}
-                <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
-                  <p className="font-bold text-slate-700 text-center">💡 Lưu ý quan trọng:</p>
-                  <p>• Chỉ đặt cọc giữ chỗ khi đã xác thực danh tính chủ nhà và có thỏa thuận biên nhận rõ ràng.</p>
-                  <p>• Kiểm tra kỹ điều khoản hợp đồng trước khi thực hiện ký kết.</p>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-20 w-20 overflow-hidden rounded-full border border-orange-200 bg-orange-100">
+                      <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-orange-600">
+                        {listing.ownerName?.slice(0, 1).toUpperCase() || "C"}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-black text-slate-800 text-lg">{listing.ownerName || "Chủ phòng trọ"}</h4>
+                      <span className="inline-block rounded-full bg-green-50 px-3 py-1 text-[10px] font-bold text-green-700 border border-green-100 mt-1">
+                        ● Đang hoạt động
+                      </span>
+                    </div>
+                  </div>
+
+                  <hr className="border-orange-50" />
+
+                  <div className="space-y-3">
+                    <a
+                      href={`tel:${listing.ownerPhone || "0966883171"}`}
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-3 text-base font-black shadow-md shadow-orange-100 transition"
+                    >
+                      📞 {listing.ownerPhone || "0966883171"}
+                    </a>
+                    <a
+                      href={`https://zalo.me/${listing.ownerPhone || "0966883171"}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-base font-bold shadow-md shadow-blue-100 transition"
+                    >
+                      💬 Nhắn Zalo
+                    </a>
+                  </div>
+
+                  <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
+                    <p className="font-bold text-slate-700 text-center">💡 Lưu ý quan trọng:</p>
+                    <p>• Chỉ đặt cọc giữ chỗ khi đã xác thực danh tính chủ nhà và có thỏa thuận biên nhận rõ ràng.</p>
+                    <p>• Kiểm tra kỹ điều khoản hợp đồng trước khi thực hiện ký kết.</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </aside>
           </div>
         )}

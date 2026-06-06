@@ -103,6 +103,7 @@ export default function AdminListingsPage() {
               <button onClick={() => navigate("/admin/dashboard")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Dashboard</button>
               <button onClick={() => navigate("/admin/users")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý người dùng</button>
               <button className="w-full rounded-full bg-orange-100 px-4 py-2 text-left text-orange-700">Quản lý bài đăng</button>
+              <button onClick={() => navigate("/admin/imported-listings")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý nguồn bài đăng</button>
               <button onClick={() => navigate("/admin/amenities")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý tiện nghi</button>
             </div>
           </div>

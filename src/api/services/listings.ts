@@ -32,6 +32,7 @@ export type Listing = {
   ownerPhone?: string | null;
   ownerAvatar?: string | null;
   ownerEmail?: string | null;
+  source?: string | null;
 };
 
 export type ListingImage = {
@@ -70,6 +71,7 @@ export type CreateListingPayload = {
   petAllowed?: boolean;
   expiresAt?: string | null;
   amenityIds?: string[];
+  source?: string | null;
 };
 
 export async function createMyListingDraft(payload: CreateListingPayload) {
@@ -119,5 +121,10 @@ export async function fetchPublicListingDetail(id: string) {
 export async function deleteListingImage(listingId: string, imageId: string) {
   const response = await axiosInstance.delete(`/api/users/me/listings/${listingId}/images/${imageId}`);
   return response.data as { message: string; imageId: string; listingId: string };
+}
+
+export async function addListingImageUrls(listingId: string, urls: string[]) {
+  const response = await axiosInstance.post(`/api/users/me/listings/${listingId}/images/urls`, { urls });
+  return response.data as { listingId: string; images: ListingImage[] };
 }
 
