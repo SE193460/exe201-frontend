@@ -41,6 +41,8 @@ export default function PublicListingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedImgIdx, setSelectedImgIdx] = useState(0);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [mediaModalTab, setMediaModalTab] = useState<"images" | "map">("images");
 
   useEffect(() => {
     if (!id) return;
@@ -64,6 +66,41 @@ export default function PublicListingDetailPage() {
     if (!listing || !listing.images || listing.images.length === 0) return;
     setSelectedImgIdx((prev) => (prev === listing.images.length - 1 ? 0 : prev + 1));
   };
+
+  const openImageModal = (imageIndex: number) => {
+    setSelectedImgIdx(imageIndex);
+    setMediaModalTab("images");
+    setIsMediaModalOpen(true);
+  };
+
+  const listingAddress = listing?.address || [listing?.ward, listing?.district, listing?.city].filter(Boolean).join(", ");
+
+  useEffect(() => {
+    if (!isMediaModalOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMediaModalOpen(false);
+      }
+      if (mediaModalTab !== "images") return;
+      if (event.key === "ArrowLeft") {
+        handlePrevImg();
+      }
+      if (event.key === "ArrowRight") {
+        handleNextImg();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isMediaModalOpen, mediaModalTab, listing]);
 
   return (
     <div className="min-h-screen bg-[#fff7f2] text-slate-800 flex flex-col">
@@ -111,7 +148,8 @@ export default function PublicListingDetailPage() {
                       <img
                         src={resolveListingImageUrl(listing.images[selectedImgIdx].imageUrl)}
                         alt={listing.title}
-                        className="h-full w-full object-cover select-none"
+                        className="h-full w-full object-cover select-none cursor-zoom-in"
+                        onClick={() => openImageModal(selectedImgIdx)}
                       />
                       
                       {listing.images.length > 1 && (
@@ -144,7 +182,7 @@ export default function PublicListingDetailPage() {
                         {listing.images.map((image, idx) => (
                           <button
                             key={image.id}
-                            onClick={() => setSelectedImgIdx(idx)}
+                            onClick={() => openImageModal(idx)}
                             className={`h-16 w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition ${
                               selectedImgIdx === idx
                                 ? "border-orange-500 shadow-md shadow-orange-100"
@@ -284,9 +322,7 @@ export default function PublicListingDetailPage() {
                       width="100%"
                       height="100%"
                       style={{ border: 0 }}
-                      src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                        listing.address || [listing.ward, listing.district, listing.city].filter(Boolean).join(", ")
-                      )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(listingAddress)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                       allowFullScreen
                     ></iframe>
                   </div>
@@ -408,6 +444,120 @@ export default function PublicListingDetailPage() {
           </div>
         )}
       </main>
+
+      {isMediaModalOpen && listing && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm px-4 py-6 md:px-8"
+          onClick={() => setIsMediaModalOpen(false)}
+        >
+          <div
+            className="mx-auto flex h-full w-full max-w-[1220px] flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-700 px-4 py-3">
+              <div className="w-20"></div>
+              <div className="flex items-center gap-2 rounded-xl bg-slate-800 p-1">
+                <button
+                  onClick={() => setMediaModalTab("images")}
+                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                    mediaModalTab === "images"
+                      ? "bg-white text-slate-900"
+                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                  }`}
+                >
+                  Hình ảnh
+                </button>
+                <button
+                  onClick={() => setMediaModalTab("map")}
+                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                    mediaModalTab === "map"
+                      ? "bg-white text-slate-900"
+                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                  }`}
+                >
+                  Bản đồ
+                </button>
+              </div>
+              <button
+                onClick={() => setIsMediaModalOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-xl text-white transition hover:bg-slate-700"
+                aria-label="Đóng modal"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-hidden p-3 md:p-4">
+              {mediaModalTab === "images" ? (
+                <div className="flex h-full flex-col gap-3">
+                  <div className="relative flex-1 overflow-hidden rounded-xl bg-slate-950">
+                    <img
+                      src={resolveListingImageUrl(listing.images[selectedImgIdx].imageUrl)}
+                      alt={listing.title}
+                      className="h-full w-full object-contain"
+                    />
+
+                    {listing.images.length > 1 && (
+                      <>
+                        <button
+                          onClick={handlePrevImg}
+                          className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800"
+                          aria-label="Ảnh trước"
+                        >
+                          ‹
+                        </button>
+                        <button
+                          onClick={handleNextImg}
+                          className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800"
+                          aria-label="Ảnh tiếp theo"
+                        >
+                          ›
+                        </button>
+                        <div className="absolute bottom-3 right-3 rounded-full bg-slate-900/75 px-3 py-1 text-xs font-semibold text-white">
+                          {selectedImgIdx + 1} / {listing.images.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {listing.images.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {listing.images.map((image, idx) => (
+                        <button
+                          key={image.id}
+                          onClick={() => setSelectedImgIdx(idx)}
+                          className={`h-16 w-24 flex-shrink-0 overflow-hidden rounded-lg border-2 transition ${
+                            selectedImgIdx === idx
+                              ? "border-orange-500"
+                              : "border-transparent opacity-70 hover:opacity-100"
+                          }`}
+                        >
+                          <img
+                            src={resolveListingImageUrl(image.imageUrl)}
+                            alt={`Ảnh phòng ${idx + 1}`}
+                            className="h-full w-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="h-full overflow-hidden rounded-xl border border-slate-700">
+                  <iframe
+                    title="Google Maps Fullscreen"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(listingAddress)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
