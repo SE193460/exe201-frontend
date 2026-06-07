@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Camera, CircleCheck, CircleX, Info, Mail, MapPinned, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { getMyListingDetail, resolveListingImageUrl, submitMyListingForApproval } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
@@ -85,7 +86,7 @@ export default function ListingDetailPage() {
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Chi tiết bài đăng cá nhân</h1>
-            <p className="mt-1 text-sm text-slate-500">Thông tin quản lý và phê duyệt bài viết phòng ở ghép của bạn.</p>
+            <p className="mt-1 text-sm text-slate-700">Thông tin quản lý và phê duyệt bài viết phòng ở ghép của bạn.</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -119,7 +120,7 @@ export default function ListingDetailPage() {
         </header>
 
         {status && (
-          <div className="rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm text-slate-500">
+          <div className="rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm text-slate-700">
             {status}
           </div>
         )}
@@ -161,7 +162,10 @@ export default function ListingDetailPage() {
                           </button>
                           {/* Counter Badge */}
                           <span className="absolute bottom-4 right-4 rounded-full bg-slate-900/70 backdrop-blur px-3 py-1 text-xs font-semibold text-white">
-                            📸 {selectedImgIdx + 1} / {listing.images.length}
+                            <span className="inline-flex items-center gap-1.5">
+                              <Camera className="h-3.5 w-3.5" />
+                              {selectedImgIdx + 1} / {listing.images.length}
+                            </span>
                           </span>
                         </>
                       )}
@@ -204,7 +208,7 @@ export default function ListingDetailPage() {
                     <h2 className="text-xl md:text-2xl font-extrabold text-slate-800 uppercase leading-snug">
                       {listing.title}
                     </h2>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-600 font-medium">
                       Địa chỉ: {listing.address || [listing.ward, listing.district, listing.city].filter(Boolean).join(", ")}
                     </p>
                   </div>
@@ -259,27 +263,27 @@ export default function ListingDetailPage() {
                   <h3 className="text-base font-bold text-slate-800">Thông tin thuộc tính</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
                     <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-500">Quận/Huyện:</span>
+                      <span className="text-slate-700">Quận/Huyện:</span>
                       <strong className="text-slate-800">{listing.district || "Chưa cập nhật"}</strong>
                     </div>
                     <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-500">Khu vực:</span>
+                      <span className="text-slate-700">Khu vực:</span>
                       <strong className="text-slate-800">{listing.ward || "Chưa cập nhật"}</strong>
                     </div>
                     <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-500">Mã tin đăng:</span>
+                      <span className="text-slate-700">Mã tin đăng:</span>
                       <strong className="text-[#ff6a3d]">#{listing.id.slice(0, 8).toUpperCase()}</strong>
                     </div>
                     <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-500">Loại phòng:</span>
+                      <span className="text-slate-700">Loại phòng:</span>
                       <strong className="text-slate-800">{listing.roomType || "Phòng trọ ở ghép"}</strong>
                     </div>
                     <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-500">Đối tượng ưu tiên:</span>
+                      <span className="text-slate-700">Đối tượng ưu tiên:</span>
                       <strong className="text-slate-800">{listing.preferredGender || "Không yêu cầu"}</strong>
                     </div>
                     <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-500">Số lượng:</span>
+                      <span className="text-slate-700">Số lượng:</span>
                       <strong className="text-slate-800">{listing.currentOccupants || 0} / {listing.maxOccupants || 0} người</strong>
                     </div>
                   </div>
@@ -288,18 +292,20 @@ export default function ListingDetailPage() {
                 {/* Description */}
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <h3 className="text-base font-bold text-slate-800">Thông tin mô tả</h3>
-                  <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                  <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
                     {renderDescription(listing.description)}
                   </div>
                 </div>
 
                 {/* Features Badges */}
                 <div className="flex flex-wrap gap-2.5 pt-4 border-t border-slate-100">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold border ${listing.smokingAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
-                    {listing.smokingAllowed ? "✓ Cho phép hút thuốc" : "✗ Không hút thuốc"}
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${listing.smokingAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
+                    {listing.smokingAllowed ? <CircleCheck className="h-3.5 w-3.5" /> : <CircleX className="h-3.5 w-3.5" />}
+                    {listing.smokingAllowed ? "Cho phép hút thuốc" : "Không hút thuốc"}
                   </span>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold border ${listing.petAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
-                    {listing.petAllowed ? "✓ Nuôi thú cưng" : "✗ Không nuôi thú cưng"}
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${listing.petAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
+                    {listing.petAllowed ? <CircleCheck className="h-3.5 w-3.5" /> : <CircleX className="h-3.5 w-3.5" />}
+                    {listing.petAllowed ? "Nuôi thú cưng" : "Không nuôi thú cưng"}
                   </span>
                 </div>
 
@@ -307,7 +313,8 @@ export default function ListingDetailPage() {
                   <div className="flex flex-wrap gap-2.5 pt-4 border-t border-slate-100">
                     <h3 className="w-full text-base font-bold text-slate-800">Tiện nghi</h3>
                     {listing.amenities.map((amenity) => (
-                      <span key={amenity.id} className="rounded-full px-3 py-1 text-xs font-semibold border bg-orange-50 border-orange-100 text-orange-700">
+                      <span key={amenity.id} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border bg-orange-50 border-orange-100 text-orange-700">
+                        <CircleCheck className="h-3.5 w-3.5" />
                         {amenity.name}
                       </span>
                     ))}
@@ -323,7 +330,7 @@ export default function ListingDetailPage() {
                 {/* Embedded Map Section */}
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <h3 className="text-base font-bold text-slate-800">Vị trí & bản đồ</h3>
-                  <p className="text-xs text-slate-500">📍 Địa chỉ: <span className="font-semibold text-slate-700">{listing.address || [listing.ward, listing.district, listing.city].filter(Boolean).join(", ")}</span></p>
+                  <p className="inline-flex items-center gap-1.5 text-xs text-slate-600"><MapPinned className="h-3.5 w-3.5 text-orange-500" />Địa chỉ: <span className="font-semibold text-slate-800">{listing.address || [listing.ward, listing.district, listing.city].filter(Boolean).join(", ")}</span></p>
                   <div className="h-72 w-full overflow-hidden rounded-2xl border border-orange-100">
                     <iframe
                       title="Google Maps"
@@ -350,24 +357,26 @@ export default function ListingDetailPage() {
                   </div>
                   <div>
                     <h4 className="font-extrabold text-slate-800 text-base">{listing.ownerName || "Chủ phòng trọ"}</h4>
-                    <p className="text-xs text-slate-400 mt-0.5">📧 {listing.ownerEmail || "Không có email"}</p>
+                    <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-slate-600"><Mail className="h-3.5 w-3.5" />{listing.ownerEmail || "Không có email"}</p>
                   </div>
                 </div>
                 
                 <div className="flex gap-2">
                   <a
                     href={`tel:${listing.ownerPhone || "0966883171"}`}
-                    className="flex-1 rounded-full bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-2.5 text-sm font-bold shadow-sm transition text-center"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-2.5 text-sm font-bold shadow-sm transition text-center"
                   >
-                    📞 {listing.ownerPhone || "0966883171"}
+                    <Phone className="h-4 w-4" />
+                    {listing.ownerPhone || "0966883171"}
                   </a>
                   <a
                     href={`https://zalo.me/${listing.ownerPhone || "0966883171"}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition text-center"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition text-center"
                   >
-                    💬 Nhắn Zalo
+                    <MessageCircle className="h-4 w-4" />
+                    Nhắn Zalo
                   </a>
                 </div>
               </div>
@@ -378,7 +387,7 @@ export default function ListingDetailPage() {
               <div className="rounded-[24px] border border-orange-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] text-center space-y-5">
                 <div>
                   <span className="inline-flex h-2.5 w-2.5 rounded-full bg-green-500 mr-2 animate-ping"></span>
-                  <span className="text-xs font-bold text-slate-500">CHỦ BÀI ĐĂNG</span>
+                  <span className="text-xs font-bold text-slate-600">CHỦ BÀI ĐĂNG</span>
                 </div>
 
                 <div className="flex flex-col items-center gap-3">
@@ -389,8 +398,9 @@ export default function ListingDetailPage() {
                   </div>
                   <div>
                     <h4 className="font-black text-slate-800 text-lg">{listing.ownerName || "Chủ phòng trọ"}</h4>
-                    <span className="inline-block rounded-full bg-green-50 px-3 py-1 text-[10px] font-bold text-green-700 border border-green-100 mt-1">
-                      ● Đang hoạt động
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-[10px] font-bold text-green-700 border border-green-100 mt-1">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      Đang hoạt động
                     </span>
                   </div>
                 </div>
@@ -402,7 +412,8 @@ export default function ListingDetailPage() {
                     href={`tel:${listing.ownerPhone || "0966883171"}`}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-3 text-base font-black shadow-md shadow-orange-100 transition"
                   >
-                    📞 {listing.ownerPhone || "0966883171"}
+                    <Phone className="h-4 w-4" />
+                    {listing.ownerPhone || "0966883171"}
                   </a>
                   <a
                     href={`https://zalo.me/${listing.ownerPhone || "0966883171"}`}
@@ -410,13 +421,14 @@ export default function ListingDetailPage() {
                     rel="noopener noreferrer"
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-base font-bold shadow-md shadow-blue-100 transition"
                   >
-                    💬 Nhắn Zalo
+                    <MessageCircle className="h-4 w-4" />
+                    Nhắn Zalo
                   </a>
                 </div>
 
                 {/* Notice Box */}
-                <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
-                  <p className="font-bold text-slate-700 text-center">💡 Lưu ý quan trọng:</p>
+                <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-600 leading-relaxed">
+                  <p className="inline-flex w-full items-center justify-center gap-1.5 font-bold text-slate-700 text-center"><Info className="h-3.5 w-3.5" />Lưu ý quan trọng:</p>
                   <p>• Chỉ đặt cọc giữ chỗ khi đã xác thực danh tính chủ nhà và có thỏa thuận biên nhận rõ ràng.</p>
                   <p>• Kiểm tra kỹ điều khoản hợp đồng trước khi thực hiện ký kết.</p>
                 </div>

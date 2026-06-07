@@ -19,6 +19,16 @@ import Sidebar from "../../components/Sidebar";
 
 type FormMode = "create" | "edit";
 
+function formatCurrencyInput(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return Number(digits).toLocaleString("vi-VN");
+}
+
+function parseCurrencyInput(value: string) {
+  return Number(value.replace(/\D/g, ""));
+}
+
 const emptyForm = () => ({
   title: "",
   description: "",
@@ -104,7 +114,7 @@ export default function AdminImportedListingsPage() {
     setForm({
       title: listing.title,
       description: listing.description,
-      rentPrice: String(listing.rentPrice),
+      rentPrice: Number(listing.rentPrice || 0).toLocaleString("vi-VN"),
       city: listing.city || CITY_OPTIONS[0],
       district: listing.district,
       ward: listing.ward || "",
@@ -135,7 +145,7 @@ export default function AdminImportedListingsPage() {
       setFormError("Vui lòng điền đầy đủ tiêu đề, mô tả, giá, quận/huyện và link nguồn.");
       return;
     }
-    const rentPrice = Number(form.rentPrice);
+    const rentPrice = parseCurrencyInput(form.rentPrice);
     if (Number.isNaN(rentPrice) || rentPrice <= 0) {
       setFormError("Giá thuê không hợp lệ.");
       return;
@@ -315,9 +325,9 @@ export default function AdminImportedListingsPage() {
 
                 <label className="block text-sm font-medium text-slate-700">
                   Giá thuê (VND) <span className="text-red-400">*</span>
-                  <input type="number" value={form.rentPrice} onChange={(e) => handleChange("rentPrice", e.target.value)}
+                  <input type="text" inputMode="numeric" value={form.rentPrice} onChange={(e) => handleChange("rentPrice", formatCurrencyInput(e.target.value))}
                     className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none focus:border-orange-300"
-                    placeholder="3000000" />
+                    placeholder="3.000.000" />
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">

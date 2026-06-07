@@ -5,6 +5,16 @@ import { fetchAmenities, type Amenity } from "../api/services/amenities";
 import UserShell from "../layouts/UserShell";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "./listingFormOptions";
 
+function formatCurrencyInput(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return Number(digits).toLocaleString("vi-VN");
+}
+
+function parseCurrencyInput(value: string) {
+  return Number(value.replace(/\D/g, ""));
+}
+
 export default function CreateListingPage() {
   const navigate = useNavigate();
   const [status, setStatus] = useState("");
@@ -94,7 +104,7 @@ export default function CreateListingPage() {
       return;
     }
 
-    const rentPrice = Number(form.rentPrice);
+    const rentPrice = parseCurrencyInput(form.rentPrice);
     if (Number.isNaN(rentPrice) || rentPrice <= 0) {
       setError("Giá thuê không hợp lệ.");
       return;
@@ -243,11 +253,12 @@ export default function CreateListingPage() {
           <label className="block text-sm font-medium text-slate-700">
             Giá thuê (VND)
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={form.rentPrice}
-              onChange={(event) => handleChange("rentPrice", event.target.value)}
+              onChange={(event) => handleChange("rentPrice", formatCurrencyInput(event.target.value))}
               className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-              placeholder="3000000"
+              placeholder="3.000.000"
             />
           </label>
 

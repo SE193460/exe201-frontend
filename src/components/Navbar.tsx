@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronDown, House, LayoutDashboard, LogOut, UserRound } from "lucide-react";
 import { logout } from "../api/services/auth";
 import { fetchProfile } from "../api/services/user";
 
@@ -65,7 +66,7 @@ export default function Navbar() {
             className="flex items-center gap-2 text-lg font-semibold"
           >
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ff6a3d] text-white">
-              🏠
+              <House className="h-4.5 w-4.5" />
             </span>
             RoomMate
           </button>
@@ -92,12 +93,7 @@ export default function Navbar() {
                     {fullName ? fullName.slice(0, 1).toUpperCase() : "U"}
                   </span>
                   <span className="max-w-[120px] truncate">{fullName || "Tài khoản"}</span>
-                  <svg
-                    className={`h-3.5 w-3.5 text-slate-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <ChevronDown className={`h-3.5 w-3.5 text-slate-500 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {dropdownOpen && (
@@ -107,21 +103,21 @@ export default function Navbar() {
                         onClick={() => { setDropdownOpen(false); navigate("/admin/dashboard"); }}
                         className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-slate-700 hover:bg-orange-50 transition"
                       >
-                        <span className="text-base">🛡️</span> Dashboard Admin
+                        <LayoutDashboard className="h-4 w-4 text-orange-600" /> Dashboard Admin
                       </button>
                     )}
                     <button
                       onClick={() => { setDropdownOpen(false); navigate("/profile"); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-slate-700 hover:bg-orange-50 transition"
                     >
-                      <span className="text-base">👤</span> Cập nhật hồ sơ
+                      <UserRound className="h-4 w-4 text-slate-600" /> Cập nhật hồ sơ
                     </button>
                     <div className="border-t border-orange-50" />
                     <button
                       onClick={handleLogout}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 transition"
                     >
-                      <span className="text-base">🚪</span> Đăng xuất
+                      <LogOut className="h-4 w-4" /> Đăng xuất
                     </button>
                   </div>
                 )}
