@@ -181,7 +181,18 @@ export default function SoftFilterPage() {
             <h3 className="text-lg font-semibold">{result.full_name || "Người dùng"}</h3>
             <p className="text-sm text-slate-500">{result.email || ""}</p>
             <p className="text-sm text-slate-500">Số điện thoại: {result.phone_number || "Chưa cập nhật"}</p>
-            <p className="text-sm text-slate-500">Zalo: {result.zalo || "Chưa cập nhật"}</p>
+            {result.phone_number ? (
+              <a
+                href={`https://zalo.me/${result.phone_number}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-600 hover:bg-blue-100 transition border border-blue-200"
+              >
+                💬 Nhắn Zalo
+              </a>
+            ) : (
+              <p className="text-sm text-slate-500">Zalo: Chưa cập nhật</p>
+            )}
           </div>
         )}
 
@@ -189,26 +200,32 @@ export default function SoftFilterPage() {
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
-            <h4 className="text-sm font-semibold text-emerald-700">Điểm tốt</h4>
-            <div className="mt-2 space-y-2 text-sm">
+            <h4 className="text-sm font-semibold text-emerald-700">✅ Điểm tốt</h4>
+            <div className="mt-2 space-y-3 text-sm">
               {good.length === 0 ? <p className="text-slate-500">Không có.</p> : null}
               {good.map(([field, value]) => (
-                <div key={`${result.id}-${field}`}>
-                  <p className="font-medium">{FIELD_LABELS[field] || field}: {value.label}</p>
-                  <p className="text-slate-500">{value.profile_value} • {value.pref_value}</p>
+                <div key={`${result.id}-${field}`} className="rounded-lg bg-white/60 p-2.5 border border-emerald-100">
+                  <p className="font-semibold text-slate-800">{FIELD_LABELS[field] || field}</p>
+                  <div className="mt-1.5 space-y-1 text-xs">
+                    <p className="text-slate-600"><span className="font-medium text-slate-700">Lựa chọn của họ:</span> {value.profile_value}</p>
+                    <p className="text-slate-600"><span className="font-medium text-slate-700">Lựa chọn của bạn:</span> {value.pref_value}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-3">
-            <h4 className="text-sm font-semibold text-amber-700">Điểm cần lưu ý</h4>
-            <div className="mt-2 space-y-2 text-sm">
+            <h4 className="text-sm font-semibold text-amber-700">⚠️ Điểm cần lưu ý</h4>
+            <div className="mt-2 space-y-3 text-sm">
               {warn.length === 0 ? <p className="text-slate-500">Không có.</p> : null}
               {warn.map(([field, value]) => (
-                <div key={`${result.id}-${field}`}>
-                  <p className="font-medium">{FIELD_LABELS[field] || field}: {value.label}</p>
-                  <p className="text-slate-500">{value.profile_value} • {value.pref_value}</p>
+                <div key={`${result.id}-${field}`} className="rounded-lg bg-white/60 p-2.5 border border-amber-100">
+                  <p className="font-semibold text-slate-800">{FIELD_LABELS[field] || field}</p>
+                  <div className="mt-1.5 space-y-1 text-xs">
+                    <p className="text-slate-600"><span className="font-medium text-slate-700">Lựa chọn của họ:</span> {value.profile_value}</p>
+                    <p className="text-slate-600"><span className="font-medium text-slate-700">Lựa chọn của bạn:</span> {value.pref_value}</p>
+                  </div>
                 </div>
               ))}
             </div>
