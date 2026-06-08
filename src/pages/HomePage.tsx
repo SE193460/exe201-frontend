@@ -6,7 +6,6 @@ import Footer from "../components/Footer";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {

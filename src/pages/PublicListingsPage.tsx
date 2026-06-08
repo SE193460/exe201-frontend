@@ -1,103 +1,34 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BadgeDollarSign, BedSingle, Filter, MapPin, Search, UsersRound } from "lucide-react";
+import { BadgeDollarSign, BedSingle, Filter, MapPin, SlidersHorizontal, UsersRound } from "lucide-react";
 import { fetchPublicListings, resolveListingImageUrl } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import { fetchProfile } from "../api/services/user";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Pagination from "../components/Pagination";
+import { AREA_OPTIONS, matchAreaRange, matchPriceRange, PRICE_OPTIONS } from "./listingRangeOptions";
 
 export default function PublicListingsPage() {
   const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [searchInput, setSearchInput] = useState("");
   const [districtInput, setDistrictInput] = useState("all");
   const [priceInput, setPriceInput] = useState("all");
   const [areaInput, setAreaInput] = useState("all");
-  const [appliedSearch, setAppliedSearch] = useState("");
   const [appliedDistrict, setAppliedDistrict] = useState("all");
   const [appliedPrice, setAppliedPrice] = useState("all");
   const [appliedArea, setAppliedArea] = useState("all");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 9;
 
-  const priceOptions = [
-    { id: "all", label: "Tất cả" },
-    { id: "under_1m", label: "Dưới 1 triệu" },
-    { id: "1m_2m", label: "Từ 1 - 2 triệu" },
-    { id: "2m_3m", label: "Từ 2 - 3 triệu" },
-    { id: "3m_5m", label: "Từ 3 - 5 triệu" },
-    { id: "5m_7m", label: "Từ 5 - 7 triệu" },
-    { id: "7m_10m", label: "Từ 7 - 10 triệu" },
-    { id: "10m_15m", label: "Từ 10 - 15 triệu" },
-    { id: "over_15m", label: "Trên 15 triệu" },
-  ];
-
-  const areaOptions = [
-    { id: "all", label: "Tất cả" },
-    { id: "under_20", label: "Dưới 20 m2" },
-    { id: "20_30", label: "Từ 20 - 30m2" },
-    { id: "30_50", label: "Từ 30 - 50m2" },
-    { id: "50_70", label: "Từ 50 - 70m2" },
-    { id: "70_90", label: "Từ 70 - 90m2" },
-    { id: "over_90", label: "Trên 90m2" },
-  ];
-
   const districtOptions = useMemo(() => {
     const districts = Array.from(new Set(listings.map((item) => item.district).filter(Boolean)));
     return ["all", ...districts];
   }, [listings]);
 
-  const matchPriceRange = (price: number, range: string) => {
-    switch (range) {
-      case "under_1m":
-        return price < 1_000_000;
-      case "1m_2m":
-        return price >= 1_000_000 && price < 2_000_000;
-      case "2m_3m":
-        return price >= 2_000_000 && price < 3_000_000;
-      case "3m_5m":
-        return price >= 3_000_000 && price < 5_000_000;
-      case "5m_7m":
-        return price >= 5_000_000 && price < 7_000_000;
-      case "7m_10m":
-        return price >= 7_000_000 && price < 10_000_000;
-      case "10m_15m":
-        return price >= 10_000_000 && price < 15_000_000;
-      case "over_15m":
-        return price >= 15_000_000;
-      default:
-        return true;
-    }
-  };
-
-  const matchAreaRange = (area: number | null | undefined, range: string) => {
-    if (range === "all") return true;
-    if (!area) return false;
-
-    switch (range) {
-      case "under_20":
-        return area < 20;
-      case "20_30":
-        return area >= 20 && area < 30;
-      case "30_50":
-        return area >= 30 && area < 50;
-      case "50_70":
-        return area >= 50 && area < 70;
-      case "70_90":
-        return area >= 70 && area < 90;
-      case "over_90":
-        return area >= 90;
-      default:
-        return true;
-    }
-  };
-
   const handleApplyFilters = () => {
-    setAppliedSearch(searchInput.trim());
     setAppliedDistrict(districtInput);
     setAppliedPrice(priceInput);
     setAppliedArea(areaInput);
@@ -144,12 +75,10 @@ export default function PublicListingsPage() {
   }, []);
 
   const filteredListings = listings.filter((item) => {
-    const searchableText = `${item.title} ${item.description} ${item.city} ${item.district} ${item.ward} ${item.address}`.toLowerCase();
-    const matchesSearch = searchableText.includes(appliedSearch.toLowerCase());
     const matchesDistrict = appliedDistrict === "all" ? true : item.district === appliedDistrict;
     const matchesPrice = matchPriceRange(item.rentPrice, appliedPrice);
     const matchesArea = matchAreaRange(item.roomAreaSqm, appliedArea);
-    return matchesSearch && matchesDistrict && matchesPrice && matchesArea;
+    return matchesDistrict && matchesPrice && matchesArea;
   });
 
   const totalPages = Math.ceil(filteredListings.length / PAGE_SIZE);
@@ -168,15 +97,12 @@ export default function PublicListingsPage() {
             <h1 className="mt-2 text-3xl font-extrabold text-slate-900">Phòng ở ghép nổi bật</h1>
             <p className="mt-1 text-sm text-slate-500">Khám phá các phòng ở ghép đã qua duyệt uy tín trên toàn quốc.</p>
           </div>
-          <div className="w-full max-w-sm">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Tìm kiếm khu vực, quận huyện, tên phòng..."
-              className="w-full rounded-full border border-orange-100 bg-white px-5 py-2.5 text-sm shadow-sm outline-none focus:border-orange-300 transition-all"
-            />
-          </div>
+          <button
+            onClick={() => navigate("/soft-filter")}
+            className="inline-flex items-center gap-2 rounded-full bg-[#ff6a3d] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#e65a2f]"
+          >
+            <SlidersHorizontal className="h-4 w-4" /> Bộ lọc mềm
+          </button>
         </header>
 
         {/* Filters */}
@@ -207,7 +133,7 @@ export default function PublicListingsPage() {
                 onChange={(e) => setPriceInput(e.target.value)}
                 className="mt-1.5 w-full rounded-2xl border border-orange-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-300"
               >
-                {priceOptions.map((option) => (
+                {PRICE_OPTIONS.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}
                   </option>
@@ -222,7 +148,7 @@ export default function PublicListingsPage() {
                 onChange={(e) => setAreaInput(e.target.value)}
                 className="mt-1.5 w-full rounded-2xl border border-orange-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-300"
               >
-                {areaOptions.map((option) => (
+                {AREA_OPTIONS.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}
                   </option>
@@ -235,8 +161,8 @@ export default function PublicListingsPage() {
                 onClick={handleApplyFilters}
                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-[#e65a2f]"
               >
-                <Search className="h-4 w-4" />
-                Tìm kiếm
+                <Filter className="h-4 w-4" />
+                Áp dụng lọc
               </button>
             </div>
           </div>
