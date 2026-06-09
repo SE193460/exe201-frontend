@@ -58,7 +58,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="border-b border-orange-100 bg-white/70 backdrop-blur">
+    <header className="relative z-40 border-b border-orange-100 bg-white/70 backdrop-blur">
       <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between px-6 py-4">
         <div className="flex items-center gap-6">
           <button
