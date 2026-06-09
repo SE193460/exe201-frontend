@@ -7,6 +7,16 @@ import UserShell from "../layouts/UserShell";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "./listingFormOptions";
 import type { Listing } from "../api/services/listings";
 
+function formatCurrencyInput(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return Number(digits).toLocaleString("vi-VN");
+}
+
+function parseCurrencyInput(value: string) {
+  return Number(value.replace(/\D/g, ""));
+}
+
 export default function EditListingPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -51,7 +61,7 @@ export default function EditListingPage() {
         setForm({
           title: data.title,
           description: data.description,
-          rentPrice: String(data.rentPrice || ""),
+          rentPrice: data.rentPrice ? formatCurrencyInput(String(data.rentPrice)) : "",
           city: data.city || CITY_OPTIONS[0] || "",
           district: data.district || DISTRICT_OPTIONS[0] || "",
           ward: data.ward || WARD_OPTIONS[data.district || ""]?.[0] || "",
@@ -142,7 +152,7 @@ export default function EditListingPage() {
       return;
     }
 
-    const rentPrice = Number(form.rentPrice);
+    const rentPrice = parseCurrencyInput(form.rentPrice);
     if (Number.isNaN(rentPrice) || rentPrice <= 0) {
       setError("Giá thuê không hợp lệ.");
       return;
@@ -203,6 +213,11 @@ export default function EditListingPage() {
 
         {status && <p className="mt-4 rounded-lg bg-green-50 px-4 py-2 text-sm text-green-700">{status}</p>}
         {error && <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>}
+        {listing?.status === "APPROVED" && (
+          <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
+            Bài đăng này đang ở trạng thái đã duyệt. Khi lưu chỉnh sửa, bài sẽ tạm ẩn khỏi trang công khai và chuyển về chờ admin duyệt lại.
+          </p>
+        )}
 
         {listing && listing.images.length > 0 && (
           <div className="mt-6 rounded-[22px] border border-orange-100 bg-orange-50/40 px-5 py-4">
@@ -319,11 +334,12 @@ export default function EditListingPage() {
           <label className="block text-sm font-medium text-slate-700">
             Giá thuê (VND)
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={form.rentPrice}
-              onChange={(event) => handleChange("rentPrice", event.target.value)}
+              onChange={(event) => handleChange("rentPrice", formatCurrencyInput(event.target.value))}
               className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-              placeholder="3000000"
+              placeholder="3.000.000"
             />
           </label>
 
