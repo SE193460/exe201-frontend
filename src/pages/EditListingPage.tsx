@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getMyListingDetail, updateMyListing, uploadListingImages, resolveListingImageUrl, deleteListingImage } from "../api/services/listings";
 import { fetchAmenities } from "../api/services/amenities";
+import { fetchProfile, updateProfile } from "../api/services/user";
 import type { Amenity } from "../api/services/amenities";
 import UserShell from "../layouts/UserShell";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "./listingFormOptions";
@@ -28,9 +29,11 @@ export default function EditListingPage() {
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [userFullName, setUserFullName] = useState("");
   const [form, setForm] = useState({
     title: "",
     description: "",
+    phoneNumber: "",
     rentPrice: "",
     city: CITY_OPTIONS[0] || "",
     district: DISTRICT_OPTIONS[0] || "",
@@ -53,6 +56,10 @@ export default function EditListingPage() {
   }, []);
 
   useEffect(() => {
+    fetchProfile().then((p) => setUserFullName(p.fullName)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!id) return;
     getMyListingDetail(id)
       .then((data) => {
@@ -61,6 +68,7 @@ export default function EditListingPage() {
         setForm({
           title: data.title,
           description: data.description,
+          phoneNumber: data.ownerPhone || "",
           rentPrice: data.rentPrice ? formatCurrencyInput(String(data.rentPrice)) : "",
           city: data.city || CITY_OPTIONS[0] || "",
           district: data.district || DISTRICT_OPTIONS[0] || "",
@@ -188,6 +196,10 @@ export default function EditListingPage() {
         await uploadListingImages(updated.id, imageFiles);
       }
 
+      if (form.phoneNumber && userFullName) {
+        await updateProfile({ fullName: userFullName, phoneNumber: form.phoneNumber }).catch(() => {});
+      }
+
       setStatus("Cập nhật bài đăng thành công.");
       navigate(`/my-listings/${updated.id}`);
     } catch {
@@ -267,6 +279,17 @@ export default function EditListingPage() {
               onChange={(event) => handleChange("description", event.target.value)}
               className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
               placeholder="Mô tả chi tiết về phòng, tiện ích, yêu cầu người ở ghép..."
+            />
+          </label>
+
+          <label className="block text-sm font-medium text-slate-700 md:col-span-2">
+            Số điện thoại liên hệ
+            <input
+              type="tel"
+              value={form.phoneNumber}
+              onChange={(event) => handleChange("phoneNumber", event.target.value)}
+              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+              placeholder="0912345678"
             />
           </label>
 

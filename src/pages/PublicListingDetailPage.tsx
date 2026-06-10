@@ -417,16 +417,16 @@ export default function PublicListingDetailPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <a href={`tel:${listing.ownerPhone || "0966883171"}`}
+                    <a href={`tel:${listing.ownerPhone || ""}`}
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-2.5 text-sm font-bold shadow-sm transition">
                       <Phone className="h-4 w-4" />
-                      {listing.ownerPhone || "0966883171"}
+                      {listing.ownerPhone || "Chưa có SĐT"}
                     </a>
-                    <a href={`https://zalo.me/${listing.ownerPhone || "0966883171"}`} target="_blank" rel="noopener noreferrer"
+                    {listing.ownerPhone && <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer"
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition">
                       <MessageCircle className="h-4 w-4" />
                       Nhắn Zalo
-                    </a>
+                    </a>}
                   </div>
                 </div>
               )}
@@ -513,16 +513,16 @@ export default function PublicListingDetailPage() {
                   </div>
                   <hr className="border-orange-50" />
                   <div className="space-y-3">
-                    <a href={`tel:${listing.ownerPhone || "0966883171"}`}
+                    <a href={`tel:${listing.ownerPhone || ""}`}
                       className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-3 text-base font-black shadow-md shadow-orange-100 transition">
                       <Phone className="h-4 w-4" />
-                      {listing.ownerPhone || "0966883171"}
+                      {listing.ownerPhone || "Chưa có SĐT"}
                     </a>
-                    <a href={`https://zalo.me/${listing.ownerPhone || "0966883171"}`} target="_blank" rel="noopener noreferrer"
+                    {listing.ownerPhone && <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer"
                       className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-base font-bold shadow-md shadow-blue-100 transition">
                       <MessageCircle className="h-4 w-4" />
                       Nhắn Zalo
-                    </a>
+                    </a>}
                   </div>
                 </div>
               )}
