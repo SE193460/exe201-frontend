@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createMyListingDraft, uploadListingImages } from "../api/services/listings";
 import { fetchAmenities, type Amenity } from "../api/services/amenities";
-import { fetchProfile } from "../api/services/user";
+import { fetchProfile, updateProfile } from "../api/services/user";
 import UserShell from "../layouts/UserShell";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "./listingFormOptions";
 
@@ -25,6 +25,7 @@ export default function CreateListingPage() {
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [userFullName, setUserFullName] = useState("");
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -71,8 +72,11 @@ export default function CreateListingPage() {
     let isMounted = true;
     fetchProfile()
       .then((profile) => {
-        if (!isMounted || !profile.phoneNumber) return;
-        setForm((prev) => ({ ...prev, phoneNumber: prev.phoneNumber || profile.phoneNumber || "" }));
+        if (!isMounted) return;
+        setUserFullName(profile.fullName);
+        if (profile.phoneNumber) {
+          setForm((prev) => ({ ...prev, phoneNumber: prev.phoneNumber || profile.phoneNumber || "" }));
+        }
       })
       .catch(() => {
         // Ignore profile prefill failures; listing form can still be used.
@@ -161,6 +165,10 @@ export default function CreateListingPage() {
 
       if (imageFiles.length > 0) {
         await uploadListingImages(listing.id, imageFiles);
+      }
+
+      if (form.phoneNumber && userFullName) {
+        await updateProfile({ fullName: userFullName, phoneNumber: form.phoneNumber }).catch(() => {});
       }
 
       setStatus("Tạo bài đăng thành công. Bài đang ở trạng thái bản nháp.");

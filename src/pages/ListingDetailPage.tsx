@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Camera, CircleCheck, CircleX, Info, Mail, MapPinned, MessageCircle, Phone, ShieldCheck } from "lucide-react";
+import { Camera, CircleCheck, CircleX, Mail, MapPinned, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { getMyListingDetail, resolveListingImageUrl, submitMyListingForApproval } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
@@ -344,6 +344,13 @@ export default function ListingDetailPage() {
                     ></iframe>
                   </div>
                 </div>
+
+                {/* Notice Box */}
+                <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
+                  <p className="font-bold text-slate-700 text-center">💡 Lưu ý quan trọng:</p>
+                  <p>• Chỉ đặt cọc giữ chỗ khi đã xác thực danh tính chủ nhà và có thỏa thuận biên nhận rõ ràng.</p>
+                  <p>• Kiểm tra kỹ điều khoản hợp đồng trước khi thực hiện ký kết.</p>
+                </div>
               </div>
 
               {/* Mobile Contact Info Card (renders at the end, hidden on desktop) */}
@@ -363,21 +370,21 @@ export default function ListingDetailPage() {
                 
                 <div className="flex gap-2">
                   <a
-                    href={`tel:${listing.ownerPhone || "0966883171"}`}
+                    href={`tel:${listing.ownerPhone || ""}`}
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-2.5 text-sm font-bold shadow-sm transition text-center"
                   >
                     <Phone className="h-4 w-4" />
-                    {listing.ownerPhone || "0966883171"}
+                    {listing.ownerPhone || "Chưa có SĐT"}
                   </a>
-                  <a
-                    href={`https://zalo.me/${listing.ownerPhone || "0966883171"}`}
+                  {listing.ownerPhone && <a
+                    href={`https://zalo.me/${listing.ownerPhone}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition text-center"
                   >
                     <MessageCircle className="h-4 w-4" />
                     Nhắn Zalo
-                  </a>
+                  </a>}
                 </div>
               </div>
             </div>
@@ -409,29 +416,22 @@ export default function ListingDetailPage() {
 
                 <div className="space-y-3">
                   <a
-                    href={`tel:${listing.ownerPhone || "0966883171"}`}
+                    href={`tel:${listing.ownerPhone || ""}`}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-3 text-base font-black shadow-md shadow-orange-100 transition"
                   >
                     <Phone className="h-4 w-4" />
-                    {listing.ownerPhone || "0966883171"}
+                    {listing.ownerPhone || "Chưa có SĐT"}
                   </a>
-                  <a
-                    href={`https://zalo.me/${listing.ownerPhone || "0966883171"}`}
+                  {listing.ownerPhone && <a
+                    href={`https://zalo.me/${listing.ownerPhone}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-base font-bold shadow-md shadow-blue-100 transition"
                   >
                     <MessageCircle className="h-4 w-4" />
                     Nhắn Zalo
-                  </a>
-                </div>
-
-                {/* Notice Box */}
-                <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-600 leading-relaxed">
-                  <p className="inline-flex w-full items-center justify-center gap-1.5 font-bold text-slate-700 text-center"><Info className="h-3.5 w-3.5" />Lưu ý quan trọng:</p>
-                  <p>• Chỉ đặt cọc giữ chỗ khi đã xác thực danh tính chủ nhà và có thỏa thuận biên nhận rõ ràng.</p>
-                  <p>• Kiểm tra kỹ điều khoản hợp đồng trước khi thực hiện ký kết.</p>
-                </div>
+                  </a>}
+                </div>  
               </div>
             </aside>
           </div>

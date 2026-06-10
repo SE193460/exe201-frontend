@@ -23,6 +23,19 @@ const quickLinks = [
     path: "/admin/amenities",
     accent: "bg-rose-100 text-rose-700",
   },
+  {
+    title: "Quản lý thanh toán",
+    description: "Xem lịch sử giao dịch và thanh toán",
+    path: "/admin/payments",
+    accent: "bg-blue-100 text-blue-700"
+  },
+
+  {
+    title: "Báo cáo hệ thống",
+    description: "Xem danh sách báo cáo từ người dùng",
+    path: "/admin/reports",
+    accent: "bg-red-100 text-red-700"
+  }
 ];
 
 export default function AdminDashboardPage() {
