@@ -204,12 +204,9 @@ hover:bg-orange-50
 
                                         <td>
 
-                                            {
-                                                new Date(
+                                            {new Date(
                                                     item.created_at
-                                                )
-                                                    .toLocaleDateString("vi-VN")
-                                            }
+                                                ).toLocaleString()}
 
                                         </td>
 

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-export type AdminSidebarKey = "dashboard" | "users" | "listings" | "imported-listings" | "amenities";
+export type AdminSidebarKey = "dashboard" | "users" | "listings" | "imported-listings" | "amenities" | "payments" | "reports";
 
 type SidebarProps = {
   activeKey: AdminSidebarKey;
@@ -13,6 +13,8 @@ const navItems: Array<{ key: AdminSidebarKey; label: string; path: string }> = [
   { key: "listings", label: "Quản lý bài đăng", path: "/admin/listings" },
   { key: "imported-listings", label: "Quản lý nguồn bài đăng", path: "/admin/imported-listings" },
   { key: "amenities", label: "Quản lý tiện nghi", path: "/admin/amenities" },
+  { key: "payments", label: "Quản lý thanh toán", path: "/admin/payments" },
+  { key: "reports", label: "Báo cáo hệ thống", path: "/admin/reports" },
 ];
 
 export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
