@@ -13,6 +13,8 @@ import EditListingPage from "./pages/EditListingPage";
 import PublicListingsPage from "./pages/PublicListingsPage";
 import PublicListingDetailPage from "./pages/PublicListingDetailPage";
 import AdminImportedListingsPage from "./pages/admin/AdminImportedListingsPage";
+import LifestyleProfilePage from "./pages/LifestyleProfilePage";
+import SoftFilterPage from "./pages/SoftFilterPage";
 import PaymentPackages from "./pages/PaymentPackages";
 import PaymentHistory from "./pages/PaymentHistory";
 import AdminPayments from "./pages/admin/AdminPayments";
@@ -25,6 +27,8 @@ export default function App() {
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/home" element={<Navigate to="/" replace />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/profile/lifestyle" element={<LifestyleProfilePage />} />
+      <Route path="/soft-filter" element={<SoftFilterPage />} />
       <Route path="/my-listings" element={<MyListingsPage />} />
       <Route path="/my-listings/new" element={<CreateListingPage />} />
       <Route path="/my-listings/:id/edit" element={<EditListingPage />} />

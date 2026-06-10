@@ -2,8 +2,19 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createMyListingDraft, uploadListingImages } from "../api/services/listings";
 import { fetchAmenities, type Amenity } from "../api/services/amenities";
+import { fetchProfile } from "../api/services/user";
 import UserShell from "../layouts/UserShell";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "./listingFormOptions";
+
+function formatCurrencyInput(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return Number(digits).toLocaleString("vi-VN");
+}
+
+function parseCurrencyInput(value: string) {
+  return Number(value.replace(/\D/g, ""));
+}
 
 export default function CreateListingPage() {
   const navigate = useNavigate();
@@ -17,6 +28,7 @@ export default function CreateListingPage() {
   const [form, setForm] = useState({
     title: "",
     description: "",
+    phoneNumber: "",
     rentPrice: "",
     city: CITY_OPTIONS[0] || "",
     district: DISTRICT_OPTIONS[0] || "",
@@ -50,6 +62,22 @@ export default function CreateListingPage() {
         if (!isMounted) return;
         setAmenitiesError("Khong the tai danh sach tien nghi.");
       });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchProfile()
+      .then((profile) => {
+        if (!isMounted || !profile.phoneNumber) return;
+        setForm((prev) => ({ ...prev, phoneNumber: prev.phoneNumber || profile.phoneNumber || "" }));
+      })
+      .catch(() => {
+        // Ignore profile prefill failures; listing form can still be used.
+      });
+
     return () => {
       isMounted = false;
     };
@@ -94,9 +122,14 @@ export default function CreateListingPage() {
       return;
     }
 
-    const rentPrice = Number(form.rentPrice);
+    const rentPrice = parseCurrencyInput(form.rentPrice);
     if (Number.isNaN(rentPrice) || rentPrice <= 0) {
       setError("Giá thuê không hợp lệ.");
+      return;
+    }
+
+    if (form.phoneNumber && !/^(\+?\d[\d\s.-]{7,20})$/.test(form.phoneNumber)) {
+      setError("Số điện thoại không hợp lệ.");
       return;
     }
 
@@ -179,6 +212,18 @@ export default function CreateListingPage() {
             />
           </label>
 
+          <label className="block text-sm font-medium text-slate-700 md:col-span-2">
+            Số điện thoại liên hệ
+            <input
+              type="tel"
+              value={form.phoneNumber}
+              onChange={(event) => handleChange("phoneNumber", event.target.value)}
+              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+              placeholder="VD: 0901234567"
+            />
+            <p className="mt-1 text-xs text-slate-500">Tự động lấy từ hồ sơ cá nhân nếu bạn đã cập nhật trước đó.</p>
+          </label>
+
           <div className="md:col-span-2 rounded-[22px] border border-orange-100 bg-orange-50/40 px-5 py-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-orange-500">Vị trí</h2>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
@@ -243,11 +288,12 @@ export default function CreateListingPage() {
           <label className="block text-sm font-medium text-slate-700">
             Giá thuê (VND)
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={form.rentPrice}
-              onChange={(event) => handleChange("rentPrice", event.target.value)}
+              onChange={(event) => handleChange("rentPrice", formatCurrencyInput(event.target.value))}
               className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-              placeholder="3000000"
+              placeholder="3.000.000"
             />
           </label>
 

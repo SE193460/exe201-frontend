@@ -15,8 +15,19 @@ import { resolveListingImageUrl } from "../../api/services/listings";
 import { logout } from "../../api/services/auth";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "../listingFormOptions";
 import Pagination from "../../components/Pagination";
+import Sidebar from "../../components/Sidebar";
 
 type FormMode = "create" | "edit";
+
+function formatCurrencyInput(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return Number(digits).toLocaleString("vi-VN");
+}
+
+function parseCurrencyInput(value: string) {
+  return Number(value.replace(/\D/g, ""));
+}
 
 const emptyForm = () => ({
   title: "",
@@ -103,7 +114,7 @@ export default function AdminImportedListingsPage() {
     setForm({
       title: listing.title,
       description: listing.description,
-      rentPrice: String(listing.rentPrice),
+      rentPrice: Number(listing.rentPrice || 0).toLocaleString("vi-VN"),
       city: listing.city || CITY_OPTIONS[0],
       district: listing.district,
       ward: listing.ward || "",
@@ -134,7 +145,7 @@ export default function AdminImportedListingsPage() {
       setFormError("Vui lòng điền đầy đủ tiêu đề, mô tả, giá, quận/huyện và link nguồn.");
       return;
     }
-    const rentPrice = Number(form.rentPrice);
+    const rentPrice = parseCurrencyInput(form.rentPrice);
     if (Number.isNaN(rentPrice) || rentPrice <= 0) {
       setFormError("Giá thuê không hợp lệ.");
       return;
@@ -146,8 +157,8 @@ export default function AdminImportedListingsPage() {
 
     const urlLines = form.imageUrls
       .split("\n")
-      .map((u) => u.trim())
-      .filter((u) => u.startsWith("http://") || u.startsWith("https://"));
+        .map((u: string) => u.trim())
+        .filter((u: string) => u.startsWith("http://") || u.startsWith("https://"));
 
     const payload: CreateImportedListingPayload = {
       title: form.title,
@@ -220,27 +231,7 @@ export default function AdminImportedListingsPage() {
   return (
     <div className="min-h-screen bg-[#fff7f2] text-slate-800">
       <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
-
-        {/* Sidebar */}
-        <aside className="w-full max-w-[250px] rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)] flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-lg font-semibold">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ff6a3d] text-white">🏠</span>
-              RoomMate Admin
-            </div>
-            <div className="mt-8 space-y-2 text-sm font-semibold">
-              <button onClick={() => navigate("/home")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Trang chủ</button>
-              <button onClick={() => navigate("/admin/dashboard")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Dashboard</button>
-              <button onClick={() => navigate("/admin/users")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý người dùng</button>
-              <button onClick={() => navigate("/admin/listings")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý bài đăng</button>
-              <button className="w-full rounded-full bg-orange-100 px-4 py-2 text-left text-orange-700">Quản lý nguồn bài đăng</button>
-              <button onClick={() => navigate("/admin/amenities")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý tiện nghi</button>
-              <button onClick={() => navigate("/admin/payments")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý thanh toán</button>
-              <button onClick={() => navigate("/admin/reports")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý báo cáo</button>
-            </div>
-          </div>
-          <button onClick={handleLogout} className="w-full rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-orange-50">Đăng xuất</button>
-        </aside>
+        <Sidebar activeKey="imported-listings" onLogout={handleLogout} />
 
         {/* Main */}
         <main className="flex-1 min-w-0 space-y-6">
@@ -334,9 +325,9 @@ export default function AdminImportedListingsPage() {
 
                 <label className="block text-sm font-medium text-slate-700">
                   Giá thuê (VND) <span className="text-red-400">*</span>
-                  <input type="number" value={form.rentPrice} onChange={(e) => handleChange("rentPrice", e.target.value)}
+                  <input type="text" inputMode="numeric" value={form.rentPrice} onChange={(e) => handleChange("rentPrice", formatCurrencyInput(e.target.value))}
                     className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none focus:border-orange-300"
-                    placeholder="3000000" />
+                    placeholder="3.000.000" />
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">

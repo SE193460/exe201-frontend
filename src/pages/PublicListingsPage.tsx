@@ -1,21 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BadgeDollarSign, BedSingle, Filter, MapPin, SlidersHorizontal, UsersRound } from "lucide-react";
 import { fetchPublicListings, resolveListingImageUrl } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import { fetchProfile } from "../api/services/user";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Pagination from "../components/Pagination";
+import { AREA_OPTIONS, matchAreaRange, matchPriceRange, PRICE_OPTIONS } from "./listingRangeOptions";
 
 export default function PublicListingsPage() {
   const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState("all");
+  const [districtInput, setDistrictInput] = useState("all");
+  const [priceInput, setPriceInput] = useState("all");
+  const [areaInput, setAreaInput] = useState("all");
+  const [appliedDistrict, setAppliedDistrict] = useState("all");
+  const [appliedPrice, setAppliedPrice] = useState("all");
+  const [appliedArea, setAppliedArea] = useState("all");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 9;
+
+  const districtOptions = useMemo(() => {
+    const districts = Array.from(new Set(listings.map((item) => item.district).filter(Boolean)));
+    return ["all", ...districts];
+  }, [listings]);
+
+  const handleApplyFilters = () => {
+    setAppliedDistrict(districtInput);
+    setAppliedPrice(priceInput);
+    setAppliedArea(areaInput);
+    setPage(1);
+  };
 
   // Handle Google OAuth callback params
   useEffect(() => {
@@ -57,9 +75,10 @@ export default function PublicListingsPage() {
   }, []);
 
   const filteredListings = listings.filter((item) => {
-    const matchesSearch = `${item.title} ${item.description} ${item.city} ${item.district} ${item.ward} ${item.address}`.toLowerCase().includes(search.toLowerCase());
-    const matchesDistrict = selectedDistrict === "all" ? true : item.district === selectedDistrict;
-    return matchesSearch && matchesDistrict;
+    const matchesDistrict = appliedDistrict === "all" ? true : item.district === appliedDistrict;
+    const matchesPrice = matchPriceRange(item.rentPrice, appliedPrice);
+    const matchesArea = matchAreaRange(item.roomAreaSqm, appliedArea);
+    return matchesDistrict && matchesPrice && matchesArea;
   });
 
   const totalPages = Math.ceil(filteredListings.length / PAGE_SIZE);
@@ -73,49 +92,79 @@ export default function PublicListingsPage() {
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-              🔥 Danh sách phòng
+              <BedSingle className="h-3.5 w-3.5" /> Danh sách phòng
             </span>
             <h1 className="mt-2 text-3xl font-extrabold text-slate-900">Phòng ở ghép nổi bật</h1>
             <p className="mt-1 text-sm text-slate-500">Khám phá các phòng ở ghép đã qua duyệt uy tín trên toàn quốc.</p>
           </div>
-          <div className="w-full max-w-sm">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Tìm kiếm khu vực, quận huyện, tên phòng..."
-              className="w-full rounded-full border border-orange-100 bg-white px-5 py-2.5 text-sm shadow-sm outline-none focus:border-orange-300 transition-all"
-            />
-          </div>
+          <button
+            onClick={() => navigate("/soft-filter")}
+            className="inline-flex items-center gap-2 rounded-full bg-[#ff6a3d] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#e65a2f]"
+          >
+            <SlidersHorizontal className="h-4 w-4" /> Bộ lọc mềm
+          </button>
         </header>
 
-        {/* District Filter Buttons */}
+        {/* Filters */}
         <section className="bg-white rounded-3xl p-5 border border-orange-100 shadow-[0_15px_40px_-25px_rgba(255,115,0,0.25)]">
-          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            🗺️ Khu vực nổi bật
+          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+            <Filter className="h-4 w-4 text-orange-500" /> Bộ lọc tìm kiếm
           </h2>
-          <div className="flex flex-wrap gap-2.5">
-            {[
-              { id: "all", label: "Tất cả", desc: "Toàn thành phố" },
-              { id: "Quận 2", label: "Quận 2", desc: "Thảo Điền, An Phú..." },
-              { id: "Quận 9", label: "Quận 9", desc: "Phước Long, Hiệp Phú..." },
-              { id: "Thủ Đức", label: "Thủ Đức", desc: "Linh Trung, Tam Phú..." }
-            ].map((dist) => (
-              <button
-                key={dist.id}
-                onClick={() => { setSelectedDistrict(dist.id); setPage(1); }}
-                className={`flex-1 min-w-[120px] max-w-[200px] text-left p-3.5 rounded-2xl border transition ${
-                  selectedDistrict === dist.id
-                    ? "bg-gradient-to-br from-[#ff6a3d] to-[#ff8c64] border-[#ff6a3d] text-white shadow-lg shadow-orange-100"
-                    : "bg-orange-50/20 border-orange-100 hover:bg-orange-50/50 hover:border-orange-200 text-slate-700"
-                }`}
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <label className="text-sm font-semibold text-slate-600">
+              Khu vực
+              <select
+                value={districtInput}
+                onChange={(e) => setDistrictInput(e.target.value)}
+                className="mt-1.5 w-full rounded-2xl border border-orange-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-300"
               >
-                <p className="text-sm font-extrabold">{dist.label}</p>
-                <p className={`text-[10px] mt-1 ${selectedDistrict === dist.id ? "text-orange-100" : "text-slate-400"}`}>
-                  {dist.desc}
-                </p>
+                {districtOptions.map((district) => (
+                  <option key={district} value={district}>
+                    {district === "all" ? "Tất cả" : district}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-sm font-semibold text-slate-600">
+              Giá
+              <select
+                value={priceInput}
+                onChange={(e) => setPriceInput(e.target.value)}
+                className="mt-1.5 w-full rounded-2xl border border-orange-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-300"
+              >
+                {PRICE_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-sm font-semibold text-slate-600">
+              Diện tích
+              <select
+                value={areaInput}
+                onChange={(e) => setAreaInput(e.target.value)}
+                className="mt-1.5 w-full rounded-2xl border border-orange-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-300"
+              >
+                {AREA_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="flex items-end">
+              <button
+                onClick={handleApplyFilters}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-[#e65a2f]"
+              >
+                <Filter className="h-4 w-4" />
+                Áp dụng lọc
               </button>
-            ))}
+            </div>
           </div>
         </section>
 
@@ -167,7 +216,8 @@ export default function PublicListingsPage() {
                     <span className="absolute left-4 top-4 rounded-full bg-slate-900/75 backdrop-blur px-3 py-1 text-xs font-semibold text-white">
                       {listing.roomType || "Phòng ở ghép"}
                     </span>
-                    <span className="absolute right-4 top-4 rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
+                    <span className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
+                      <BadgeDollarSign className="h-3.5 w-3.5" />
                       {listing.rentPrice.toLocaleString("vi-VN")} đ/tháng
                     </span>
                   </div>
@@ -181,16 +231,18 @@ export default function PublicListingsPage() {
                     </p>
 
                     <div className="mt-4 flex items-center gap-1.5 text-xs text-slate-500">
-                      <span>📍</span>
+                      <MapPin className="h-3.5 w-3.5 text-orange-500" />
                       <span className="line-clamp-1">{location || "Chưa cập nhật địa chỉ"}</span>
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-orange-50 flex items-center justify-between text-xs text-slate-500">
-                      <span className="flex items-center gap-1">
-                        👥 {listing.currentOccupants || 0}/{listing.maxOccupants || 4} thành viên
+                      <span className="flex items-center gap-1.5">
+                        <UsersRound className="h-3.5 w-3.5 text-orange-500" />
+                        {listing.currentOccupants || 0}/{listing.maxOccupants || 4} thành viên
                       </span>
-                      <span className="flex items-center gap-1">
-                        📐 {listing.roomAreaSqm ? `${listing.roomAreaSqm} m²` : "Chưa rõ diện tích"}
+                      <span className="flex items-center gap-1.5">
+                        <BedSingle className="h-3.5 w-3.5 text-orange-500" />
+                        {listing.roomAreaSqm ? `${listing.roomAreaSqm} m²` : "Chưa rõ diện tích"}
                       </span>
                       <span className="rounded-full bg-orange-50 px-2 py-1 text-[10px] font-semibold text-orange-700">
                         {listing.preferredGender || "Mọi giới tính"}
