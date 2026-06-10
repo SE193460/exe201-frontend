@@ -22,6 +22,19 @@ const quickLinks = [
     path: "/admin/amenities",
     accent: "bg-rose-100 text-rose-700",
   },
+  {
+    title: "Quản lý thanh toán",
+    description: "Xem lịch sử giao dịch và thanh toán",
+    path: "/admin/payments",
+    accent: "bg-blue-100 text-blue-700"
+  },
+
+  {
+    title: "Báo cáo hệ thống",
+    description: "Xem danh sách báo cáo từ người dùng",
+    path: "/admin/reports",
+    accent: "bg-red-100 text-red-700"
+  }
 ];
 
 export default function AdminDashboardPage() {
@@ -134,6 +147,19 @@ export default function AdminDashboardPage() {
                 className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
               >
                 Quản lý tiện nghi
+              </button>
+              <button
+                onClick={() => navigate("/admin/payments")}
+                className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
+              >
+                Quản lý thanh toán
+              </button>
+
+              <button
+                onClick={() => navigate("/admin/reports")}
+                className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
+              >
+                Báo cáo
               </button>
             </div>
           </div>

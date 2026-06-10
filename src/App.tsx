@@ -13,6 +13,10 @@ import EditListingPage from "./pages/EditListingPage";
 import PublicListingsPage from "./pages/PublicListingsPage";
 import PublicListingDetailPage from "./pages/PublicListingDetailPage";
 import AdminImportedListingsPage from "./pages/admin/AdminImportedListingsPage";
+import PaymentPackages from "./pages/PaymentPackages";
+import PaymentHistory from "./pages/PaymentHistory";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminReportsPage from "./pages/admin/AdminReportsPage";
 
 export default function App() {
   return (
@@ -33,6 +37,10 @@ export default function App() {
       <Route path="/admin/amenities" element={<AdminAmenitiesPage />} />
       <Route path="/admin/imported-listings" element={<AdminImportedListingsPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/payment/:listingId" element={<PaymentPackages />}/>
+      <Route path="/payment-history" element={<PaymentHistory />} />
+      <Route path="/admin/payments" element={<AdminPayments />} />
+      <Route path="/admin/reports" element={<AdminReportsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -118,6 +118,13 @@ export default function Navbar() {
                     </button>
                     <div className="border-t border-orange-50" />
                     <button
+                      onClick={() => { setDropdownOpen(false); navigate("/payment-history"); }}
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-slate-700 hover:bg-orange-50 transition"
+                    >
+                      <span className="text-base">👤</span> Lịch sử thanh toán
+                    </button>
+                    <div className="border-t border-orange-50" />
+                    <button
                       onClick={handleLogout}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 transition"
                     >

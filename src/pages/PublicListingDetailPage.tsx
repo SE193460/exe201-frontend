@@ -4,6 +4,8 @@ import { fetchPublicListingDetail, resolveListingImageUrl } from "../api/service
 import type { Listing } from "../api/services/listings";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { submitReport } from "../api/services/reports";
+
 
 function formatDate(value: string | null) {
   if (!value) return "";
@@ -43,6 +45,11 @@ export default function PublicListingDetailPage() {
   const [selectedImgIdx, setSelectedImgIdx] = useState(0);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [mediaModalTab, setMediaModalTab] = useState<"images" | "map">("images");
+  const [showSave, setShowSave] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reason, setReason] =
+    useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -102,6 +109,40 @@ export default function PublicListingDetailPage() {
     };
   }, [isMediaModalOpen, mediaModalTab, listing]);
 
+  const handleSubmitReport = async () => {
+
+    if (!listing?.id) {
+      alert("Không tìm thấy bài đăng");
+      return;
+    }
+
+    try {
+
+      await submitReport({
+
+        listingId: listing.id,
+
+        reason
+
+      });
+
+      alert("Báo cáo thành công");
+
+      setShowReport(false);
+
+      setReason("");
+
+    }
+    catch (error) {
+
+      console.log(error);
+
+      alert("Không thể gửi báo cáo");
+
+    }
+
+  }
+
   return (
     <div className="min-h-screen bg-[#fff7f2] text-slate-800 flex flex-col">
       <Navbar />
@@ -151,7 +192,7 @@ export default function PublicListingDetailPage() {
                         className="h-full w-full object-cover select-none cursor-zoom-in"
                         onClick={() => openImageModal(selectedImgIdx)}
                       />
-                      
+
                       {listing.images.length > 1 && (
                         <>
                           {/* Prev Button */}
@@ -183,11 +224,10 @@ export default function PublicListingDetailPage() {
                           <button
                             key={image.id}
                             onClick={() => openImageModal(idx)}
-                            className={`h-16 w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition ${
-                              selectedImgIdx === idx
-                                ? "border-orange-500 shadow-md shadow-orange-100"
-                                : "border-transparent opacity-60 hover:opacity-100"
-                            }`}
+                            className={`h-16 w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition ${selectedImgIdx === idx
+                              ? "border-orange-500 shadow-md shadow-orange-100"
+                              : "border-transparent opacity-60 hover:opacity-100"
+                              }`}
                           >
                             <img
                               src={resolveListingImageUrl(image.imageUrl)}
@@ -267,10 +307,10 @@ export default function PublicListingDetailPage() {
                       <strong className="text-slate-800">{listing.preferredGender || "Không yêu cầu"}</strong>
                     </div>
                     {!listing.source && (
-                    <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-500">Số lượng:</span>
-                      <strong className="text-slate-800">{listing.currentOccupants || 0} / {listing.maxOccupants || 0} người</strong>
-                    </div>
+                      <div className="flex justify-between py-1.5 border-b border-slate-50">
+                        <span className="text-slate-500">Số lượng:</span>
+                        <strong className="text-slate-800">{listing.currentOccupants || 0} / {listing.maxOccupants || 0} người</strong>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -285,14 +325,14 @@ export default function PublicListingDetailPage() {
 
                 {/* Features Badges */}
                 {!listing.source && (
-                <div className="flex flex-wrap gap-2.5 pt-4 border-t border-slate-100">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold border ${listing.smokingAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
-                    {listing.smokingAllowed ? "✓ Cho phép hút thuốc" : "✗ Không hút thuốc"}
-                  </span>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold border ${listing.petAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
-                    {listing.petAllowed ? "✓ Nuôi thú cưng" : "✗ Không nuôi thú cưng"}
-                  </span>
-                </div>
+                  <div className="flex flex-wrap gap-2.5 pt-4 border-t border-slate-100">
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold border ${listing.smokingAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                      {listing.smokingAllowed ? "✓ Cho phép hút thuốc" : "✗ Không hút thuốc"}
+                    </span>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold border ${listing.petAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                      {listing.petAllowed ? "✓ Nuôi thú cưng" : "✗ Không nuôi thú cưng"}
+                    </span>
+                  </div>
                 )}
 
                 {/* Amenities */}
@@ -326,6 +366,12 @@ export default function PublicListingDetailPage() {
                       allowFullScreen
                     ></iframe>
                   </div>
+                </div>
+
+                <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
+                  <p className="font-bold text-slate-700 text-center">💡 Lưu ý quan trọng:</p>
+                  <p>• Chỉ đặt cọc giữ chỗ khi đã xác thực danh tính chủ nhà và có thỏa thuận biên nhận rõ ràng.</p>
+                  <p>• Kiểm tra kỹ điều khoản hợp đồng trước khi thực hiện ký kết.</p>
                 </div>
               </div>
 
@@ -361,6 +407,130 @@ export default function PublicListingDetailPage() {
                         className="flex-1 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition text-center">
                         💬 Nhắn Zalo
                       </a>
+                    </div>
+                    <div className="flex gap-3 justify-center mt-2">
+
+                      <button
+                        onClick={() => setShowSave(true)}
+                        className="rounded-full bg-orange-100 px-4 py-2"
+                      >
+                        💾 Lưu
+                      </button>
+
+                      <button
+                        onClick={() => setShowShare(true)}
+                        className="rounded-full bg-blue-100 px-4 py-2"
+                      >
+                        📤 Chia sẻ
+                      </button>
+
+                      <button
+                        onClick={handleSubmitReport}
+                        className="
+rounded-full
+bg-[#ff6a3d]
+px-5
+py-2
+text-white
+"
+                      >
+
+                        Gửi báo cáo
+
+                      </button>
+                      {showReport && (
+
+                        <div
+                          className="
+fixed
+inset-0
+bg-black/50
+flex
+items-center
+justify-center
+"
+                        >
+
+                          <div
+                            className="
+w-[500px]
+rounded-[24px]
+bg-white
+p-6
+"
+                          >
+
+                            <h2
+                              className="
+text-xl
+font-bold
+"
+                            >
+
+                              Báo cáo bài đăng
+
+                            </h2>
+
+                            <textarea
+
+                              value={reason}
+
+                              onChange={(e) =>
+                                setReason(e.target.value)
+                              }
+
+                              className="
+mt-4
+w-full
+rounded-xl
+border
+p-4
+"
+
+                              placeholder="
+Nhập lý do báo cáo...
+"
+                            />
+
+                            <div
+                              className="
+mt-6
+flex
+justify-end
+gap-3
+"
+                            >
+
+                              <button
+                                onClick={() => setShowReport(false)}
+                              >
+
+                                Huỷ
+
+                              </button>
+
+                              <button
+                                onClick={handleSubmitReport}
+                                className="
+rounded-full
+bg-[#ff6a3d]
+px-5
+py-2
+text-white
+"
+                              >
+
+                                Gửi báo cáo
+
+                              </button>
+
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                      )}
                     </div>
                   </div>
                 )}
@@ -432,11 +602,37 @@ export default function PublicListingDetailPage() {
                       💬 Nhắn Zalo
                     </a>
                   </div>
+                  <div className="flex gap-3 justify-center mt-2">
 
-                  <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
-                    <p className="font-bold text-slate-700 text-center">💡 Lưu ý quan trọng:</p>
-                    <p>• Chỉ đặt cọc giữ chỗ khi đã xác thực danh tính chủ nhà và có thỏa thuận biên nhận rõ ràng.</p>
-                    <p>• Kiểm tra kỹ điều khoản hợp đồng trước khi thực hiện ký kết.</p>
+                    <button
+                      onClick={() => setShowSave(true)}
+                      className="rounded-full bg-orange-100 px-4 py-2"
+                    >
+                      💾 Lưu
+                    </button>
+
+                    <button
+                      onClick={() => setShowShare(true)}
+                      className="rounded-full bg-blue-100 px-4 py-2"
+                    >
+                      📤 Chia sẻ
+                    </button>
+
+                    <button
+                      onClick={handleSubmitReport}
+                      className="
+rounded-full
+bg-[#ff6a3d]
+px-5
+py-2
+text-white
+"
+                    >
+
+                      Gửi báo cáo
+
+                    </button>
+
                   </div>
                 </div>
               )}
@@ -459,21 +655,19 @@ export default function PublicListingDetailPage() {
               <div className="flex items-center gap-2 rounded-xl bg-slate-800 p-1">
                 <button
                   onClick={() => setMediaModalTab("images")}
-                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                    mediaModalTab === "images"
-                      ? "bg-white text-slate-900"
-                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                  }`}
+                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${mediaModalTab === "images"
+                    ? "bg-white text-slate-900"
+                    : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                    }`}
                 >
                   Hình ảnh
                 </button>
                 <button
                   onClick={() => setMediaModalTab("map")}
-                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                    mediaModalTab === "map"
-                      ? "bg-white text-slate-900"
-                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                  }`}
+                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${mediaModalTab === "map"
+                    ? "bg-white text-slate-900"
+                    : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                    }`}
                 >
                   Bản đồ
                 </button>
@@ -526,11 +720,10 @@ export default function PublicListingDetailPage() {
                         <button
                           key={image.id}
                           onClick={() => setSelectedImgIdx(idx)}
-                          className={`h-16 w-24 flex-shrink-0 overflow-hidden rounded-lg border-2 transition ${
-                            selectedImgIdx === idx
-                              ? "border-orange-500"
-                              : "border-transparent opacity-70 hover:opacity-100"
-                          }`}
+                          className={`h-16 w-24 flex-shrink-0 overflow-hidden rounded-lg border-2 transition ${selectedImgIdx === idx
+                            ? "border-orange-500"
+                            : "border-transparent opacity-70 hover:opacity-100"
+                            }`}
                         >
                           <img
                             src={resolveListingImageUrl(image.imageUrl)}
@@ -560,6 +753,51 @@ export default function PublicListingDetailPage() {
       )}
 
       <Footer />
+      {showSave && (
+        <div className="fixed inset-0 bg-black/50">
+
+          <div className="bg-white p-6 rounded">
+
+            <h2>Đã lưu bài đăng</h2>
+
+            <button onClick={() => setShowSave(false)}>
+              Đóng
+            </button>
+
+          </div>
+
+        </div>
+      )}
+      {showShare && (
+        <div className="fixed inset-0 bg-black/50">
+
+          <div className="bg-white p-6 rounded">
+
+            <h2>Chia sẻ bài đăng</h2>
+
+            <button onClick={() => setShowShare(false)}>
+              Đóng
+            </button>
+
+          </div>
+
+        </div>
+      )}
+      {showReport && (
+        <div className="fixed inset-0 bg-black/50">
+
+          <div className="bg-white p-6 rounded">
+
+            <h2>Báo cáo bài đăng</h2>
+
+            <button onClick={() => setShowReport(false)}>
+              Đóng
+            </button>
+
+          </div>
+
+        </div>
+      )}
     </div>
   );
 }

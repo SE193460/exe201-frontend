@@ -235,6 +235,8 @@ export default function AdminImportedListingsPage() {
               <button onClick={() => navigate("/admin/listings")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý bài đăng</button>
               <button className="w-full rounded-full bg-orange-100 px-4 py-2 text-left text-orange-700">Quản lý nguồn bài đăng</button>
               <button onClick={() => navigate("/admin/amenities")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý tiện nghi</button>
+              <button onClick={() => navigate("/admin/payments")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý thanh toán</button>
+              <button onClick={() => navigate("/admin/reports")} className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50">Quản lý báo cáo</button>
             </div>
           </div>
           <button onClick={handleLogout} className="w-full rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-orange-50">Đăng xuất</button>

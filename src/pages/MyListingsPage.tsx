@@ -115,7 +115,31 @@ export default function MyListingsPage() {
                       <span>Khu vực: {location || "Chưa cập nhật"}</span>
                       <span>Tạo: {formatDate(listing.createdAt)}</span>
                     </div>
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigate(`/payment/${listing.id}`)
+                        }}
+                        className="
+                            rounded-full
+                            bg-[#ff6a3d]
+                            px-5
+                            py-2
+                            text-white
+                            font-bold
+                            hover:bg-[#e55d35]
+                            transition                     
+                        "
+                        >
+
+                        🚀 Đẩy bài đăng
+
+                      </button>
+                    </div>
                   </div>
+
                 </div>
               </button>
             );
