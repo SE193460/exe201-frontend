@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/services/auth";
 
@@ -10,7 +10,6 @@ import {
 
 export default function AdminPayments() {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [payments, setPayments] =
         useState<PaymentTransaction[]>([]);
@@ -23,10 +22,19 @@ export default function AdminPayments() {
 
     const loadData = async () => {
 
-        const data =
-            await fetchAllPaymentHistory();
+        try {
 
-        setPayments(data);
+            const data =
+                await fetchAllPaymentHistory();
+
+            setPayments(data);
+
+        }
+        catch {
+
+            setError("Không tải được lịch sử giao dịch");
+
+        }
 
     }
 

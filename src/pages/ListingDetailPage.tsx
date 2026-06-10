@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Camera, CircleCheck, CircleX, Info, Mail, MapPinned, MessageCircle, Phone, ShieldCheck } from "lucide-react";
+import { Camera, CircleCheck, CircleX, Mail, MapPinned, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { getMyListingDetail, resolveListingImageUrl, submitMyListingForApproval } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";

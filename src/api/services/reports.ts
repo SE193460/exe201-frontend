@@ -4,7 +4,7 @@ export type Report = {
 
     id:string;
 
-    listingId?:string;
+    listingId:string;
 
     reason:string;
 
@@ -12,15 +12,19 @@ export type Report = {
 
     status:string;
 
-    created_at:string;
+    createdAt:string;
 
     reporterName?:string|null;
 
     reporterEmail?:string|null;
 
+    reporterId?:string|null;
+
     listingTitle?:string|null;
 
     listingOwner?:string|null;
+
+    listingOwnerId?:string|null;
 
 }
 
@@ -42,4 +46,13 @@ export async function fetchAllReports() {
   );
 
   return response.data as Report[];
+}
+
+export async function resolveReport(reportId: string, status: "RESOLVED" | "DISMISSED") {
+  const response = await axiosInstance.patch(
+    `/api/reports/admin/${reportId}/status`,
+    { status }
+  );
+
+  return response.data as { message: string };
 }

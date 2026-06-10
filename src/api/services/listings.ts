@@ -32,6 +32,10 @@ export type Listing = {
   ownerPhone?: string | null;
   ownerAvatar?: string | null;
   ownerEmail?: string | null;
+  ownerCreatedAt?: string | null;
+  ownerLastActive?: string | null;
+  ownerListingsCount?: number;
+  isSaved?: boolean;
   source?: string | null;
 };
 
@@ -126,5 +130,20 @@ export async function deleteListingImage(listingId: string, imageId: string) {
 export async function addListingImageUrls(listingId: string, urls: string[]) {
   const response = await axiosInstance.post(`/api/users/me/listings/${listingId}/images/urls`, { urls });
   return response.data as { listingId: string; images: ListingImage[] };
+}
+
+export async function toggleSaveListing(listingId: string) {
+  const response = await axiosInstance.post(`/api/listings/${listingId}/save`);
+  return response.data as { isSaved: boolean };
+}
+
+export async function fetchSavedListings() {
+  const response = await axiosInstance.get("/api/listings/saved");
+  return response.data as Listing[];
+}
+
+export async function reportListing(listingId: string, payload: { reason: string; description?: string | null }) {
+  const response = await axiosInstance.post(`/api/listings/${listingId}/report`, payload);
+  return response.data as { message: string; report: unknown };
 }
 

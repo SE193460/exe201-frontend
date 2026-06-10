@@ -16,6 +16,7 @@ import AdminImportedListingsPage from "./pages/admin/AdminImportedListingsPage";
 import LifestyleProfilePage from "./pages/LifestyleProfilePage";
 import SoftFilterPage from "./pages/SoftFilterPage";
 import PaymentPackages from "./pages/PaymentPackages";
+import SavedListingsPage from "./pages/SavedListingsPage";
 import PaymentHistory from "./pages/PaymentHistory";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminReportsPage from "./pages/admin/AdminReportsPage";
@@ -41,6 +42,7 @@ export default function App() {
       <Route path="/admin/amenities" element={<AdminAmenitiesPage />} />
       <Route path="/admin/imported-listings" element={<AdminImportedListingsPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/saved-listings" element={<SavedListingsPage />} />
       <Route path="/payment/:listingId" element={<PaymentPackages />}/>
       <Route path="/payment-history" element={<PaymentHistory />} />
       <Route path="/admin/payments" element={<AdminPayments />} />
