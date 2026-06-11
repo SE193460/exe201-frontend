@@ -7,6 +7,7 @@ import {
     type PaymentTransaction
 }
     from "../../api/services/payments";
+import Sidebar from "../../components/Sidebar";
 
 export default function AdminPayments() {
     const navigate = useNavigate();
@@ -50,70 +51,7 @@ export default function AdminPayments() {
 
         <div className="min-h-screen bg-[#fff7f2] text-slate-800">
             <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
-                <aside className="w-full max-w-[250px] rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)] flex flex-col justify-between">
-                    <div>
-                        <div className="flex items-center gap-2 text-lg font-semibold">
-                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ff6a3d] text-white">🏠</span>
-                            RoomMate Admin
-                        </div>
-                        <div className="mt-8 space-y-2 text-sm font-semibold">
-                            <button
-                                onClick={() => navigate("/home")}
-                                className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
-                            >
-                                Trang chủ
-                            </button>
-                            <button
-                                className="w-full rounded-full bg-orange-100 px-4 py-2 text-left text-orange-700"
-                            >
-                                Dashboard
-                            </button>
-                            <button
-                                onClick={() => navigate("/admin/users")}
-                                className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
-                            >
-                                Quản lý người dùng
-                            </button>
-                            <button
-                                onClick={() => navigate("/admin/listings")}
-                                className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
-                            >
-                                Quản lý bài đăng
-                            </button>
-                            <button
-                                onClick={() => navigate("/admin/imported-listings")}
-                                className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
-                            >
-                                Quản lý nguồn bài đăng
-                            </button>
-                            <button
-                                onClick={() => navigate("/admin/amenities")}
-                                className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
-                            >
-                                Quản lý tiện nghi
-                            </button>
-                            <button
-                                onClick={() => navigate("/admin/payments")}
-                                className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
-                            >
-                                Quản lý thanh toán
-                            </button>
-
-                            <button
-                                onClick={() => navigate("/admin/reports")}
-                                className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
-                            >
-                                Báo cáo
-                            </button>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="w-full rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-orange-50"
-                    >
-                        Đăng xuất
-                    </button>
-                </aside>
+                <Sidebar activeKey="users" onLogout={handleLogout} />
 
                 <main className="flex-1 space-y-6">
                     <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
@@ -161,11 +99,7 @@ export default function AdminPayments() {
                                     <tr className="text-left">
 
                                         <th className="px-6 py-4 text-sm font-semibold text-slate-600">
-                                            User
-                                        </th>
-
-                                        <th className="px-6 py-4 text-sm font-semibold text-slate-600">
-                                            Email
+                                            Người dùng
                                         </th>
 
                                         <th className="px-6 py-4 text-sm font-semibold text-slate-600">
@@ -206,12 +140,9 @@ export default function AdminPayments() {
                         "
                                         >
 
-                                            <td className="px-6 py-4 font-medium">
-                                                {item.userName || "-"}
-                                            </td>
-
-                                            <td className="px-6 py-4 text-sm text-slate-500">
-                                                {item.userEmail || "-"}
+                                            <td className="px-6 py-4">
+                                                <div className="font-medium">{item.userName || "-"}</div>
+                                                <div className="text-xs text-slate-400">{item.userEmail || ""}</div>
                                             </td>
 
                                             <td className="px-6 py-4">
