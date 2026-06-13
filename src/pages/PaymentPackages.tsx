@@ -1,233 +1,187 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { checkoutPayment } from "../api/services/payments";
+import { generateQR, confirmTransfer } from "../api/services/payments";
 import UserShell from "@/layouts/UserShell";
+import { Sparkles, Crown, CheckCircle, Copy } from "lucide-react";
 
 const packages = [
-
     {
-        name: "VIP 1",
-        amount: 10000,
-        duration: "3 ngày",
+        name: "Gói 5.000đ",
+        amount: 5000,
+        duration: "1 ngày",
+        icon: Sparkles,
         benefits: [
-            "Đẩy lên đầu danh sách",
-            "Tăng khả năng tiếp cận"
+            "Đẩy bài lên trang đầu",
+            "Luôn đứng trước gói 15.000đ",
+            "Hiệu lực 1 ngày"
         ]
     },
-
     {
-        name: "VIP 2",
-        amount: 30000,
+        name: "Gói 15.000đ",
+        amount: 15000,
         duration: "7 ngày",
+        icon: Crown,
         benefits: [
-            "Ưu tiên hiển thị",
-            "Nhãn VIP"
-        ]
-    },
-
-    {
-        name: "VIP Premium",
-        amount: 50000,
-        duration: "15 ngày",
-        benefits: [
-            "Ghim đầu trang",
-            "Nổi bật màu đỏ",
-            "Ưu tiên tìm kiếm"
+            "Đẩy bài lên trang đầu",
+            "Hiển thị ưu tiên 7 ngày",
+            "Chỉ bị đẩy bởi gói 5.000đ"
         ]
     }
-
 ];
 
 export default function PaymentPackages() {
-
     const { listingId } = useParams();
-
     const navigate = useNavigate();
-
     const [loading, setLoading] = useState(false);
-
     const [selected, setSelected] = useState<any>(null);
+    const [qrData, setQrData] = useState<any>(null);
+    const [submitted, setSubmitted] = useState(false);
+    const [copied, setCopied] = useState(false);
 
-    const handlePayment = async () => {
-
-        if (!selected) return;
-
+    const handleSelectPackage = async (pkg: any) => {
+        setSelected(pkg);
+        setQrData(null);
+        setSubmitted(false);
         try {
+            const data = await generateQR({ listingId: listingId!, amount: pkg.amount });
+            setQrData(data);
+        } catch {
+            alert("Không thể tạo mã QR");
+        }
+    };
 
+    const handleCopyContent = () => {
+        if (qrData?.content) {
+            navigator.clipboard.writeText(qrData.content);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
+    const handleConfirmTransfer = async () => {
+        if (!selected) return;
+        try {
             setLoading(true);
-
-            await checkoutPayment({
-
+            await confirmTransfer({
                 listingId: listingId!,
+                amount: selected.amount,
                 packageName: selected.name,
-                amount: selected.amount
-
-            })
-
-            navigate("/payment-history");
-
-        }
-        catch {
-
-            alert("Thanh toán thất bại");
-
-        }
-        finally {
-
+            });
+            setSubmitted(true);
+        } catch {
+            alert("Xác nhận thất bại. Vui lòng thử lại.");
+        } finally {
             setLoading(false);
-
         }
-
-    }
+    };
 
     return (
         <UserShell>
-            <div className="
-min-h-screen
-bg-[#fff7f2]
-p-8
-">
+            <div className="min-h-screen bg-[#fff7f2] p-8">
+                <div className="max-w-3xl mx-auto">
+                    <h1 className="text-3xl font-black mb-2">Thanh toán đẩy bài đăng</h1>
+                    <p className="text-slate-500 mb-8">Chọn gói và chuyển khoản theo hướng dẫn</p>
 
-                <div className="
-max-w-6xl
-mx-auto
-">
-
-                    <h1
-                        className="
-text-3xl
-font-black
-mb-2
-"
-                    >
-
-                        Thanh toán đẩy bài đăng
-
-                    </h1>
-
-                    <p className="text-slate-500 mb-8">
-
-                        Chọn gói để tăng hiển thị bài đăng
-
-                    </p>
-
-                    <div className="grid md:grid-cols-3 gap-6">
-
-                        {packages.map(pkg => (
-
-                            <div
-                                key={pkg.name}
-                                onClick={() => setSelected(pkg)}
-                                className={`
-
-cursor-pointer
-rounded-[24px]
-bg-white
-p-6
-border-2
-
-${selected?.name === pkg.name
-                                        ?
-
-                                        "border-orange-500"
-
-                                        :
-
-                                        "border-orange-100"
-
-                                    }
-
-shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)]
-
-`}
+                    {submitted ? (
+                        <div className="rounded-[24px] bg-white p-10 border-2 border-green-200 shadow-[0_20px_50px_-35px_rgba(34,197,94,0.3)] text-center">
+                            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                            <h2 className="text-2xl font-bold text-green-700 mb-2">Đã ghi nhận yêu cầu!</h2>
+                            <p className="text-slate-500">Vui lòng chờ admin xác nhận thanh toán. Bạn sẽ nhận được thông báo khi gói được kích hoạt.</p>
+                            <button
+                                onClick={() => navigate("/payment-history")}
+                                className="mt-6 rounded-full bg-[#ff6a3d] px-8 py-3 text-white font-bold"
                             >
-
-                                <h2
-                                    className="
-font-black
-text-xl
-"
-                                >
-
-                                    {pkg.name}
-
-                                </h2>
-
-                                <p
-                                    className="
-text-3xl
-font-black
-text-[#ff6a3d]
-mt-3
-"
-                                >
-
-                                    {pkg.amount.toLocaleString()}đ
-
-                                </p>
-
-                                <p
-                                    className="
-text-sm
-text-slate-500
-mt-2
-"
-                                >
-
-                                    {pkg.duration}
-
-                                </p>
-
-                                <div className="mt-5">
-
-                                    {pkg.benefits.map(
-                                        (item: string) => (
-                                            <p>
-
-                                                ✓ {item}
-
-                                            </p>
-                                        )
-                                    )}
-
-                                </div>
-
+                                Xem lịch sử
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid md:grid-cols-2 gap-6 mb-8">
+                                {packages.map(pkg => {
+                                    const Icon = pkg.icon;
+                                    const isSelected = selected?.name === pkg.name;
+                                    return (
+                                        <div
+                                            key={pkg.name}
+                                            onClick={() => handleSelectPackage(pkg)}
+                                            className={`cursor-pointer rounded-[24px] bg-white p-6 border-2 transition ${
+                                                isSelected ? "border-orange-500 shadow-[0_20px_50px_-20px_rgba(255,136,0,0.4)]" : "border-orange-100 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)]"
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <Icon className={`h-6 w-6 ${isSelected ? "text-orange-500" : "text-slate-400"}`} />
+                                                <h2 className="font-black text-xl">{pkg.name}</h2>
+                                            </div>
+                                            <p className="text-3xl font-black text-[#ff6a3d]">{pkg.amount.toLocaleString()}đ</p>
+                                            <p className="text-sm text-slate-500 mt-2">Hiệu lực: {pkg.duration}</p>
+                                            <div className="mt-5 space-y-1">
+                                                {pkg.benefits.map((item: string, i: number) => (
+                                                    <p key={i} className="text-sm text-slate-600">✓ {item}</p>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
 
-                        ))}
+                            {qrData && (
+                                <div className="rounded-[24px] bg-white p-8 border border-orange-100 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)]">
+                                    <h3 className="text-lg font-bold mb-4 text-center">Quét mã QR để chuyển khoản</h3>
 
-                    </div>
+                                    <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+                                        <div className="rounded-2xl border-2 border-orange-100 p-2 bg-white">
+                                            <img src={qrData.qrUrl} alt="VietQR" className="w-56 h-56 object-contain" />
+                                        </div>
 
-                    <div className="mt-8">
+                                        <div className="space-y-3 text-sm">
+                                            <div>
+                                                <p className="font-semibold text-slate-500">Ngân hàng</p>
+                                                <p className="font-bold">{qrData.bankInfo.bank}</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-slate-500">Số tài khoản</p>
+                                                <p className="font-bold">{qrData.bankInfo.accountNumber}</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-slate-500">Chủ tài khoản</p>
+                                                <p className="font-bold">{qrData.bankInfo.accountName}</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-slate-500">Số tiền</p>
+                                                <p className="font-bold text-[#ff6a3d] text-lg">{qrData.amount.toLocaleString()}đ</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-slate-500">Nội dung chuyển khoản</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-mono font-bold bg-orange-50 px-3 py-1 rounded-lg border border-orange-200">{qrData.content}</span>
+                                                    <button onClick={handleCopyContent} className="p-1.5 rounded-lg hover:bg-orange-50 transition">
+                                                        <Copy className={`h-4 w-4 ${copied ? "text-green-500" : "text-slate-400"}`} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                        <button
-                            disabled={!selected || loading}
-                            onClick={handlePayment}
-                            className="
-rounded-full
-bg-[#ff6a3d]
-px-8
-py-4
-text-white
-font-bold
-"
-                        >
+                                    <div className="mt-6 rounded-2xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
+                                        <p className="font-semibold">⚠️ Lưu ý:</p>
+                                        <p>Vui lòng chuyển khoản đúng nội dung <strong>{qrData.content}</strong> để gói được kích hoạt tự động. Sau khi chuyển khoản, nhấn nút bên dưới để xác nhận.</p>
+                                    </div>
 
-                            {loading
-                                ?
-                                "Đang xử lý..."
-                                :
-                                "Thanh toán ngay"
-                            }
-
-                        </button>
-
-                    </div>
-
+                                    <div className="mt-6 text-center">
+                                        <button
+                                            disabled={loading}
+                                            onClick={handleConfirmTransfer}
+                                            className="rounded-full bg-[#ff6a3d] px-10 py-3.5 text-white font-bold text-base hover:bg-[#e55d35] transition disabled:opacity-50"
+                                        >
+                                            {loading ? "Đang xử lý..." : "Tôi đã chuyển khoản"}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
-
             </div>
         </UserShell>
     )
-
 }

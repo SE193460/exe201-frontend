@@ -4,6 +4,7 @@ import { listMyListings, resolveListingImageUrl } from "../api/services/listings
 import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
 import Pagination from "../components/Pagination";
+import {LucideRocket} from "lucide-react";
 
 function formatDate(value: string | null) {
   if (!value) return "";
@@ -115,6 +116,7 @@ export default function MyListingsPage() {
                       <span>Khu vực: {location || "Chưa cập nhật"}</span>
                       <span>Tạo: {formatDate(listing.createdAt)}</span>
                     </div>
+                    {listing.status === "APPROVED" && (
                     <div className="mt-4 flex justify-end">
                       <button
                         onClick={(e) => {
@@ -122,22 +124,12 @@ export default function MyListingsPage() {
                           e.stopPropagation();
                           navigate(`/payment/${listing.id}`)
                         }}
-                        className="
-                            rounded-full
-                            bg-[#ff6a3d]
-                            px-5
-                            py-2
-                            text-white
-                            font-bold
-                            hover:bg-[#e55d35]
-                            transition                     
-                        "
+                        className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
                         >
-
-                        🚀 Đẩy bài đăng
-
+                        <LucideRocket className="h-4 w-4" /> Đẩy bài
                       </button>
                     </div>
+                    )}
                   </div>
 
                 </div>
