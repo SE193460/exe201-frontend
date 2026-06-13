@@ -37,6 +37,9 @@ export type Listing = {
   ownerListingsCount?: number;
   isSaved?: boolean;
   source?: string | null;
+  promoType?: string | null;
+  promoPurchasedAt?: string | null;
+  promoExpiresAt?: string | null;
 };
 
 export type ListingImage = {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ChevronDown, House, LayoutDashboard, LogOut, SlidersHorizontal, UserRound, UsersRound } from "lucide-react";
+import { Bell, Bookmark, ChevronDown, CreditCard, House, LayoutDashboard, LogOut, SlidersHorizontal, UserRound, UsersRound } from "lucide-react";
 import { logout } from "../api/services/auth";
 import { fetchProfile } from "../api/services/user";
 import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from "../api/services/notifications";
@@ -222,14 +222,14 @@ export default function Navbar() {
                       onClick={() => { setDropdownOpen(false); navigate("/saved-listings"); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-slate-700 hover:bg-orange-50 transition"
                     >
-                      <span className="text-base">🔖</span> Tin đã lưu
+                      <Bookmark className="h-4 w-4 text-slate-600" /> Tin đã lưu
                     </button>
                     <div className="border-t border-orange-50" />
                     <button
                       onClick={() => { setDropdownOpen(false); navigate("/payment-history"); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-slate-700 hover:bg-orange-50 transition"
                     >
-                      <span className="text-base">👤</span> Lịch sử thanh toán
+                      <CreditCard className="h-4 w-4 text-slate-600" /> Lịch sử thanh toán
                     </button>
                     <div className="border-t border-orange-50" />
                     <button

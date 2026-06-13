@@ -269,10 +269,12 @@ export default function PublicListingDetailPage() {
               {/* Listing Details */}
               <div className="rounded-[24px] border border-orange-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] space-y-6">
                 <div>
+                  {listing.promoExpiresAt && new Date(listing.promoExpiresAt) > new Date() && (
                   <span className="inline-flex items-center gap-1.5 rounded bg-red-100 border border-red-200 px-2.5 py-0.5 text-[10px] font-black uppercase text-red-700 tracking-wider">
                     <Sparkles className="h-3.5 w-3.5" />
-                    TIN VIP NỔI BẬT
+                    {listing.promoType === "premium" ? "TIN VIP CAO CẤP" : "TIN VIP NỔI BẬT"}
                   </span>
+                  )}
                   <h2 className="mt-2 text-xl md:text-2xl font-extrabold text-red-600 uppercase leading-snug">{listing.title}</h2>
                   <p className="mt-2 text-xs text-slate-600 font-medium">
                     Địa chỉ: {listing.address || [listing.ward, listing.district, listing.city].filter(Boolean).join(", ")}
