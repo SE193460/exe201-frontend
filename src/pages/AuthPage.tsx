@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { UsersRound, HeartHandshake } from "lucide-react";
 import { login, register } from "../api/services/auth";
 import { fetchProfile } from "../api/services/user";
 
@@ -183,21 +184,21 @@ export default function AuthPage() {
               Tìm người ở ghép<br />hợp gu, hợp túi tiền.
             </h1>
             <p className="mt-5 max-w-sm text-sm text-white/90 md:text-base">
-              Hơn 10.000 bạn trẻ đang tìm bạn cùng phòng tại Hà Nội, Sài Gòn, Đà Nẵng. Chỉ vài phút để bắt đầu.
+              Gần 10.000 bạn trẻ đang tìm bạn cùng phòng tại thành phố Thủ Đức. Chỉ vài phút để bắt đầu.
             </p>
           </div>
           <div className="relative z-10 mt-10 flex flex-wrap gap-6 text-sm">
             <div className="flex items-center gap-3 rounded-full bg-white/15 px-4 py-2">
-              <span className="text-lg">👥</span>
+              <UsersRound className="h-5 w-5 text-white/90" />
               <div>
-                <p className="text-base font-semibold">10k+</p>
+                <p className="text-base font-semibold">2k+</p>
                 <p className="text-xs text-white/80">Thành viên</p>
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-full bg-white/15 px-4 py-2">
-              <span className="text-lg">❤</span>
+              <HeartHandshake className="h-5 w-5 text-white/90" />
               <div>
-                <p className="text-base font-semibold">3.2k</p>
+                <p className="text-base font-semibold">0.5k</p>
                 <p className="text-xs text-white/80">Ghép thành công</p>
               </div>
             </div>

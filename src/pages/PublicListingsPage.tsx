@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BadgeDollarSign, BedSingle, Filter, MapPin, SlidersHorizontal, UsersRound } from "lucide-react";
+import { BadgeDollarSign, BedDouble, BedSingle, Filter, MapPin, SlidersHorizontal } from "lucide-react";
 import { fetchPublicListings, resolveListingImageUrl } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import { fetchProfile } from "../api/services/user";
@@ -241,9 +241,7 @@ export default function PublicListingsPage() {
                         Chưa cập nhật hình ảnh
                       </div>
                     )}
-                    <span className="absolute left-4 top-4 rounded-full bg-slate-900/75 backdrop-blur px-3 py-1 text-xs font-semibold text-white">
-                      {listing.roomType || "Phòng ở ghép"}
-                    </span>
+
                     <span className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
                       <BadgeDollarSign className="h-3.5 w-3.5" />
                       {listing.rentPrice.toLocaleString("vi-VN")} đ/tháng
@@ -265,8 +263,8 @@ export default function PublicListingsPage() {
 
                     <div className="mt-4 pt-4 border-t border-orange-50 flex items-center justify-between text-xs text-slate-500">
                       <span className="flex items-center gap-1.5">
-                        <UsersRound className="h-3.5 w-3.5 text-orange-500" />
-                        {listing.currentOccupants || 0}/{listing.maxOccupants || 4} thành viên
+                        <BedDouble className="h-3.5 w-3.5 text-orange-500" />
+                        {listing.roomType || "Phòng ở ghép"}
                       </span>
                       <span className="flex items-center gap-1.5">
                         <BedSingle className="h-3.5 w-3.5 text-orange-500" />
