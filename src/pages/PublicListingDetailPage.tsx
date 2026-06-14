@@ -63,6 +63,7 @@ const REPORT_REASONS = [
 ];
 
 export default function PublicListingDetailPage() {
+  const MAX_THUMBNAILS = 8;
   const navigate = useNavigate();
   const { id } = useParams();
   const [listing, setListing] = useState<Listing | null>(null);
@@ -250,12 +251,25 @@ export default function PublicListingDetailPage() {
                     </div>
                     {listing.images.length > 1 && (
                       <div className="flex gap-2 overflow-x-auto pb-1 max-w-full">
-                        {listing.images.map((image, idx) => (
-                          <button key={image.id} onClick={() => openImageModal(idx)}
-                            className={`h-16 w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition ${selectedImgIdx === idx ? "border-orange-500 shadow-md shadow-orange-100" : "border-transparent opacity-60 hover:opacity-100"}`}>
-                            <img src={resolveListingImageUrl(image.imageUrl)} alt="Thumbnail" className="h-full w-full object-cover" />
-                          </button>
-                        ))}
+                        {listing.images.slice(0, MAX_THUMBNAILS).map((image, idx) => {
+                          const extraCount = listing.images.length - MAX_THUMBNAILS;
+                          const isLastVisible = idx === MAX_THUMBNAILS - 1;
+                          const shouldShowExtra = isLastVisible && extraCount > 0;
+                          return (
+                            <button
+                              key={image.id}
+                              onClick={() => setSelectedImgIdx(idx)}
+                              className={`relative h-16 w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition ${selectedImgIdx === idx ? "border-orange-500 shadow-md shadow-orange-100" : "border-transparent opacity-60 hover:opacity-100"}`}
+                            >
+                              <img src={resolveListingImageUrl(image.imageUrl)} alt="Thumbnail" className="h-full w-full object-cover" />
+                              {shouldShowExtra && (
+                                <span className="absolute inset-0 flex items-center justify-center bg-slate-900/65 text-sm font-bold text-white">
+                                  +{extraCount}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

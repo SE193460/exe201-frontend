@@ -57,6 +57,7 @@ const STATUS_LABELS: Record<string, { text: string; cls: string }> = {
 };
 
 export default function AdminImportedListingsPage() {
+  const MAX_LISTING_IMAGES = 20;
   const navigate = useNavigate();
   const [listings, setListings] = useState<ImportedListing[]>([]);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
@@ -68,6 +69,7 @@ export default function AdminImportedListingsPage() {
   const [showForm, setShowForm] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [existingImageCount, setExistingImageCount] = useState(0);
   const [form, setForm] = useState(emptyForm());
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -107,6 +109,7 @@ export default function AdminImportedListingsPage() {
     setFormError("");
     setFormMode("create");
     setEditingId(null);
+    setExistingImageCount(0);
     setShowForm(true);
   };
 
@@ -134,6 +137,7 @@ export default function AdminImportedListingsPage() {
     setFormError("");
     setFormMode("edit");
     setEditingId(listing.id);
+    setExistingImageCount((listing.images || []).length);
     setShowForm(true);
   };
 
@@ -159,6 +163,17 @@ export default function AdminImportedListingsPage() {
       .split("\n")
         .map((u: string) => u.trim())
         .filter((u: string) => u.startsWith("http://") || u.startsWith("https://"));
+
+    if (formMode === "create" && urlLines.length > MAX_LISTING_IMAGES) {
+      setFormError(`Chỉ được nhập tối đa ${MAX_LISTING_IMAGES} URLs hình ảnh.`);
+      return;
+    }
+
+    if (formMode === "edit" && existingImageCount + urlLines.length > MAX_LISTING_IMAGES) {
+      const available = Math.max(0, MAX_LISTING_IMAGES - existingImageCount);
+      setFormError(`Bài đăng hiện có ${existingImageCount} ảnh. Bạn chỉ có thể thêm tối đa ${available} URLs nữa.`);
+      return;
+    }
 
     const payload: CreateImportedListingPayload = {
       title: form.title,
@@ -306,6 +321,7 @@ export default function AdminImportedListingsPage() {
                       placeholder={"https://cdn.example.com/img1.jpg\nhttps://cdn.example.com/img2.jpg"}
                     />
                     <p className="mt-1 text-xs text-slate-400">Mỗi URL một dòng. Ảnh tham chiếu trực tiếp, không tải về server.</p>
+                    <p className="mt-1 text-xs text-slate-400">Tối đa 20 URLs ảnh cho mỗi bài đăng.</p>
                   </label>
                 </div>
 

@@ -7,6 +7,7 @@ export type PaymentTransaction = {
   amount: number;
   packageName: string;
   status: string;
+  code?: string | null;
   created_at: string;
   listingTitle?: string | null;
   userName?: string | null;

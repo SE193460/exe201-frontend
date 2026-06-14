@@ -19,6 +19,7 @@ function parseCurrencyInput(value: string) {
 }
 
 export default function EditListingPage() {
+  const MAX_LISTING_IMAGES = 20;
   const navigate = useNavigate();
   const { id } = useParams();
   const [status, setStatus] = useState("Đang tải...");
@@ -114,9 +115,18 @@ export default function EditListingPage() {
       setImagePreviews([]);
       return;
     }
+    const existingCount = listing?.images.length ?? 0;
+    const maxNewImages = Math.max(0, MAX_LISTING_IMAGES - existingCount);
+    if (maxNewImages === 0) {
+      setError(`Bài đăng đã đạt giới hạn ${MAX_LISTING_IMAGES} ảnh.`);
+      return;
+    }
     setImageFiles((prevFiles) => {
       const merged = [...prevFiles, ...Array.from(files)];
-      const limited = merged.slice(0, 10);
+      if (merged.length > maxNewImages) {
+        setError(`Bạn chỉ có thể thêm tối đa ${maxNewImages} ảnh nữa (tổng cộng ${MAX_LISTING_IMAGES} ảnh).`);
+      }
+      const limited = merged.slice(0, maxNewImages);
       setImagePreviews(limited.map((file) => URL.createObjectURL(file)));
       return limited;
     });
@@ -477,7 +487,7 @@ export default function EditListingPage() {
 
           <div className="md:col-span-2 rounded-[22px] border border-orange-100 bg-orange-50/40 px-5 py-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-orange-500">Thêm hình ảnh</h2>
-            <p className="mt-2 text-xs text-slate-500">Tối đa 10 ảnh, định dạng JPG/PNG.</p>
+            <p className="mt-2 text-xs text-slate-500">Tối đa 20 ảnh, định dạng JPG/PNG.</p>
             <input
               type="file"
               multiple

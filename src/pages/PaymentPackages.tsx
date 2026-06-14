@@ -12,7 +12,6 @@ const packages = [
         icon: Sparkles,
         benefits: [
             "Đẩy bài lên trang đầu",
-            "Luôn đứng trước gói 15.000đ",
             "Hiệu lực 1 ngày"
         ]
     },
@@ -23,8 +22,7 @@ const packages = [
         icon: Crown,
         benefits: [
             "Đẩy bài lên trang đầu",
-            "Hiển thị ưu tiên 7 ngày",
-            "Chỉ bị đẩy bởi gói 5.000đ"
+            "Hiển thị ưu tiên 7 ngày"
         ]
     }
 ];

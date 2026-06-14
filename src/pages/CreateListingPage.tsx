@@ -17,6 +17,7 @@ function parseCurrencyInput(value: string) {
 }
 
 export default function CreateListingPage() {
+  const MAX_LISTING_IMAGES = 20;
   const navigate = useNavigate();
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -99,7 +100,10 @@ export default function CreateListingPage() {
     }
     setImageFiles((prevFiles) => {
       const merged = [...prevFiles, ...Array.from(files)];
-      const limited = merged.slice(0, 10);
+      if (merged.length > MAX_LISTING_IMAGES) {
+        setError(`Bạn chỉ có thể thêm tối đa ${MAX_LISTING_IMAGES} ảnh.`);
+      }
+      const limited = merged.slice(0, MAX_LISTING_IMAGES);
       setImagePreviews(limited.map((file) => URL.createObjectURL(file)));
       return limited;
     });
@@ -393,7 +397,7 @@ export default function CreateListingPage() {
 
           <div className="md:col-span-2 rounded-[22px] border border-orange-100 bg-orange-50/40 px-5 py-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-orange-500">Hình ảnh phòng</h2>
-            <p className="mt-2 text-xs text-slate-500">Tối đa 10 ảnh, định dạng JPG/PNG.</p>
+            <p className="mt-2 text-xs text-slate-500">Tối đa 20 ảnh, định dạng JPG/PNG.</p>
             <input
               type="file"
               multiple
