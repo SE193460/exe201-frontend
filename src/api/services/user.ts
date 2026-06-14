@@ -35,6 +35,15 @@ export async function uploadAvatar(file: File) {
   return response.data as { avatarUrl: string };
 }
 
+export async function changePassword(payload: {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}) {
+  const response = await axiosInstance.put("/api/users/me/password", payload);
+  return response.data as { message: string };
+}
+
 export function resolveAvatarUrl(avatarUrl: string) {
   if (!avatarUrl) return avatarUrl;
   if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://")) {
