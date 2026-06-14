@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Bookmark, ChevronDown, CreditCard, House, LayoutDashboard, LogOut, SlidersHorizontal, UserRound, UsersRound } from "lucide-react";
+import { Bell, Bookmark, ChevronDown, CreditCard, LayoutDashboard, LogOut, SlidersHorizontal, UserRound, UsersRound } from "lucide-react";
 import { logout } from "../api/services/auth";
 import { fetchProfile } from "../api/services/user";
 import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from "../api/services/notifications";
@@ -107,10 +107,8 @@ export default function Navbar() {
             onClick={() => navigate("/")}
             className="flex items-center gap-2 text-lg font-semibold"
           >
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ff6a3d] text-white">
-              <House className="h-4.5 w-4.5" />
-            </span>
-            RoomMate
+            <img src="/logo-roomie.svg" alt="ROOMIE logo" className="h-9 w-9 object-contain" />
+            ROOMIE
           </button>
         </div>
         <div className="flex items-center gap-3 text-sm font-semibold">

@@ -49,6 +49,14 @@ export default function AdminPayments() {
         }
     };
 
+    const handleViewListing = (listingId?: string | null) => {
+        if (!listingId) {
+            alert("Giao dịch này không có bài đăng liên kết.");
+            return;
+        }
+        navigate(`/?highlightListingId=${listingId}`);
+    };
+
     const handleLogout = async () => {
         try {
             await logout();
@@ -154,7 +162,6 @@ export default function AdminPayments() {
                                         <tr className="text-left">
                                             <th className="px-4 py-4 text-sm font-semibold text-slate-600">Mã GD</th>
                                             <th className="px-4 py-4 text-sm font-semibold text-slate-600">Người dùng</th>
-                                            <th className="px-4 py-4 text-sm font-semibold text-slate-600">Bài đăng</th>
                                             <th className="px-4 py-4 text-sm font-semibold text-slate-600">Gói</th>
                                             <th className="px-4 py-4 text-sm font-semibold text-slate-600">Tiền</th>
                                             <th className="px-4 py-4 text-sm font-semibold text-slate-600">Ngày</th>
@@ -173,13 +180,18 @@ export default function AdminPayments() {
                                                     <div className="font-medium">{item.userName || "-"}</div>
                                                     <div className="text-xs text-slate-400">{item.userEmail || ""}</div>
                                                 </td>
-                                                <td className="px-4 py-4 text-sm">{item.listingTitle || "-"}</td>
                                                 <td className="px-4 py-4">
                                                     <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">{item.packageName}</span>
                                                 </td>
                                                 <td className="px-4 py-4 font-bold text-[#ff6a3d]">{item.amount.toLocaleString()}đ</td>
                                                 <td className="px-4 py-4 text-sm text-slate-500">{new Date(item.created_at).toLocaleString("vi-VN")}</td>
-                                                <td className="px-4 py-4">
+                                                <td className="px-4 py-4 space-x-2">
+                                                    <button
+                                                        onClick={() => handleViewListing(item.listingId || item.listing_id)}
+                                                        className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+                                                    >
+                                                        Xem bài đăng
+                                                    </button>
                                                     <button
                                                         onClick={() => handleConfirm(item.id)}
                                                         className="rounded-full bg-green-100 px-4 py-2 text-xs font-bold text-green-700 hover:bg-green-200 transition"
@@ -204,11 +216,11 @@ export default function AdminPayments() {
                                     <tr className="text-left">
                                         <th className="px-4 py-4 text-sm font-semibold text-slate-600">Mã GD</th>
                                         <th className="px-4 py-4 text-sm font-semibold text-slate-600">Người dùng</th>
-                                        <th className="px-4 py-4 text-sm font-semibold text-slate-600">Bài đăng</th>
                                         <th className="px-4 py-4 text-sm font-semibold text-slate-600">Gói</th>
                                         <th className="px-4 py-4 text-sm font-semibold text-slate-600">Tiền</th>
                                         <th className="px-4 py-4 text-sm font-semibold text-slate-600">Trạng thái</th>
                                         <th className="px-4 py-4 text-sm font-semibold text-slate-600">Ngày</th>
+                                        <th className="px-4 py-4 text-sm font-semibold text-slate-600">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -230,7 +242,6 @@ export default function AdminPayments() {
                                                     <div className="font-medium">{item.userName || "-"}</div>
                                                     <div className="text-xs text-slate-400">{item.userEmail || ""}</div>
                                                 </td>
-                                                <td className="px-4 py-4 text-sm">{item.listingTitle || "-"}</td>
                                                 <td className="px-4 py-4">
                                                     <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">{item.packageName}</span>
                                                 </td>
@@ -241,6 +252,14 @@ export default function AdminPayments() {
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-4 text-sm text-slate-500">{new Date(item.created_at).toLocaleString("vi-VN")}</td>
+                                                <td className="px-4 py-4">
+                                                    <button
+                                                        onClick={() => handleViewListing(item.listingId)}
+                                                        className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+                                                    >
+                                                        Xem bài đăng
+                                                    </button>
+                                                </td>
                                             </tr>
                                         ))
                                     )}

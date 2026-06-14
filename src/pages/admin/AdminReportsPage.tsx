@@ -60,7 +60,7 @@ export default function AdminReportsPage() {
     return (
         <div className="min-h-screen bg-[#fff7f2] text-slate-800">
             <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
-                <Sidebar activeKey="users" onLogout={handleLogout} />
+                <Sidebar activeKey="reports" onLogout={handleLogout} />
 
                 <main className="flex-1 space-y-6">
                     <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">

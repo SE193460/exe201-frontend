@@ -175,8 +175,8 @@ export default function AuthPage() {
                 onClick={() => navigate("/")}
                 className="flex items-center gap-2 text-lg font-semibold"
               >
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15">🏠</span>
-                RoomMate
+                <img src="/logo-roomie-white.svg" alt="ROOMIE logo" className="h-9 w-9 rounded-full object-contain" />
+                ROOMIE
               </button>
             </div>
             <h1 className="mt-12 text-4xl font-extrabold leading-tight md:text-5xl">
@@ -202,7 +202,7 @@ export default function AuthPage() {
               </div>
             </div>
           </div>
-          <p className="relative z-10 mt-10 text-xs text-white/70">© 2026 RoomMate Vietnam</p>
+          <p className="relative z-10 mt-10 text-xs text-white/70">© 2026 ROOMIE Vietnam</p>
         </section>
 
         <section className="flex w-full flex-1 items-center justify-center bg-gradient-to-br from-white via-white to-[#fff7f1] px-6 py-12">
@@ -389,7 +389,7 @@ export default function AuthPage() {
             </button>
 
             <p className="mt-5 text-center text-xs text-slate-400">
-              Bằng việc tiếp tục, bạn đồng ý với điều khoản và chính sách của RoomMate.
+              Bằng việc tiếp tục, bạn đồng ý với điều khoản và chính sách của ROOMIE.
             </p>
           </div>
         </section>

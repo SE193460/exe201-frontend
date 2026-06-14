@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { BadgeDollarSign, BedSingle, Filter, MapPin, SlidersHorizontal, UsersRound } from "lucide-react";
 import { fetchPublicListings, resolveListingImageUrl } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
@@ -11,6 +11,7 @@ import { AREA_OPTIONS, matchAreaRange, matchPriceRange, PRICE_OPTIONS } from "./
 
 export default function PublicListingsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,6 +23,11 @@ export default function PublicListingsPage() {
   const [appliedArea, setAppliedArea] = useState("all");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 9;
+
+  const highlightListingId = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get("highlightListingId");
+  }, [location.search]);
 
   const districtOptions = useMemo(() => {
     const districts = Array.from(new Set(listings.map((item) => item.district).filter(Boolean)));
@@ -84,6 +90,27 @@ export default function PublicListingsPage() {
   const totalPages = Math.ceil(filteredListings.length / PAGE_SIZE);
   const pagedListings = filteredListings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  useEffect(() => {
+    if (!highlightListingId || listings.length === 0) return;
+    const targetIndex = listings.findIndex((item) => item.id === highlightListingId);
+    if (targetIndex >= 0) {
+      const targetPage = Math.floor(targetIndex / PAGE_SIZE) + 1;
+      setPage(targetPage);
+    }
+  }, [highlightListingId, listings]);
+
+  useEffect(() => {
+    if (!highlightListingId) return;
+    const timer = window.setTimeout(() => {
+      const element = document.querySelector(`[data-listing-id="${highlightListingId}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [highlightListingId, pagedListings]);
+
   return (
     <div className="min-h-screen bg-[#fff7f2] text-slate-800 flex flex-col">
       <Navbar />
@@ -95,7 +122,7 @@ export default function PublicListingsPage() {
               <BedSingle className="h-3.5 w-3.5" /> Danh sách phòng
             </span>
             <h1 className="mt-2 text-3xl font-extrabold text-slate-900">Phòng ở ghép nổi bật</h1>
-            <p className="mt-1 text-sm text-slate-500">Khám phá các phòng ở ghép đã qua duyệt uy tín trên toàn quốc.</p>
+            <p className="mt-1 text-sm text-slate-500">Khám phá các phòng ở ghép đã qua duyệt uy tín ở khu vực thành phố Thủ Đức.</p>
           </div>
           <button
             onClick={() => navigate("/soft-filter")}
@@ -198,8 +225,9 @@ export default function PublicListingsPage() {
               return (
                 <article
                   key={listing.id}
+                  data-listing-id={listing.id}
                   onClick={() => navigate(`/listings/${listing.id}`)}
-                  className="group cursor-pointer overflow-hidden rounded-[24px] border border-orange-100 bg-white shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] transition hover:-translate-y-1 hover:shadow-[0_30px_60px_-25px_rgba(255,115,0,0.45)]"
+                  className={`group cursor-pointer overflow-hidden rounded-[24px] border bg-white shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] transition hover:-translate-y-1 hover:shadow-[0_30px_60px_-25px_rgba(255,115,0,0.45)] ${highlightListingId === listing.id ? "border-[#ff6a3d] ring-2 ring-orange-300" : "border-orange-100"}`}
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-orange-50">
                     {thumbnail ? (
