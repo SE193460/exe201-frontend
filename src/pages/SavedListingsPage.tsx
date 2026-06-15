@@ -5,12 +5,15 @@ import { fetchSavedListings, resolveListingImageUrl } from "../api/services/list
 import type { Listing } from "../api/services/listings";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Pagination from "../components/Pagination";
 
 export default function SavedListingsPage() {
   const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 6;
 
   useEffect(() => {
     fetchSavedListings()
@@ -23,6 +26,9 @@ export default function SavedListingsPage() {
         setLoading(false);
       });
   }, []);
+
+  const totalPages = Math.max(1, Math.ceil(listings.length / PAGE_SIZE));
+  const pagedListings = listings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="min-h-screen bg-[#fff7f2] text-slate-800 flex flex-col">
@@ -64,7 +70,7 @@ export default function SavedListingsPage() {
         )}
 
         <div className="grid gap-4 md:grid-cols-2">
-          {listings.map((listing) => {
+          {pagedListings.map((listing) => {
             const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
             const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
             return (
@@ -94,6 +100,9 @@ export default function SavedListingsPage() {
             );
           })}
         </div>
+        {!loading && !error && listings.length > 0 && (
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        )}
       </main>
       <Footer />
     </div>

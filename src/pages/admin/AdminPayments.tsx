@@ -8,6 +8,7 @@ import {
     type PaymentTransaction
 } from "../../api/services/payments";
 import Sidebar from "../../components/Sidebar";
+import Pagination from "../../components/Pagination";
 
 const PACKAGE_OPTIONS = [
     { value: "", label: "Tất cả gói" },
@@ -22,6 +23,9 @@ export default function AdminPayments() {
     const [pending, setPending] = useState<(PaymentTransaction & { listing_id: string; user_id: string })[]>([]);
     const [searchCode, setSearchCode] = useState("");
     const [filterPackage, setFilterPackage] = useState("");
+    const [pendingPage, setPendingPage] = useState(1);
+    const [paymentsPage, setPaymentsPage] = useState(1);
+    const PAGE_SIZE = 10;
 
     useEffect(() => {
         loadData();
@@ -98,6 +102,16 @@ export default function AdminPayments() {
         });
     }, [pending, searchCode, filterPackage]);
 
+    useEffect(() => {
+        setPendingPage(1);
+        setPaymentsPage(1);
+    }, [searchCode, filterPackage]);
+
+    const pendingTotalPages = Math.max(1, Math.ceil(filteredPending.length / PAGE_SIZE));
+    const paymentsTotalPages = Math.max(1, Math.ceil(filteredPayments.length / PAGE_SIZE));
+    const pagedPending = filteredPending.slice((pendingPage - 1) * PAGE_SIZE, pendingPage * PAGE_SIZE);
+    const pagedPayments = filteredPayments.slice((paymentsPage - 1) * PAGE_SIZE, paymentsPage * PAGE_SIZE);
+
     return (
         <div className="min-h-screen bg-[#fff7f2] text-slate-800">
             <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
@@ -169,7 +183,7 @@ export default function AdminPayments() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredPending.map((item) => (
+                                        {pagedPending.map((item) => (
                                             <tr key={item.id} className="border-t border-yellow-50 hover:bg-yellow-50/40 transition">
                                                 <td className="px-4 py-4">
                                                     <span className="font-mono font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg text-sm">
@@ -204,6 +218,7 @@ export default function AdminPayments() {
                                     </tbody>
                                 </table>
                             </div>
+                            <Pagination currentPage={pendingPage} totalPages={pendingTotalPages} onPageChange={setPendingPage} />
                         </section>
                     )}
 
@@ -231,7 +246,7 @@ export default function AdminPayments() {
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredPayments.map((item) => (
+                                        pagedPayments.map((item) => (
                                             <tr key={item.id} className="border-t border-orange-50 hover:bg-orange-50/40 transition">
                                                 <td className="px-4 py-4">
                                                     <span className="font-mono font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg text-sm">
@@ -266,6 +281,7 @@ export default function AdminPayments() {
                                 </tbody>
                             </table>
                         </div>
+                        <Pagination currentPage={paymentsPage} totalPages={paymentsTotalPages} onPageChange={setPaymentsPage} />
                     </section>
                 </main>
             </div>

@@ -20,6 +20,8 @@ import SavedListingsPage from "./pages/SavedListingsPage";
 import PaymentHistory from "./pages/PaymentHistory";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminReportsPage from "./pages/admin/AdminReportsPage";
+import SupportContactPage from "./pages/SupportContactPage";
+import AdminFeedbacksPage from "./pages/admin/AdminFeedbacksPage";
 
 export default function App() {
   return (
@@ -45,8 +47,10 @@ export default function App() {
       <Route path="/saved-listings" element={<SavedListingsPage />} />
       <Route path="/payment/:listingId" element={<PaymentPackages />}/>
       <Route path="/payment-history" element={<PaymentHistory />} />
+      <Route path="/support" element={<SupportContactPage />} />
       <Route path="/admin/payments" element={<AdminPayments />} />
       <Route path="/admin/reports" element={<AdminReportsPage />} />
+      <Route path="/admin/feedbacks" element={<AdminFeedbacksPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

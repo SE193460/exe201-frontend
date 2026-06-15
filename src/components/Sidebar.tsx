@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from "../api/services/notifications";
 
-export type AdminSidebarKey = "dashboard" | "users" | "listings" | "imported-listings" | "amenities" | "payments" | "reports";
+export type AdminSidebarKey = "dashboard" | "users" | "listings" | "imported-listings" | "amenities" | "payments" | "reports" | "feedbacks";
 
 type SidebarProps = {
   activeKey: AdminSidebarKey;
@@ -18,6 +18,7 @@ const navItems: Array<{ key: AdminSidebarKey; label: string; path: string }> = [
   { key: "amenities", label: "Quản lý tiện nghi", path: "/admin/amenities" },
   { key: "payments", label: "Quản lý thanh toán", path: "/admin/payments" },
   { key: "reports", label: "Báo cáo hệ thống", path: "/admin/reports" },
+  { key: "feedbacks", label: "Feedback người dùng", path: "/admin/feedbacks" },
 ];
 
 export default function Sidebar({ activeKey, onLogout }: SidebarProps) {

@@ -7,11 +7,14 @@ import {
     type Report
 } from "../../api/services/reports";
 import Sidebar from "../../components/Sidebar";
+import Pagination from "../../components/Pagination";
 
 export default function AdminReportsPage() {
     const navigate = useNavigate();
     const [error, setError] = useState("");
     const [reports, setReports] = useState<Report[]>([]);
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 10;
 
     useEffect(() => {
         loadReports();
@@ -57,6 +60,9 @@ export default function AdminReportsPage() {
         return styles[status] || "bg-slate-100 text-slate-500";
     };
 
+    const totalPages = Math.max(1, Math.ceil(reports.length / PAGE_SIZE));
+    const pagedReports = reports.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
     return (
         <div className="min-h-screen bg-[#fff7f2] text-slate-800">
             <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
@@ -96,7 +102,7 @@ export default function AdminReportsPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {reports.map(item => (
+                                {pagedReports.map(item => (
                                     <tr key={item.id} className="border-t border-orange-50 hover:bg-orange-50/40 transition">
                                         <td className="px-6 py-4">
                                             <div className="font-medium">{item.reporterName || "-"}</div>
@@ -152,6 +158,7 @@ export default function AdminReportsPage() {
                                 )}
                             </tbody>
                         </table>
+                        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
                     </div>
                 </main>
             </div>

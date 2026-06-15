@@ -115,13 +115,20 @@ export default function Navbar() {
           {isAuthed ? (
             <>
               {!isAdmin && (
+                <button
+                  onClick={() => navigate("/my-listings")}
+                  className="rounded-full px-4 py-2 text-slate-700 hover:bg-orange-50 transition"
+                >
+                  Bài đăng của tôi
+                </button>
+              )}
+
               <button
-                onClick={() => navigate("/my-listings")}
+                onClick={() => navigate("/support")}
                 className="rounded-full px-4 py-2 text-slate-700 hover:bg-orange-50 transition"
               >
-                Bài đăng của tôi
+                Liên hệ
               </button>
-              )}
 
               {/* Notification bell */}
               <div className="relative" ref={notifRef}>
@@ -241,12 +248,20 @@ export default function Navbar() {
               </div>
             </>
           ) : (
-            <button
-              onClick={() => navigate("/auth")}
-              className="rounded-full bg-[#ff6a3d] px-4 py-2 text-white shadow-sm"
-            >
-              Đăng nhập
-            </button>
+            <>
+              <button
+                onClick={() => navigate("/support")}
+                className="rounded-full px-4 py-2 text-slate-700 hover:bg-orange-50 transition"
+              >
+                Liên hệ
+              </button>
+              <button
+                onClick={() => navigate("/auth")}
+                className="rounded-full bg-[#ff6a3d] px-4 py-2 text-white shadow-sm"
+              >
+                Đăng nhập
+              </button>
+            </>
           )}
         </div>
       </div>
