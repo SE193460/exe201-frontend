@@ -85,7 +85,7 @@ export default function LifestyleProfilePage() {
 
             {hasNoApprovedListing && (
               <label className="block text-sm font-medium text-slate-700">
-                Khu vực mong muốn
+                Khu vực bạn mong muốn tìm được người ở ghép phù hợp 
                 <select
                   className={selectClassName()}
                   value={form.preferred_district ?? ""}
@@ -100,7 +100,7 @@ export default function LifestyleProfilePage() {
             )}
 
             <label className="block text-sm font-medium text-slate-700">
-              1. Độ sạch sẽ
+              1. Mức độ sạch sẽ của bạn 
               <select className={selectClassName()} value={form.cleanliness ?? ""} onChange={(e) => setNumberField("cleanliness", e.target.value)}>
                 <option value="">Bỏ trống</option>
                 {PROFILE_OPTIONS.cleanliness.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -108,7 +108,7 @@ export default function LifestyleProfilePage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              2. Tần suất dùng điều hòa
+              2. Tần suất dùng điều hòa của bạn 
               <select className={selectClassName()} value={form.ac_usage ?? ""} onChange={(e) => setNumberField("ac_usage", e.target.value)}>
                 <option value="">Bỏ trống</option>
                 {PROFILE_OPTIONS.ac_usage.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -117,14 +117,14 @@ export default function LifestyleProfilePage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block text-sm font-medium text-slate-700">
-                3. Thú cưng
+                3. Bạn có nuôi thú cưng không?
                 <select className={selectClassName()} value={form.pet_status ?? ""} onChange={(e) => setNumberField("pet_status", e.target.value)}>
                   <option value="">Bỏ trống</option>
                   {PROFILE_OPTIONS.binary.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </label>
               <label className="block text-sm font-medium text-slate-700">
-                4. Hút thuốc
+                4. Bạn có hút thuốc không?
                 <select className={selectClassName()} value={form.smoking_status ?? ""} onChange={(e) => setNumberField("smoking_status", e.target.value)}>
                   <option value="">Bỏ trống</option>
                   {PROFILE_OPTIONS.binary.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -137,7 +137,7 @@ export default function LifestyleProfilePage() {
             <h2 className="text-base font-semibold">Thói quen ở phòng</h2>
 
             <label className="block text-sm font-medium text-slate-700">
-              5. Nấu ăn
+              5. Bạn có thường xuyên nấu ăn không?
               <select className={selectClassName()} value={form.cooking ?? ""} onChange={(e) => setNumberField("cooking", e.target.value)}>
                 <option value="">Bỏ trống</option>
                 {PROFILE_OPTIONS.cooking.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -145,7 +145,7 @@ export default function LifestyleProfilePage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              6. Bạn bè về phòng
+              6. Tần suất dẫn bạn bè về phòng của bạn 
               <select className={selectClassName()} value={form.guest ?? ""} onChange={(e) => setNumberField("guest", e.target.value)}>
                 <option value="">Bỏ trống</option>
                 {PROFILE_OPTIONS.guest.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -153,7 +153,7 @@ export default function LifestyleProfilePage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              7. Tần suất ở trong phòng
+              7. Tần suất ở trong phòng của bạn
               <select className={selectClassName()} value={form.home_frequency ?? ""} onChange={(e) => setNumberField("home_frequency", e.target.value)}>
                 <option value="">Bỏ trống</option>
                 {PROFILE_OPTIONS.home_frequency.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -161,7 +161,7 @@ export default function LifestyleProfilePage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              8. Thời gian làm việc
+              8. Thời gian làm việc của bạn 
               <select className={selectClassName()} value={form.work_schedule ?? ""} onChange={(e) => setTextField("work_schedule", e.target.value)}>
                 <option value="">Bỏ trống</option>
                 {PROFILE_OPTIONS.work_schedule.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -173,7 +173,7 @@ export default function LifestyleProfilePage() {
             <h2 className="text-base font-semibold">Môi trường sống chung</h2>
 
             <label className="block text-sm font-medium text-slate-700">
-              9. Chia sẻ đồ dùng
+              9. Mức độ chia sẻ đồ dùng của bạn
               <select className={selectClassName()} value={form.sharing ?? ""} onChange={(e) => setNumberField("sharing", e.target.value)}>
                 <option value="">Bỏ trống</option>
                 {PROFILE_OPTIONS.sharing.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -181,7 +181,7 @@ export default function LifestyleProfilePage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              10. Mức độ yên tĩnh
+              10. Mức độ yên tĩnh trong không gian chung của bạn
               <select className={selectClassName()} value={form.noise ?? ""} onChange={(e) => setNumberField("noise", e.target.value)}>
                 <option value="">Bỏ trống</option>
                 {PROFILE_OPTIONS.noise.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -189,7 +189,7 @@ export default function LifestyleProfilePage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              11. Tần suất gọi điện/video call
+              11. Tần suất gọi điện/video call trong phòng của bạn
               <select className={selectClassName()} value={form.call_frequency ?? ""} onChange={(e) => setNumberField("call_frequency", e.target.value)}>
                 <option value="">Bỏ trống</option>
                 {PROFILE_OPTIONS.call_frequency.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -197,7 +197,7 @@ export default function LifestyleProfilePage() {
             </label>
 
             <label className="block text-sm font-medium text-slate-700">
-              12. Game voice chat
+              12. Mức độ chơi game dùng mic hoặc voice chat trong phòng của bạn
               <select className={selectClassName()} value={form.game_mic ?? ""} onChange={(e) => setNumberField("game_mic", e.target.value)}>
                 <option value="">Bỏ trống</option>
                 {PROFILE_OPTIONS.game_mic.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}

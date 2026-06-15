@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import UserShell from "../layouts/UserShell";
 import { listMyListings, resolveListingImageUrl } from "../api/services/listings";
 import {
@@ -14,7 +15,7 @@ import {
   PRICE_OPTIONS,
   priceRangeToBounds,
 } from "./listingRangeOptions";
-import { DISTRICT_OPTIONS, PREF_OPTIONS, PROFILE_OPTIONS } from "./lifestyleOptions";
+import { DISTRICT_OPTIONS, FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 
 type UserType = "HAS_ROOM" | "NO_ROOM";
 
@@ -77,14 +78,14 @@ export default function SoftFilterPage() {
 
   const linearWithAny = useMemo(() => {
     return {
-      cleanliness: [...PROFILE_OPTIONS.cleanliness, PREF_OPTIONS.intAny],
-      ac_usage: [...PROFILE_OPTIONS.ac_usage, PREF_OPTIONS.intAny],
-      cooking: [...PROFILE_OPTIONS.cooking, PREF_OPTIONS.intAny],
-      guest: [...PROFILE_OPTIONS.guest, PREF_OPTIONS.intAny],
-      home_frequency: [...PROFILE_OPTIONS.home_frequency, PREF_OPTIONS.intAny],
-      noise: [...PROFILE_OPTIONS.noise, PREF_OPTIONS.intAny],
-      call_frequency: [...PROFILE_OPTIONS.call_frequency, PREF_OPTIONS.intAny],
-      game_mic: [...PROFILE_OPTIONS.game_mic, PREF_OPTIONS.intAny],
+      cleanliness: [...FILTER_LINEAR_OPTIONS.cleanliness, PREF_OPTIONS.intAny],
+      ac_usage: [...FILTER_LINEAR_OPTIONS.ac_usage, PREF_OPTIONS.intAny],
+      cooking: [...FILTER_LINEAR_OPTIONS.cooking, PREF_OPTIONS.intAny],
+      guest: [...FILTER_LINEAR_OPTIONS.guest, PREF_OPTIONS.intAny],
+      home_frequency: [...FILTER_LINEAR_OPTIONS.home_frequency, PREF_OPTIONS.intAny],
+      noise: [...FILTER_LINEAR_OPTIONS.noise, PREF_OPTIONS.intAny],
+      call_frequency: [...FILTER_LINEAR_OPTIONS.call_frequency, PREF_OPTIONS.intAny],
+      game_mic: [...FILTER_LINEAR_OPTIONS.game_mic, PREF_OPTIONS.intAny],
     };
   }, []);
 
@@ -200,7 +201,7 @@ export default function SoftFilterPage() {
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
-            <h4 className="text-sm font-semibold text-emerald-700">✅ Điểm tốt</h4>
+            <h4 className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700"><CheckCircle2 className="h-4 w-4" /> Điểm tốt</h4>
             <div className="mt-2 space-y-3 text-sm">
               {good.length === 0 ? <p className="text-slate-500">Không có.</p> : null}
               {good.map(([field, value]) => (
@@ -216,7 +217,7 @@ export default function SoftFilterPage() {
           </div>
 
           <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-3">
-            <h4 className="text-sm font-semibold text-amber-700">⚠️ Điểm cần lưu ý</h4>
+            <h4 className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700"><AlertTriangle className="h-4 w-4" /> Điểm cần lưu ý</h4>
             <div className="mt-2 space-y-3 text-sm">
               {warn.length === 0 ? <p className="text-slate-500">Không có.</p> : null}
               {warn.map(([field, value]) => (
@@ -291,26 +292,26 @@ export default function SoftFilterPage() {
 
             <section className="rounded-3xl border border-orange-100 bg-white p-6">
               <h2 className="text-lg font-semibold">Bộ lọc mềm - Sinh hoạt cơ bản</h2>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="block text-sm font-medium text-slate-700">Độ sạch sẽ
+              <div className="mt-4 space-y-4">
+                <label className="block text-sm font-medium text-slate-700">Bạn mong muốn roommate có mức độ sạch sẽ như thế nào?
                   <select className={selectClassName()} value={prefs.pref_cleanliness ?? ""} onChange={(e) => setPrefNumber("pref_cleanliness", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {linearWithAny.cleanliness.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </label>
-                <label className="block text-sm font-medium text-slate-700">Tần suất dùng điều hòa
+                <label className="block text-sm font-medium text-slate-700">Tần suất sử dụng điều hòa mong muốn của roommate
                   <select className={selectClassName()} value={prefs.pref_ac_usage ?? ""} onChange={(e) => setPrefNumber("pref_ac_usage", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {linearWithAny.ac_usage.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </label>
-                <label className="block text-sm font-medium text-slate-700">Thú cưng
+                <label className="block text-sm font-medium text-slate-700">Bạn có muốn roommate nuôi thú cưng không?
                   <select className={selectClassName()} value={prefs.pref_pet ?? ""} onChange={(e) => setPrefText("pref_pet", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {PREF_OPTIONS.pet.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </label>
-                <label className="block text-sm font-medium text-slate-700">Hút thuốc
+                <label className="block text-sm font-medium text-slate-700">Bạn có muốn roommate hút thuốc không?
                   <select className={selectClassName()} value={prefs.pref_smoking ?? ""} onChange={(e) => setPrefText("pref_smoking", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {PREF_OPTIONS.smoking.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -321,26 +322,26 @@ export default function SoftFilterPage() {
 
             <section className="rounded-3xl border border-orange-100 bg-white p-6">
               <h2 className="text-lg font-semibold">Bộ lọc mềm - Thói quen ở phòng</h2>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="block text-sm font-medium text-slate-700">Nấu ăn
+              <div className="mt-4 space-y-4">
+                <label className="block text-sm font-medium text-slate-700">Bạn mong muốn roommate nấu ăn ở mức nào?
                   <select className={selectClassName()} value={prefs.pref_cooking ?? ""} onChange={(e) => setPrefNumber("pref_cooking", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {linearWithAny.cooking.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </label>
-                <label className="block text-sm font-medium text-slate-700">Bạn bè về phòng
+                <label className="block text-sm font-medium text-slate-700">Tần suất dẫn bạn bè về phòng mong muốn của roommate
                   <select className={selectClassName()} value={prefs.pref_guest ?? ""} onChange={(e) => setPrefNumber("pref_guest", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {linearWithAny.guest.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </label>
-                <label className="block text-sm font-medium text-slate-700">Tần suất ở phòng
+                <label className="block text-sm font-medium text-slate-700">Tần suất ở trong phòng mong muốn của roommate
                   <select className={selectClassName()} value={prefs.pref_home_frequency ?? ""} onChange={(e) => setPrefNumber("pref_home_frequency", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {linearWithAny.home_frequency.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </label>
-                <label className="block text-sm font-medium text-slate-700">Thời gian làm việc
+                <label className="block text-sm font-medium text-slate-700">Thời gian làm việc mong muốn của roommate
                   <select className={selectClassName()} value={prefs.pref_work_schedule ?? ""} onChange={(e) => setPrefText("pref_work_schedule", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {PREF_OPTIONS.work_schedule.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -351,26 +352,26 @@ export default function SoftFilterPage() {
 
             <section className="rounded-3xl border border-orange-100 bg-white p-6">
               <h2 className="text-lg font-semibold">Bộ lọc mềm - Môi trường sống chung</h2>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="block text-sm font-medium text-slate-700">Chia sẻ đồ dùng
+              <div className="mt-4 space-y-4">
+                <label className="block text-sm font-medium text-slate-700">Mức độ chia sẻ đồ dùng mong muốn của roommate
                   <select className={selectClassName()} value={prefs.pref_sharing ?? ""} onChange={(e) => setPrefText("pref_sharing", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {PREF_OPTIONS.sharing.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </label>
-                <label className="block text-sm font-medium text-slate-700">Mức độ yên tĩnh
+                <label className="block text-sm font-medium text-slate-700">Mức độ giữ yên tĩnh trong không gian chung mong muốn của roommate
                   <select className={selectClassName()} value={prefs.pref_noise ?? ""} onChange={(e) => setPrefNumber("pref_noise", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {linearWithAny.noise.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </label>
-                <label className="block text-sm font-medium text-slate-700">Gọi điện/video call
+                <label className="block text-sm font-medium text-slate-700">Mức độ gọi điện/video call mong muốn của roommate
                   <select className={selectClassName()} value={prefs.pref_call_frequency ?? ""} onChange={(e) => setPrefNumber("pref_call_frequency", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {linearWithAny.call_frequency.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </label>
-                <label className="block text-sm font-medium text-slate-700">Game voice chat
+                <label className="block text-sm font-medium text-slate-700">Mức độ chơi game có sử dụng mic hoặc voice chat mong muốn của roommate
                   <select className={selectClassName()} value={prefs.pref_game_mic ?? ""} onChange={(e) => setPrefNumber("pref_game_mic", e.target.value)}>
                     <option value="">Bỏ trống</option>
                     {linearWithAny.game_mic.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
