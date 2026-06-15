@@ -19,17 +19,22 @@ export async function checkoutPayment(payload: { listingId: string; packageName:
   return response.data as { message: string; transaction: PaymentTransaction };
 }
 
+export type QrData = {
+  qrUrl: string;
+  recipientInfo: { name: string; phone: string };
+  amount: number;
+  content: string;
+  code: string;
+  syntax: string;
+  example: string;
+  packageType: string;
+  packageLabel: string;
+  durationDays: number;
+};
+
 export async function generateQR(payload: { listingId: string; amount: number }) {
   const response = await axiosInstance.post("/api/payments/generate-qr", payload);
-  return response.data as {
-    qrUrl: string;
-    bankInfo: { bank: string; accountNumber: string; accountName: string };
-    amount: number;
-    content: string;
-    packageType: string;
-    packageLabel: string;
-    durationDays: number;
-  };
+  return response.data as QrData;
 }
 
 export async function confirmTransfer(payload: { listingId: string; amount: number; packageName: string }) {

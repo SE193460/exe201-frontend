@@ -225,7 +225,7 @@ export default function CreateListingPage() {
           </label>
 
           <label className="block text-sm font-medium text-slate-700 md:col-span-2">
-            Số điện thoại liên hệ
+            Số điện thoại liên hệ*
             <input
               type="tel"
               value={form.phoneNumber}
@@ -286,7 +286,7 @@ export default function CreateListingPage() {
             </div>
 
             <label className="mt-4 block text-sm font-medium text-slate-700">
-              Địa chỉ cụ thể
+              Địa chỉ cụ thể*
               <input
                 type="text"
                 value={form.address}
@@ -298,7 +298,7 @@ export default function CreateListingPage() {
           </div>
 
           <label className="block text-sm font-medium text-slate-700">
-            Giá thuê (VND)
+            Giá thuê (VND)*
             <input
               type="text"
               inputMode="numeric"
@@ -321,7 +321,7 @@ export default function CreateListingPage() {
           </label>
 
           <label className="block text-sm font-medium text-slate-700">
-            Ngày có thể ở
+            Ngày có thể ở*
             <input
               type="date"
               value={form.availableFrom}
