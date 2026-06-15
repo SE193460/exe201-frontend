@@ -66,6 +66,7 @@ export default function AdminImportedListingsPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
+  const [sourceDuplicateMessage, setSourceDuplicateMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -100,6 +101,20 @@ export default function AdminImportedListingsPage() {
   };
 
   const handleChange = (key: string, value: string | boolean) => {
+    if (key === "source" && typeof value === "string") {
+      const normalizedSource = value.trim().toLowerCase();
+      if (!normalizedSource) {
+        setSourceDuplicateMessage("");
+      } else {
+        const duplicateSource = listings.find((listing) => {
+          if (formMode === "edit" && listing.id === editingId) {
+            return false;
+          }
+          return (listing.source || "").trim().toLowerCase() === normalizedSource;
+        });
+        setSourceDuplicateMessage(duplicateSource ? "Link bài đăng gốc đã tồn tại trong hệ thống." : "");
+      }
+    }
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -107,6 +122,7 @@ export default function AdminImportedListingsPage() {
     setForm(emptyForm());
     setSelectedAmenityIds([]);
     setFormError("");
+    setSourceDuplicateMessage("");
     setFormMode("create");
     setEditingId(null);
     setExistingImageCount(0);
@@ -131,10 +147,11 @@ export default function AdminImportedListingsPage() {
       smokingAllowed: listing.smokingAllowed,
       petAllowed: listing.petAllowed,
       source: listing.source || "",
-      imageUrls: (listing.images || []).map((img) => img.imageUrl).filter((u) => u.startsWith("http://") || u.startsWith("https://")).join("\n"),
+      imageUrls: "",
     });
     setSelectedAmenityIds((listing.amenities || []).map((a) => a.id));
     setFormError("");
+    setSourceDuplicateMessage("");
     setFormMode("edit");
     setEditingId(listing.id);
     setExistingImageCount((listing.images || []).length);
@@ -149,6 +166,12 @@ export default function AdminImportedListingsPage() {
       setFormError("Vui lòng điền đầy đủ tiêu đề, mô tả, giá, quận/huyện và link nguồn.");
       return;
     }
+
+    if (sourceDuplicateMessage) {
+      setFormError(sourceDuplicateMessage);
+      return;
+    }
+
     const rentPrice = parseCurrencyInput(form.rentPrice);
     if (Number.isNaN(rentPrice) || rentPrice <= 0) {
       setFormError("Giá thuê không hợp lệ.");
@@ -156,6 +179,18 @@ export default function AdminImportedListingsPage() {
     }
     if (!form.source.startsWith("http://") && !form.source.startsWith("https://")) {
       setFormError("Link nguồn phải bắt đầu bằng http:// hoặc https://");
+      return;
+    }
+
+    const normalizedSource = form.source.trim().toLowerCase();
+    const duplicateSource = listings.find((listing) => {
+      if (formMode === "edit" && listing.id === editingId) {
+        return false;
+      }
+      return (listing.source || "").trim().toLowerCase() === normalizedSource;
+    });
+    if (duplicateSource) {
+      setFormError("Link bài đăng gốc đã tồn tại trong hệ thống.");
       return;
     }
 
@@ -309,7 +344,10 @@ export default function AdminImportedListingsPage() {
                       className="mt-2 w-full rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm outline-none focus:border-blue-300"
                       placeholder="https://nhatot.com/..."
                     />
-                    <p className="mt-1 text-xs text-slate-400">Link gốc được lưu để đảm bảo tính minh bạch pháp lý.</p>
+                    {sourceDuplicateMessage && (
+                      <p className="mt-2 text-xs font-semibold text-red-600">{sourceDuplicateMessage}</p>
+                    )}
+                    <p className="mt-1 text-xs text-slate-400">Link gốc được lưu để đảm bảo tính minh bạch pháp lý và không được trùng trong hệ thống.</p>
                   </label>
                   <label className="mt-4 block text-sm font-medium text-slate-700">
                     URLs hình ảnh từ nguồn gốc
@@ -320,7 +358,7 @@ export default function AdminImportedListingsPage() {
                       className="mt-2 w-full rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm font-mono outline-none focus:border-blue-300"
                       placeholder={"https://cdn.example.com/img1.jpg\nhttps://cdn.example.com/img2.jpg"}
                     />
-                    <p className="mt-1 text-xs text-slate-400">Mỗi URL một dòng. Ảnh tham chiếu trực tiếp, không tải về server.</p>
+                    <p className="mt-1 text-xs text-slate-400">Mỗi URL một dòng. Ảnh tham chiếu trực tiếp, không tải về server. Khi chỉnh sửa, chỉ nhập thêm URLs mới.</p>
                     <p className="mt-1 text-xs text-slate-400">Tối đa 20 URLs ảnh cho mỗi bài đăng.</p>
                   </label>
                 </div>
@@ -479,6 +517,10 @@ export default function AdminImportedListingsPage() {
                       </span>
 
                       <div className="flex shrink-0 items-center gap-2">
+                        <button onClick={() => navigate(`/listings/${listing.id}`)}
+                          className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                          Xem bài đăng
+                        </button>
                         <button onClick={() => openEdit(listing)}
                           className="rounded-full border border-orange-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-orange-50 transition">
                           Sửa
