@@ -125,25 +125,21 @@ export default function PaymentPackages() {
                             {qrData && (
                                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
                                     <div className="rounded-[24px] bg-white p-8 border border-orange-100 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)]">
-                                        <h3 className="text-lg font-bold mb-4 text-center">Quét mã QR để chuyển khoản</h3>
+                                        <h3 className="text-lg font-bold mb-4 text-center">Chuyển khoản đến</h3>
 
                                         <div className="flex flex-col md:flex-row items-center justify-center gap-8">
                                             <div className="rounded-2xl border-2 border-orange-100 p-2 bg-white">
-                                                <img src={qrData.qrUrl} alt="VietQR" className="w-56 h-56 object-contain" />
+                                                <img src={qrData.qrUrl} alt="QR chuyển khoản" className="w-56 h-56 object-contain" />
                                             </div>
 
                                             <div className="space-y-3 text-sm">
                                                 <div>
-                                                    <p className="font-semibold text-slate-500">Ngân hàng</p>
-                                                    <p className="font-bold">{qrData.bankInfo.bank}</p>
+                                                    <p className="font-semibold text-slate-500">Người nhận</p>
+                                                    <p className="font-bold">{qrData.recipientInfo.name}</p>
                                                 </div>
                                                 <div>
-                                                    <p className="font-semibold text-slate-500">Số tài khoản</p>
-                                                    <p className="font-bold">{qrData.bankInfo.accountNumber}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-slate-500">Chủ tài khoản</p>
-                                                    <p className="font-bold">{qrData.bankInfo.accountName}</p>
+                                                    <p className="font-semibold text-slate-500">Số điện thoại</p>
+                                                    <p className="font-bold">{qrData.recipientInfo.phone}</p>
                                                 </div>
                                                 <div>
                                                     <p className="font-semibold text-slate-500">Số tiền</p>
@@ -151,8 +147,11 @@ export default function PaymentPackages() {
                                                 </div>
                                                 <div>
                                                     <p className="font-semibold text-slate-500">Nội dung chuyển khoản</p>
+                                                    <div className="text-xs text-slate-400 mb-1">
+                                                        Cú pháp: <span className="font-mono">{qrData.syntax}</span>
+                                                    </div>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-mono font-bold bg-orange-50 px-3 py-1 rounded-lg border border-orange-200">{qrData.content}</span>
+                                                        <span className="font-mono font-bold bg-orange-50 px-3 py-1 rounded-lg border border-orange-200 text-sm">{qrData.content}</span>
                                                         <button onClick={handleCopyContent} className="p-1.5 rounded-lg hover:bg-orange-50 transition">
                                                             <Copy className={`h-4 w-4 ${copied ? "text-green-500" : "text-slate-400"}`} />
                                                         </button>
@@ -162,8 +161,15 @@ export default function PaymentPackages() {
                                         </div>
 
                                         <div className="mt-6 rounded-2xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
-                                            <p className="font-semibold">⚠️ Lưu ý nhanh:</p>
-                                            <p>Vui lòng chuyển khoản đúng nội dung <strong>{qrData.content}</strong>. Sau khi chuyển khoản, nhấn nút bên dưới để gửi yêu cầu xác nhận giao dịch.</p>
+                                            <p className="font-semibold">⚠️ Hướng dẫn:</p>
+                                            <ul className="mt-1 space-y-1 list-disc pl-4">
+                                                <li>Mở ứng dụng <strong>ngân hàng</strong> hoặc <strong>Momo</strong> trên điện thoại</li>
+                                                <li>Quét mã QR hoặc chuyển khoản đến số <strong>{qrData.recipientInfo.phone}</strong></li>
+                                                <li>Nhập nội dung: <strong className="font-mono">{qrData.syntax}</strong></li>
+                                                <li>Mã tin đăng <strong>{qrData.code}</strong> có trong chi tiết bài đăng</li>
+                                                <li>Ví dụ: <strong className="font-mono">{qrData.example}</strong></li>
+                                                <li>Sau khi chuyển, nhấn nút bên dưới để xác nhận</li>
+                                            </ul>
                                         </div>
 
                                         <div className="mt-6 text-center">
