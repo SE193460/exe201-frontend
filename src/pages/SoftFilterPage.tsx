@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import UserShell from "../layouts/UserShell";
 import { listMyListings, resolveListingImageUrl } from "../api/services/listings";

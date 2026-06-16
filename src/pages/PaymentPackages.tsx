@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { generateQR, confirmTransfer } from "../api/services/payments";
 import UserShell from "@/layouts/UserShell";
-import { Sparkles, Crown, CheckCircle, Copy, Phone, MessageCircleMore } from "lucide-react";
+import { Sparkles, Crown, CheckCircle, Copy, Phone, MessageCircleMore, AlertTriangle } from "lucide-react";
 
 const packages = [
     {
@@ -148,7 +148,7 @@ export default function PaymentPackages() {
                                                 <div>
                                                     <p className="font-semibold text-slate-500">Nội dung chuyển khoản</p>
                                                     <div className="text-xs text-slate-400 mb-1">
-                                                        Cú pháp: <span className="font-mono">{qrData.syntax}</span>
+
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-mono font-bold bg-orange-50 px-3 py-1 rounded-lg border border-orange-200 text-sm">{qrData.content}</span>
@@ -161,13 +161,14 @@ export default function PaymentPackages() {
                                         </div>
 
                                         <div className="mt-6 rounded-2xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
-                                            <p className="font-semibold">⚠️ Hướng dẫn:</p>
+                                            <div className="flex items-center gap-2 font-semibold mb-3">
+                                                <AlertTriangle className="h-4 w-4 text-amber-700" />
+                                                <span>Hướng dẫn:</span>
+                                            </div>
                                             <ul className="mt-1 space-y-1 list-disc pl-4">
                                                 <li>Mở ứng dụng <strong>ngân hàng</strong> hoặc <strong>Momo</strong> trên điện thoại</li>
                                                 <li>Quét mã QR hoặc chuyển khoản đến số <strong>{qrData.recipientInfo.phone}</strong></li>
-                                                <li>Nhập nội dung: <strong className="font-mono">{qrData.syntax}</strong></li>
-                                                <li>Mã tin đăng <strong>{qrData.code}</strong> có trong chi tiết bài đăng</li>
-                                                <li>Ví dụ: <strong className="font-mono">{qrData.example}</strong></li>
+                                                <li>Nhập nội dung chuyển khoản: <strong className="font-mono">{qrData.example}</strong></li>
                                                 <li>Sau khi chuyển, nhấn nút bên dưới để xác nhận</li>
                                             </ul>
                                         </div>
