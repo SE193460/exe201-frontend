@@ -23,7 +23,6 @@ export default function EditListingPage() {
   const MAX_LISTING_IMAGES = 20;
   const navigate = useNavigate();
   const { id } = useParams();
-  const todayDate = new Date().toISOString().slice(0, 10);
   const [status, setStatus] = useState("Đang tải...");
   const [error, setError] = useState("");
   const { showToast } = useToast();
