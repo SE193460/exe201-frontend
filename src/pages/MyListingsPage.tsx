@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listMyListings, resolveListingImageUrl, deleteMyListing } from "../api/services/listings";
+import { listMyListings, resolveListingImageUrl, deleteMyListing, unpublishMyListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
 import Pagination from "../components/Pagination";
 import { useToast } from "../contexts/ToastContext";
-import { LucideRocket, Trash2 } from "lucide-react";
+import { LucideRocket, Trash2, XCircle } from "lucide-react";
 
 function formatDate(value: string | null) {
   if (!value) return "";
@@ -41,6 +41,7 @@ export default function MyListingsPage() {
   const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
   const [confirmAgree, setConfirmAgree] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [actionType, setActionType] = useState<"delete" | "retract" | null>(null);
 
   useEffect(() => {
     listMyListings()
@@ -59,24 +60,45 @@ export default function MyListingsPage() {
     e.stopPropagation();
     setListingToDelete(listing);
     setConfirmAgree(false);
+    setActionType("delete");
+    setShowDeleteModal(true);
+  };
+
+  const handleRetractClick = (e: React.MouseEvent, listing: Listing) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setListingToDelete(listing);
+    setConfirmAgree(false);
+    setActionType("retract");
     setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!listingToDelete) return;
-    // For APPROVED listings, checkbox must be checked
-    if (listingToDelete.status === "APPROVED" && !confirmAgree) return;
+    // For retract action, checkbox must be checked
+    if (actionType === "retract" && !confirmAgree) return;
     
     setDeleting(true);
     try {
-      await deleteMyListing(listingToDelete.id);
-      setListings((prev) => prev.filter((l) => l.id !== listingToDelete.id));
+      if (actionType === "delete") {
+        await deleteMyListing(listingToDelete.id);
+        // For delete, remove from list
+        setListings((prev) => prev.filter((l) => l.id !== listingToDelete.id));
+      } else if (actionType === "retract") {
+        await unpublishMyListing(listingToDelete.id);
+        // For retract, reload the entire list since status changed to DRAFT
+        const updatedListings = await listMyListings();
+        setListings(updatedListings);
+      }
       setShowDeleteModal(false);
       setListingToDelete(null);
       setConfirmAgree(false);
-      showToast({ type: "success", message: "Xóa bài đăng thành công." });
+      setActionType(null);
+      const successMsg = actionType === "retract" ? "Gỡ bài đăng thành công." : "Xóa bài đăng thành công.";
+      showToast({ type: "success", message: successMsg });
     } catch {
-      showToast({ type: "error", message: "Không thể xóa bài đăng. Vui lòng thử lại." });
+      const errorMsg = actionType === "retract" ? "Không thể gỡ bài đăng. Vui lòng thử lại." : "Không thể xóa bài đăng. Vui lòng thử lại.";
+      showToast({ type: "error", message: errorMsg });
     } finally {
       setDeleting(false);
     }
@@ -151,26 +173,39 @@ export default function MyListingsPage() {
                       <span>Tạo: {formatDate(listing.createdAt)}</span>
                     </div>
                     <div className="mt-4 flex items-center justify-end gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDeleteClick(e, listing);
-                        }}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" /> Xóa
-                      </button>
-                      {listing.status === "APPROVED" && (
+                      {listing.status === "APPROVED" ? (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleRetractClick(e, listing);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+                          >
+                            <XCircle className="h-4 w-4" /> Gỡ bài đăng
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              navigate(`/payment/${listing.id}`)
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+                            >
+                            <LucideRocket className="h-4 w-4" /> Đẩy bài
+                          </button>
+                        </>
+                      ) : (
                         <button
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            navigate(`/payment/${listing.id}`)
+                            handleDeleteClick(e, listing);
                           }}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
-                          >
-                          <LucideRocket className="h-4 w-4" /> Đẩy bài
+                          className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" /> Xóa
                         </button>
                       )}
                     </div>
@@ -187,16 +222,19 @@ export default function MyListingsPage() {
           onPageChange={setPage}
         />
 
-        {/* Delete Confirmation Modal */}
+        {/* Delete/Retract Confirmation Modal */}
         {showDeleteModal && listingToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="max-w-md rounded-2xl border border-orange-100 bg-white p-6 shadow-xl">
-              <h2 className="text-xl font-bold text-slate-800">Xóa bài đăng</h2>
+              <h2 className="text-xl font-bold text-slate-800">
+                {actionType === "retract" ? "Gỡ bài đăng" : "Xóa bài đăng"}
+              </h2>
               <p className="mt-3 text-sm text-slate-600">
-                Bạn chắc chắn muốn xóa bài đăng <strong>{listingToDelete.title}</strong> không? Hành động này không thể hoàn tác.
+                Bạn chắc chắn muốn {actionType === "retract" ? "gỡ" : "xóa"} bài đăng <strong>{listingToDelete.title}</strong> không?
+                {actionType === "retract" ? " Bài đăng sẽ chuyển về trạng thái Bản nháp." : " Hành động này không thể hoàn tác."}
               </p>
               
-              {listingToDelete.status === "APPROVED" && (
+              {actionType === "retract" && (
                 <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
                   <label className="flex items-start gap-3">
                     <input
@@ -218,6 +256,7 @@ export default function MyListingsPage() {
                     setShowDeleteModal(false);
                     setListingToDelete(null);
                     setConfirmAgree(false);
+                    setActionType(null);
                   }}
                   className="flex-1 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   disabled={deleting}
@@ -226,10 +265,10 @@ export default function MyListingsPage() {
                 </button>
                 <button
                   onClick={handleConfirmDelete}
-                  disabled={(listingToDelete.status === "APPROVED" && !confirmAgree) || deleting}
+                  disabled={(actionType === "retract" && !confirmAgree) || deleting}
                   className="flex-1 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {deleting ? "Đang xóa..." : "Xóa bài đăng"}
+                  {deleting ? (actionType === "retract" ? "Đang gỡ..." : "Đang xóa...") : (actionType === "retract" ? "Gỡ bài đăng" : "Xóa bài đăng")}
                 </button>
               </div>
             </div>

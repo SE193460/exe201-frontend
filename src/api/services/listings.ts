@@ -155,3 +155,8 @@ export async function deleteMyListing(id: string) {
   return response.data as { message: string };
 }
 
+export async function unpublishMyListing(id: string) {
+  const response = await axiosInstance.put(`/api/users/me/listings/${id}/unpublish`);
+  return response.data as Listing;
+}
+
