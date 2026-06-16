@@ -59,6 +59,70 @@ export async function fetchAdminListings() {
   return response.data as AdminListing[];
 }
 
+export type AdminDashboardSummary = {
+  userStats: {
+    total_users: number;
+    active_users: number;
+    new_users_last_7d: number;
+    new_users_prev_7d: number;
+  };
+  listingStats: {
+    total_listings: number;
+    pending_listings: number;
+    rejected_listings: number;
+    approved_listings: number;
+    imported_listings: number;
+    imported_source_count: number;
+  };
+  reportStats: {
+    total_reports: number;
+    unresolved_reports: number;
+    resolved_reports: number;
+  };
+  paymentStats: {
+    total_revenue: number;
+    pending_revenue: number;
+    completed_transactions: number;
+    pending_transactions: number;
+    revenue_last_30d: number;
+    revenue_last_7d: number;
+    revenue_prev_7d: number;
+  };
+  topImportSources: Array<{ source: string; count: number }>;
+  userGrowthWeekly: Array<{ day: string; new_users: number }>;
+  revenueTrendWeekly: Array<{ day: string; revenue: number }>;
+  userGrowthYearly: Array<{ month: string; new_users: number }>;
+  revenueTrendYearly: Array<{ month: string; revenue: number }>;
+  recentPayments: Array<{
+    id: string;
+    code: string | null;
+    amount: number;
+    package_name: string;
+    status: string;
+    created_at: string;
+    listing_id: string | null;
+    listing_title: string | null;
+    user_name: string | null;
+    user_email: string | null;
+  }>;
+  recentReports: Array<{
+    id: string;
+    status: string;
+    reason: string;
+    description: string | null;
+    created_at: string;
+    listing_id: string | null;
+    listing_title: string | null;
+    reporter_name: string | null;
+    reporter_email: string | null;
+  }>;
+};
+
+export async function fetchAdminDashboard() {
+  const response = await axiosInstance.get("/api/admin/dashboard");
+  return response.data as AdminDashboardSummary;
+}
+
 export async function approveListing(id: string) {
   const response = await axiosInstance.patch(`/api/admin/listings/${id}/approve`);
   return response.data as { id: string; status: string };

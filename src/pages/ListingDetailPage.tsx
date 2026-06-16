@@ -282,10 +282,6 @@ export default function ListingDetailPage() {
                       <span className="text-slate-700">Đối tượng ưu tiên:</span>
                       <strong className="text-slate-800">{listing.preferredGender || "Không yêu cầu"}</strong>
                     </div>
-                    <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-700">Số lượng:</span>
-                      <strong className="text-slate-800">{listing.currentOccupants || 0} / {listing.maxOccupants || 0} người</strong>
-                    </div>
                   </div>
                 </div>
 

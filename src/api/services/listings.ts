@@ -150,3 +150,8 @@ export async function reportListing(listingId: string, payload: { reason: string
   return response.data as { message: string; report: unknown };
 }
 
+export async function deleteMyListing(id: string) {
+  const response = await axiosInstance.delete(`/api/users/me/listings/${id}`);
+  return response.data as { message: string };
+}
+

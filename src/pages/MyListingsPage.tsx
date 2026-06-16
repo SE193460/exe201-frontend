@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listMyListings, resolveListingImageUrl } from "../api/services/listings";
+import { listMyListings, resolveListingImageUrl, deleteMyListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
 import Pagination from "../components/Pagination";
-import {LucideRocket} from "lucide-react";
+import { useToast } from "../contexts/ToastContext";
+import { LucideRocket, Trash2 } from "lucide-react";
 
 function formatDate(value: string | null) {
   if (!value) return "";
@@ -30,11 +31,16 @@ function statusLabel(status: string) {
 
 export default function MyListingsPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [listings, setListings] = useState<Listing[]>([]);
   const [status, setStatus] = useState("Đang tải...");
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 6;
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
+  const [confirmAgree, setConfirmAgree] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     listMyListings()
@@ -47,6 +53,34 @@ export default function MyListingsPage() {
         setStatus("");
       });
   }, []);
+
+  const handleDeleteClick = (e: React.MouseEvent, listing: Listing) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setListingToDelete(listing);
+    setConfirmAgree(false);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!listingToDelete) return;
+    // For APPROVED listings, checkbox must be checked
+    if (listingToDelete.status === "APPROVED" && !confirmAgree) return;
+    
+    setDeleting(true);
+    try {
+      await deleteMyListing(listingToDelete.id);
+      setListings((prev) => prev.filter((l) => l.id !== listingToDelete.id));
+      setShowDeleteModal(false);
+      setListingToDelete(null);
+      setConfirmAgree(false);
+      showToast({ type: "success", message: "Xóa bài đăng thành công." });
+    } catch {
+      showToast({ type: "error", message: "Không thể xóa bài đăng. Vui lòng thử lại." });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <UserShell>
@@ -116,20 +150,30 @@ export default function MyListingsPage() {
                       <span>Khu vực: {location || "Chưa cập nhật"}</span>
                       <span>Tạo: {formatDate(listing.createdAt)}</span>
                     </div>
-                    {listing.status === "APPROVED" && (
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex items-center justify-end gap-2">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          navigate(`/payment/${listing.id}`)
+                          handleDeleteClick(e, listing);
                         }}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
-                        >
-                        <LucideRocket className="h-4 w-4" /> Đẩy bài
+                        className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" /> Xóa
                       </button>
+                      {listing.status === "APPROVED" && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            navigate(`/payment/${listing.id}`)
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-orange-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+                          >
+                          <LucideRocket className="h-4 w-4" /> Đẩy bài
+                        </button>
+                      )}
                     </div>
-                    )}
                   </div>
 
                 </div>
@@ -142,6 +186,55 @@ export default function MyListingsPage() {
           totalPages={Math.ceil(listings.length / PAGE_SIZE)}
           onPageChange={setPage}
         />
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && listingToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="max-w-md rounded-2xl border border-orange-100 bg-white p-6 shadow-xl">
+              <h2 className="text-xl font-bold text-slate-800">Xóa bài đăng</h2>
+              <p className="mt-3 text-sm text-slate-600">
+                Bạn chắc chắn muốn xóa bài đăng <strong>{listingToDelete.title}</strong> không? Hành động này không thể hoàn tác.
+              </p>
+              
+              {listingToDelete.status === "APPROVED" && (
+                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={confirmAgree}
+                      onChange={(e) => setConfirmAgree(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-amber-300 text-amber-600"
+                    />
+                    <span className="text-sm text-slate-700">
+                      Tôi đã tìm được người ở ghép hoặc không có nhu cầu đăng bài nữa
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setListingToDelete(null);
+                    setConfirmAgree(false);
+                  }}
+                  className="flex-1 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  disabled={deleting}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={(listingToDelete.status === "APPROVED" && !confirmAgree) || deleting}
+                  className="flex-1 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? "Đang xóa..." : "Xóa bài đăng"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </UserShell>
   );

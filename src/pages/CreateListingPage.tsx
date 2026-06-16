@@ -4,6 +4,7 @@ import { createMyListingDraft, uploadListingImages } from "../api/services/listi
 import { fetchAmenities, type Amenity } from "../api/services/amenities";
 import { fetchProfile, updateProfile } from "../api/services/user";
 import UserShell from "../layouts/UserShell";
+import { useToast } from "../contexts/ToastContext";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "./listingFormOptions";
 
 function formatCurrencyInput(value: string) {
@@ -19,6 +20,7 @@ function parseCurrencyInput(value: string) {
 export default function CreateListingPage() {
   const MAX_LISTING_IMAGES = 20;
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [amenities, setAmenities] = useState<Amenity[]>([]);
@@ -36,12 +38,9 @@ export default function CreateListingPage() {
     district: DISTRICT_OPTIONS[0] || "",
     ward: WARD_OPTIONS[DISTRICT_OPTIONS[0]]?.[0] || "",
     address: "",
-    availableFrom: "",
     preferredGender: "",
     roomType: "",
     roomAreaSqm: "",
-    maxOccupants: "",
-    currentOccupants: "0",
     smokingAllowed: false,
     petAllowed: false,
   });
@@ -126,24 +125,39 @@ export default function CreateListingPage() {
     setError("");
 
     if (!form.title || !form.description || !form.rentPrice || !form.city || !form.district || !form.ward) {
-      setError("Vui lòng nhập đầy đủ tiêu đề, mô tả, giá và khu vực.");
+      const msg = "Vui lòng nhập đầy đủ tiêu đề, mô tả, giá và khu vực.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
       return;
     }
 
     const rentPrice = parseCurrencyInput(form.rentPrice);
     if (Number.isNaN(rentPrice) || rentPrice <= 0) {
-      setError("Giá thuê không hợp lệ.");
+      const msg = "Giá thuê không hợp lệ.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
+      return;
+    }
+
+    if (!form.phoneNumber) {
+      const msg = "Vui lòng nhập Số điện thoại liên hệ.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
       return;
     }
 
     if (form.phoneNumber && !/^(\+?\d[\d\s.-]{7,20})$/.test(form.phoneNumber)) {
-      setError("Số điện thoại không hợp lệ.");
+      const msg = "Số điện thoại không hợp lệ.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
       return;
     }
 
     const roomAreaSqm = form.roomAreaSqm ? Number(form.roomAreaSqm) : null;
     if (roomAreaSqm !== null && (Number.isNaN(roomAreaSqm) || roomAreaSqm <= 0)) {
-      setError("Diện tích phòng không hợp lệ.");
+      const msg = "Diện tích phòng không hợp lệ.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
       return;
     }
 
@@ -156,12 +170,9 @@ export default function CreateListingPage() {
         district: form.district,
         ward: form.ward,
         address: form.address || null,
-        availableFrom: form.availableFrom || null,
         preferredGender: form.preferredGender || null,
         roomType: form.roomType || null,
         roomAreaSqm,
-        maxOccupants: form.maxOccupants ? Number(form.maxOccupants) : null,
-        currentOccupants: form.currentOccupants ? Number(form.currentOccupants) : 0,
         smokingAllowed: form.smokingAllowed,
         petAllowed: form.petAllowed,
         amenityIds: selectedAmenityIds,
@@ -178,7 +189,9 @@ export default function CreateListingPage() {
       setStatus("Tạo bài đăng thành công. Bài đang ở trạng thái bản nháp.");
       navigate(`/my-listings/${listing.id}`);
     } catch {
-      setError("Không thể tạo bài đăng. Vui lòng thử lại.");
+      const msg = "Không thể tạo bài đăng. Vui lòng thử lại.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
     }
   };
 
@@ -321,16 +334,6 @@ export default function CreateListingPage() {
           </label>
 
           <label className="block text-sm font-medium text-slate-700">
-            Ngày có thể ở*
-            <input
-              type="date"
-              value={form.availableFrom}
-              onChange={(event) => handleChange("availableFrom", event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-            />
-          </label>
-
-          <label className="block text-sm font-medium text-slate-700">
             Giới tính ưu tiên
             <input
               type="text"
@@ -349,28 +352,6 @@ export default function CreateListingPage() {
               onChange={(event) => handleChange("roomType", event.target.value)}
               className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
               placeholder="Phòng trọ / Căn hộ"
-            />
-          </label>
-
-          <label className="block text-sm font-medium text-slate-700">
-            Số người tối đa
-            <input
-              type="number"
-              value={form.maxOccupants}
-              onChange={(event) => handleChange("maxOccupants", event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-              placeholder="2"
-            />
-          </label>
-
-          <label className="block text-sm font-medium text-slate-700">
-            Đang ở (người)
-            <input
-              type="number"
-              value={form.currentOccupants}
-              onChange={(event) => handleChange("currentOccupants", event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-              placeholder="0"
             />
           </label>
 

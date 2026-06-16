@@ -7,6 +7,7 @@ import type { Amenity } from "../api/services/amenities";
 import UserShell from "../layouts/UserShell";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "./listingFormOptions";
 import type { Listing } from "../api/services/listings";
+import { useToast } from "../contexts/ToastContext";
 
 function formatCurrencyInput(value: string) {
   const digits = value.replace(/\D/g, "");
@@ -22,8 +23,10 @@ export default function EditListingPage() {
   const MAX_LISTING_IMAGES = 20;
   const navigate = useNavigate();
   const { id } = useParams();
+  const todayDate = new Date().toISOString().slice(0, 10);
   const [status, setStatus] = useState("Đang tải...");
   const [error, setError] = useState("");
+  const { showToast } = useToast();
   const [listing, setListing] = useState<Listing | null>(null);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [amenitiesError, setAmenitiesError] = useState("");
@@ -40,12 +43,9 @@ export default function EditListingPage() {
     district: DISTRICT_OPTIONS[0] || "",
     ward: WARD_OPTIONS[DISTRICT_OPTIONS[0]]?.[0] || "",
     address: "",
-    availableFrom: "",
     preferredGender: "",
     roomType: "",
     roomAreaSqm: "",
-    maxOccupants: "",
-    currentOccupants: "0",
     smokingAllowed: false,
     petAllowed: false,
   });
@@ -75,12 +75,9 @@ export default function EditListingPage() {
           district: data.district || DISTRICT_OPTIONS[0] || "",
           ward: data.ward || WARD_OPTIONS[data.district || ""]?.[0] || "",
           address: data.address || "",
-          availableFrom: data.availableFrom || "",
           preferredGender: data.preferredGender || "",
           roomType: data.roomType || "",
           roomAreaSqm: data.roomAreaSqm ? String(data.roomAreaSqm) : "",
-          maxOccupants: data.maxOccupants ? String(data.maxOccupants) : "",
-          currentOccupants: data.currentOccupants ? String(data.currentOccupants) : "0",
           smokingAllowed: data.smokingAllowed,
           petAllowed: data.petAllowed,
         });
@@ -166,7 +163,23 @@ export default function EditListingPage() {
     if (!id) return;
 
     if (!form.title || !form.description || !form.rentPrice || !form.city || !form.district || !form.ward) {
-      setError("Vui lòng nhập đầy đủ tiêu đề, mô tả, giá và khu vực.");
+      const msg = "Vui lòng nhập đầy đủ tiêu đề, mô tả, giá và khu vực.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
+      return;
+    }
+
+    if (!form.phoneNumber) {
+      const msg = "Vui lòng nhập Số điện thoại liên hệ.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
+      return;
+    }
+
+    if (form.phoneNumber && !/^(\+?\d[\d\s.-]{7,20})$/.test(form.phoneNumber)) {
+      const msg = "Số điện thoại không hợp lệ.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
       return;
     }
 
@@ -178,7 +191,9 @@ export default function EditListingPage() {
 
     const roomAreaSqm = form.roomAreaSqm ? Number(form.roomAreaSqm) : null;
     if (roomAreaSqm !== null && (Number.isNaN(roomAreaSqm) || roomAreaSqm <= 0)) {
-      setError("Diện tích phòng không hợp lệ.");
+      const msg = "Diện tích phòng không hợp lệ.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
       return;
     }
 
@@ -191,12 +206,9 @@ export default function EditListingPage() {
         district: form.district,
         ward: form.ward,
         address: form.address || null,
-        availableFrom: form.availableFrom || null,
         preferredGender: form.preferredGender || null,
         roomType: form.roomType || null,
         roomAreaSqm,
-        maxOccupants: form.maxOccupants ? Number(form.maxOccupants) : null,
-        currentOccupants: form.currentOccupants ? Number(form.currentOccupants) : 0,
         smokingAllowed: form.smokingAllowed,
         petAllowed: form.petAllowed,
         amenityIds: selectedAmenityIds,
@@ -213,7 +225,9 @@ export default function EditListingPage() {
       setStatus("Cập nhật bài đăng thành công.");
       navigate(`/my-listings/${updated.id}`);
     } catch {
-      setError("Không thể cập nhật bài đăng. Vui lòng thử lại.");
+      const msg = "Không thể cập nhật bài đăng. Vui lòng thử lại.";
+      showToast({ type: "error", message: msg });
+      setError(msg);
     }
   };
 
@@ -293,7 +307,7 @@ export default function EditListingPage() {
           </label>
 
           <label className="block text-sm font-medium text-slate-700 md:col-span-2">
-            Số điện thoại liên hệ
+              Số điện thoại liên hệ*
             <input
               type="tel"
               value={form.phoneNumber}
@@ -388,16 +402,6 @@ export default function EditListingPage() {
           </label>
 
           <label className="block text-sm font-medium text-slate-700">
-            Ngày có thể ở
-            <input
-              type="date"
-              value={form.availableFrom}
-              onChange={(event) => handleChange("availableFrom", event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-            />
-          </label>
-
-          <label className="block text-sm font-medium text-slate-700">
             Giới tính ưu tiên
             <input
               type="text"
@@ -416,28 +420,6 @@ export default function EditListingPage() {
               onChange={(event) => handleChange("roomType", event.target.value)}
               className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
               placeholder="Phòng trọ / Căn hộ"
-            />
-          </label>
-
-          <label className="block text-sm font-medium text-slate-700">
-            Số người tối đa
-            <input
-              type="number"
-              value={form.maxOccupants}
-              onChange={(event) => handleChange("maxOccupants", event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-              placeholder="2"
-            />
-          </label>
-
-          <label className="block text-sm font-medium text-slate-700">
-            Đang ở (người)
-            <input
-              type="number"
-              value={form.currentOccupants}
-              onChange={(event) => handleChange("currentOccupants", event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-              placeholder="0"
             />
           </label>
 

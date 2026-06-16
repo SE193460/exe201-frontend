@@ -169,9 +169,14 @@ export default function SoftFilterPage() {
               <p className="text-sm text-slate-500">{result.district || "-"} {result.address ? `• ${result.address}` : ""}</p>
               <p className="mt-1 text-sm">Giá: <span className="font-semibold">{result.rent_price?.toLocaleString("vi-VN") || 0}đ</span></p>
               <p className="text-sm">Chủ phòng: {result.owner?.name || "-"}</p>
-              <Link to={`/listings/${result.id}`} className="mt-2 inline-block text-sm font-semibold text-orange-600 hover:text-orange-700">
+              <a
+                href={`/listings/${result.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block text-sm font-semibold text-orange-600 hover:text-orange-700"
+              >
                 Xem chi tiết listing
-              </Link>
+              </a>
             </div>
             {result.image_url ? (
               <img src={resolveListingImageUrl(result.image_url)} alt={result.title} className="h-24 w-full rounded-xl object-cover md:w-40" />
