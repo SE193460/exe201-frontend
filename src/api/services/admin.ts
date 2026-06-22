@@ -170,3 +170,8 @@ export async function addImportedListingImageUrls(id: string, urls: string[]) {
   return response.data as { listingId: string; images: ListingImage[] };
 }
 
+export async function deleteImportedListingImage(listingId: string, imageId: string) {
+  const response = await axiosInstance.delete(`/api/admin/imported-listings/${listingId}/images/${imageId}`);
+  return response.data;
+}
+

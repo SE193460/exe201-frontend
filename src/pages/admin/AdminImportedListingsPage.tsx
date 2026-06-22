@@ -7,6 +7,7 @@ import {
   publishImportedListing,
   unpublishImportedListing,
   addImportedListingImageUrls,
+  deleteImportedListingImage,
   type ImportedListing,
   type CreateImportedListingPayload,
 } from "../../api/services/admin";
@@ -71,6 +72,8 @@ export default function AdminImportedListingsPage() {
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [existingImageCount, setExistingImageCount] = useState(0);
+  const [existingImages, setExistingImages] = useState<Array<{ id: string; imageUrl: string }>>([]);
+  const [originalImages, setOriginalImages] = useState<Array<{ id: string; imageUrl: string }>>([]);
   const [form, setForm] = useState(emptyForm());
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -126,10 +129,38 @@ export default function AdminImportedListingsPage() {
     setFormMode("create");
     setEditingId(null);
     setExistingImageCount(0);
+    setExistingImages([]);
+    setOriginalImages([]);
     setShowForm(true);
   };
 
+  const closeForm = () => {
+    setShowForm(false);
+    setForm(emptyForm());
+    setSelectedAmenityIds([]);
+    setFormError("");
+    setSourceDuplicateMessage("");
+    setFormMode("create");
+    setEditingId(null);
+    setExistingImageCount(0);
+    setExistingImages([]);
+    setOriginalImages([]);
+  };
+
   const openEdit = (listing: ImportedListing) => {
+    const existingUrls = (listing.images || [])
+      .map((img) => img.imageUrl)
+      .filter((url) => url && url.trim())
+      .join("\n");
+    
+    const imagesList = (listing.images || []).map((img) => ({
+      id: img.id,
+      imageUrl: img.imageUrl,
+    }));
+    
+    setExistingImages(imagesList);
+    setOriginalImages(imagesList);
+    
     setForm({
       title: listing.title,
       description: listing.description,
@@ -147,7 +178,7 @@ export default function AdminImportedListingsPage() {
       smokingAllowed: listing.smokingAllowed,
       petAllowed: listing.petAllowed,
       source: listing.source || "",
-      imageUrls: "",
+      imageUrls: existingUrls,
     });
     setSelectedAmenityIds((listing.amenities || []).map((a) => a.id));
     setFormError("");
@@ -237,12 +268,26 @@ export default function AdminImportedListingsPage() {
         await createImportedListing(payload);
       } else if (editingId) {
         await updateImportedListing(editingId, payload);
-        // Add new image URLs if entered in edit mode
-        if (urlLines.length > 0) {
-          await addImportedListingImageUrls(editingId, urlLines);
+        
+        // Handle deleted images (those in originalImages but not in current form.imageUrls)
+        const deletedImages = originalImages.filter(
+          (original) => !urlLines.some((url) => url.trim() === original.imageUrl.trim())
+        );
+        for (const img of deletedImages) {
+          await deleteImportedListingImage(editingId, img.id);
+        }
+        
+        // Add only truly new image URLs (those not in originalImages)
+        const newUrls = urlLines.filter(
+          (url) => !originalImages.some((img) => img.imageUrl.trim() === url.trim())
+        );
+        if (newUrls.length > 0) {
+          await addImportedListingImageUrls(editingId, newUrls);
         }
       }
       setShowForm(false);
+      setExistingImages([]);
+      setOriginalImages([]);
       await load();
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -324,7 +369,7 @@ export default function AdminImportedListingsPage() {
                 <h2 className="text-lg font-bold text-slate-800">
                   {formMode === "create" ? "Thêm bài đăng từ nguồn bên ngoài" : "Chỉnh sửa bài đăng"}
                 </h2>
-                <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+                <button onClick={() => closeForm()} className="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
               </div>
 
               {formError && (
@@ -351,6 +396,39 @@ export default function AdminImportedListingsPage() {
                   </label>
                   <label className="mt-4 block text-sm font-medium text-slate-700">
                     URLs hình ảnh từ nguồn gốc
+                    {formMode === "edit" && existingImages.length > 0 && (
+                      <div className="mt-3 mb-4">
+                        <p className="text-xs font-semibold text-slate-600 mb-2">Hình ảnh hiện có ({existingImages.length}):</p>
+                        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+                          {existingImages.map((img) => (
+                            <div key={img.id} className="relative group border border-slate-200 rounded-lg overflow-hidden bg-slate-50 hover:border-red-300 transition">
+                              <img 
+                                src={img.imageUrl} 
+                                alt="preview" 
+                                className="w-full h-24 object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23e2e8f0' width='100' height='100'/%3E%3Ctext x='50' y='50' font-size='12' fill='%23cbd5e1' text-anchor='middle' dy='.3em'%3EError%3C/text%3E%3C/svg%3E";
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setExistingImages(existingImages.filter((x) => x.id !== img.id));
+                                  const newUrls = form.imageUrls
+                                    .split("\n")
+                                    .filter((u) => u.trim() !== img.imageUrl.trim())
+                                    .join("\n");
+                                  setForm({ ...form, imageUrls: newUrls });
+                                }}
+                                className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white font-bold text-lg cursor-pointer"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <textarea
                       rows={3}
                       value={form.imageUrls}
@@ -358,8 +436,21 @@ export default function AdminImportedListingsPage() {
                       className="mt-2 w-full rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm font-mono outline-none focus:border-blue-300"
                       placeholder={"https://cdn.example.com/img1.jpg\nhttps://cdn.example.com/img2.jpg"}
                     />
-                    <p className="mt-1 text-xs text-slate-400">Mỗi URL một dòng. Ảnh tham chiếu trực tiếp, không tải về server. Khi chỉnh sửa, chỉ nhập thêm URLs mới.</p>
-                    <p className="mt-1 text-xs text-slate-400">Tối đa 20 URLs ảnh cho mỗi bài đăng.</p>
+                    <p className="mt-1 text-xs text-slate-400">Mỗi URL một dòng. Ảnh tham chiếu trực tiếp, không tải về server.</p>
+                    {formMode === "create" && (
+                      <p className="mt-1 text-xs text-slate-400">Tối đa 20 URLs ảnh cho mỗi bài đăng.</p>
+                    )}
+                    {formMode === "edit" && (
+                      <p className="mt-1 text-xs text-slate-400">
+                        Bài đăng hiện có {existingImages.length} ảnh. 
+                        {existingImages.length < MAX_LISTING_IMAGES && (
+                          <> Bạn có thể thêm tối đa {MAX_LISTING_IMAGES - existingImages.length} URLs mới.</>
+                        )}
+                        {existingImages.length === MAX_LISTING_IMAGES && (
+                          <> Bài đăng đã đạt giới hạn tối đa 20 ảnh.</>
+                        )}
+                      </p>
+                    )}
                   </label>
                 </div>
 
@@ -463,7 +554,7 @@ export default function AdminImportedListingsPage() {
                     className="flex-1 rounded-2xl bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200 disabled:opacity-50">
                     {actionLoading ? "Đang lưu..." : formMode === "create" ? "Lưu bản nháp" : "Cập nhật"}
                   </button>
-                  <button type="button" onClick={() => setShowForm(false)}
+                  <button type="button" onClick={() => closeForm()}
                     className="rounded-2xl border border-orange-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50">
                     Hủy
                   </button>

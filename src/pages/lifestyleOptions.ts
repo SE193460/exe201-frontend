@@ -13,8 +13,8 @@ export const PROFILE_OPTIONS = {
   cleanliness: [
     { value: 1, label: "Rất sạch: Dọn dẹp thường xuyên, khó chịu khi phòng bừa bộn" },
     { value: 2, label: "Khá sạch: Giữ phòng gọn gàng, dọn dẹp định kỳ" },
-    { value: 3, label: "Bình thường: Chấp nhận một chút bừa bộn" },
-    { value: 4, label: "Khá bừa bộn: Ít quan tâm tới việc dọn dẹp" },
+    { value: 3, label: "Bình thường: Dọn dẹp khi cần thiết, không quá khắt khe nhưng vẫn muốn không gian sạch sẽ" },
+    { value: 4, label: "Ít quan tâm: Không đặt nặng việc dọn dẹp thường xuyên, ưu tiên sự thoải mái trong sinh hoạt" },
   ],
   ac_usage: [
     { value: 1, label: "Hầu như không dùng: Chỉ bật trong những ngày rất nóng" },
@@ -75,8 +75,8 @@ export const FILTER_LINEAR_OPTIONS = {
   cleanliness: [
     { value: 1, label: "Rất sạch: Ưu tiên người dọn dẹp thường xuyên, thích phòng luôn gọn gàng" },
     { value: 2, label: "Khá sạch: Ưu tiên người giữ phòng gọn gàng và dọn dẹp định kỳ" },
-    { value: 3, label: "Bình thường: Chấp nhận một chút bừa bộn trong sinh hoạt" },
-    { value: 4, label: "Khá bừa bộn: Không quá quan trọng việc dọn dẹp" },
+    { value: 3, label: "Bình thường: Dọn dẹp khi cần thiết, không quá khắt khe nhưng vẫn muốn không gian sạch sẽ" },
+    { value: 4, label: "Ít quan tâm: Không đặt nặng việc dọn dẹp thường xuyên, ưu tiên sự thoải mái trong sinh hoạt" },
   ],
   ac_usage: [
     { value: 1, label: "Hầu như không dùng: Ưu tiên roommate chỉ bật điều hòa trong những ngày rất nóng" },
