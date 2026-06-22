@@ -169,7 +169,7 @@ export default function SoftFilterPage() {
               <p className="mt-1 text-sm">Giá: <span className="font-semibold">{result.rent_price?.toLocaleString("vi-VN") || 0}đ</span></p>
               <p className="text-sm">Chủ phòng: {result.owner?.name || "-"}</p>
               <button
-                onClick={() => window.open(`/listings/${result.id}`, '_blank')}
+                onClick={() => window.open(`${window.location.origin}/listings/${result.id}`, '_blank')}
                 className="mt-2 inline-block text-sm font-semibold text-orange-600 hover:text-orange-700 bg-none border-none cursor-pointer p-0"
               >
                 Xem chi tiết listing
