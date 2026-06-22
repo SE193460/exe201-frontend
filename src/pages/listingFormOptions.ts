@@ -12,6 +12,7 @@ export const WARD_OPTIONS: Record<string, string[]> = {
     "Bình Trưng Tây",
     "Bình Trưng Đông",
     "Thủ Thiêm",
+    "An Lợi Đông",
   ],
   "Quận 9": [
     "Phước Long A",
@@ -25,6 +26,8 @@ export const WARD_OPTIONS: Record<string, string[]> = {
     "Trường Thạnh",
     "Hiệp Phú",
     "Phú Hữu",
+    "Long Trường",
+    "Tân Phú",
   ],
   "Thủ Đức": [
     "Linh Trung",
@@ -38,5 +41,6 @@ export const WARD_OPTIONS: Record<string, string[]> = {
     "Tam Bình",
     "Trường Thọ",
     "Bình Thọ",
+    "Bình Chiểu",
   ],
 };
