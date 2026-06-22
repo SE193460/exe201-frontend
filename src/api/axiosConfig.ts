@@ -1,7 +1,16 @@
 import axios from "axios";
 
+// Determine API base URL: prioritize env var, fallback to current origin
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  // Use current origin (scheme + domain + port) for deployed environments
+  return typeof window !== 'undefined' ? window.location.origin : "http://localhost:3000";
+};
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000",
+  baseURL: getApiBaseUrl(),
   withCredentials: true,
 });
 
