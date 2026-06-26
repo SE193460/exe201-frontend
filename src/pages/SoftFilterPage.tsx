@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import UserShell from "../layouts/UserShell";
-import { listMyListings, resolveListingImageUrl } from "../api/services/listings";
+import { resolveListingImageUrl } from "../api/services/listings";
 import {
   fetchRoommatePreferences,
   runSoftFilter,
@@ -15,8 +15,6 @@ import {
   priceRangeToBounds,
 } from "./listingRangeOptions";
 import { DISTRICT_OPTIONS, FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
-
-type UserType = "HAS_ROOM" | "NO_ROOM";
 
 type HardFiltersForm = {
   district: string;
@@ -44,34 +42,20 @@ function selectClassName() {
 }
 
 export default function SoftFilterPage() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [userType, setUserType] = useState<UserType | "">("");
+  const [step, setStep] = useState<2 | 3>(2);
   const [prefs, setPrefs] = useState<RoommatePreferences>({});
   const [hardFilters, setHardFilters] = useState<HardFiltersForm>({ district: "", price_range: "all", area_range: "all" });
   const [results, setResults] = useState<SoftFilterResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [hint, setHint] = useState("");
+  const hint = "";
 
   useEffect(() => {
     fetchRoommatePreferences()
       .then((data) => setPrefs(data || {}))
       .catch(() => {
         // ignore and let user fill manually
-      });
-
-    listMyListings()
-      .then((myListings) => {
-        const hasApproved = myListings.some((listing) => listing.status === "APPROVED");
-        if (hasApproved) {
-          setUserType("HAS_ROOM");
-        } else {
-          setUserType("NO_ROOM");
-        }
-      })
-      .catch(() => {
-        setHint("Không xác định được trạng thái bài đăng, vui lòng tự chọn ở bước 1.");
       });
   }, []);
 
@@ -96,22 +80,8 @@ export default function SoftFilterPage() {
     setPrefs((prev) => ({ ...prev, [field]: value === "" ? null : value }));
   };
 
-  const goStep2 = () => {
-    if (!userType) {
-      setError("Vui lòng chọn trạng thái hiện tại.");
-      return;
-    }
-    setError("");
-    setStep(2);
-  };
-
   const submitSoftFilter = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!userType) {
-      setError("Vui lòng chọn trạng thái hiện tại.");
-      setStep(1);
-      return;
-    }
 
     setLoading(true);
     setResultsLoading(true);
@@ -121,7 +91,7 @@ export default function SoftFilterPage() {
       await updateRoommatePreferences(prefs);
 
       const response = await runSoftFilter({
-        user_type: userType,
+        user_type: "NO_ROOM",
         hard_filters: {
           district: hardFilters.district || null,
           min_price: priceRangeToBounds(hardFilters.price_range).min,
@@ -131,7 +101,13 @@ export default function SoftFilterPage() {
         },
       });
 
-      setResults(response.results || []);
+      const resultsData = response.results || [];
+      setResults(resultsData);
+      // Lưu vào localStorage để hiển thị điểm ở trang chủ
+      localStorage.setItem("softFilterResults", JSON.stringify(resultsData));
+      localStorage.setItem("softFilterTimestamp", new Date().toISOString());
+      // Dispatch custom event để thông báo cho PublicListingsPage cập nhật
+      window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: resultsData }));
     } catch (e) {
       const message = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(message || "Không thể chạy bộ lọc mềm. Vui lòng thử lại.");
@@ -248,27 +224,10 @@ export default function SoftFilterPage() {
           {error ? <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p> : null}
         </header>
 
-        {step === 1 && (
-          <section className="rounded-3xl border border-orange-100 bg-white p-6">
-            <h2 className="text-lg font-semibold">Bước 1: Bạn hiện tại đang ở trạng thái nào?</h2>
-            <div className="mt-4 space-y-3 text-sm">
-              <label className="flex items-center gap-2">
-                <input type="radio" name="userType" checked={userType === "HAS_ROOM"} onChange={() => setUserType("HAS_ROOM")} />
-                Tôi đã có phòng và đã đăng bài
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="radio" name="userType" checked={userType === "NO_ROOM"} onChange={() => setUserType("NO_ROOM")} />
-                Tôi chưa có phòng
-              </label>
-            </div>
-            <button onClick={goStep2} className="mt-5 rounded-full bg-[#ff6a3d] px-5 py-2.5 text-sm font-semibold text-white">Tiếp tục</button>
-          </section>
-        )}
-
         {step === 2 && (
           <form onSubmit={submitSoftFilter} className="space-y-5">
             <section className="rounded-3xl border border-orange-100 bg-white p-6">
-              <h2 className="text-lg font-semibold">Bước 2: Bộ lọc cứng</h2>
+              <h2 className="text-lg font-semibold">Bộ lọc cứng</h2>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <label className="block text-sm font-medium text-slate-700">
                   Khu vực
@@ -383,7 +342,6 @@ export default function SoftFilterPage() {
             </section>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={() => setStep(1)} className="rounded-full border border-orange-200 px-5 py-2.5 text-sm font-semibold text-slate-700">Quay lại</button>
               <button type="submit" disabled={loading} className="rounded-full bg-[#ff6a3d] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-70">{loading ? "Đang tìm..." : "Tìm kết quả"}</button>
             </div>
           </form>

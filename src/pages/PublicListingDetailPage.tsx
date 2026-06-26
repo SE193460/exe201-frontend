@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import type { SoftFilterResult } from "../api/services/lifestyle";
+import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { useNavigate, useParams } from "react-router-dom";
 import { Bookmark, BookmarkCheck, Camera, CircleCheck, CircleX, Copy, ExternalLink, Info, MapPinned, MessageCircle, Phone, Send, ShieldCheck, Sparkles, Share2, Flag } from "lucide-react";
 import { fetchPublicListingDetail, resolveListingImageUrl, toggleSaveListing, reportListing } from "../api/services/listings";
@@ -75,6 +77,7 @@ export default function PublicListingDetailPage() {
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportDescription, setReportDescription] = useState("");
   const [reportName, setReportName] = useState("");
@@ -82,6 +85,7 @@ export default function PublicListingDetailPage() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [submittingReport, setSubmittingReport] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+  const [softFilterResult, setSoftFilterResult] = useState<SoftFilterResult | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -188,6 +192,111 @@ export default function PublicListingDetailPage() {
   const activeLabel = listing?.ownerLastActive
     ? `Đã hoạt động ${timeAgo(listing.ownerLastActive)}`
     : "Đang hoạt động";
+
+  const FIELD_FULL_LABELS: Record<string, string> = {
+    cleanliness: "Mức độ sạch sẽ",
+    ac_usage: "Tần suất sử dụng điều hòa",
+    pet: "Thú cưng",
+    smoking: "Hút thuốc",
+    cooking: "Nấu ăn",
+    guest: "Tần suất dẫn bạn bè về phòng",
+    home_frequency: "Tần suất ở trong phòng",
+    work_schedule: "Thời gian làm việc",
+    sharing: "Mức độ chia sẻ đồ dùng",
+    noise: "Mức độ giữ yên tĩnh",
+    call_frequency: "Tần suất gọi điện/video call",
+    game_mic: "Mức độ chơi game voice chat",
+  };
+
+  const mapOptionLabel = (field: string, value: string | number | null | undefined): string | null => {
+    if (value === null || value === undefined || value === "") return null;
+    try {
+      // numeric linear options
+      const linear = (FILTER_LINEAR_OPTIONS as any)[field];
+      if (Array.isArray(linear)) {
+        const vNum = typeof value === "string" && !isNaN(Number(value)) ? Number(value) : value;
+        const opt = linear.find((o: any) => String(o.value) === String(vNum));
+        if (opt) return opt.label;
+      }
+
+      // pref options
+      const pref = (PREF_OPTIONS as any)[field];
+      if (Array.isArray(pref)) {
+        const opt = pref.find((o: any) => String(o.value) === String(value));
+        if (opt) return opt.label;
+      }
+
+      // fallback
+      return typeof value === "string" ? value : String(value);
+    } catch (e) {
+      return typeof value === "string" ? value : String(value);
+    }
+  };
+
+  const getPrefsFromResult = (result: SoftFilterResult | null) => {
+    if (!result?.field_scores) return { good: [], caution: [] };
+    const order = [
+      "ac_usage",
+      "cooking",
+      "home_frequency",
+      "call_frequency",
+      "smoking",
+      "pet",
+      "cleanliness",
+      "guest",
+      "noise",
+      "game_mic",
+      "work_schedule",
+      "sharing",
+    ];
+    const good: Array<any> = [];
+    const caution: Array<any> = [];
+    for (const field of order) {
+      const f = result.field_scores[field];
+      if (!f) continue;
+      const profileLabel = mapOptionLabel(field, f.profile_value) || String(f.profile_value);
+      const prefLabel = mapOptionLabel(field, f.pref_value) || String(f.pref_value);
+      const score = typeof f.score === "number" ? f.score : 0;
+      const item = { field, profileLabel, prefLabel, score };
+      if (score >= 0.75) good.push(item);
+      else caution.push(item);
+    }
+    return { good, caution };
+  };
+
+  useEffect(() => {
+    const load = () => {
+      try {
+        const raw = localStorage.getItem("softFilterResults");
+        if (!raw) return setSoftFilterResult(null);
+        const arr = JSON.parse(raw) as SoftFilterResult[];
+        if (!Array.isArray(arr)) return setSoftFilterResult(null);
+        const found = arr.find((r) => r.id === listing?.id) || null;
+        setSoftFilterResult(found);
+      } catch (e) {
+        console.error("Lỗi khi tải soft filter results:", e);
+      }
+    };
+    load();
+    const onUpdate = (e: any) => {
+      try {
+        const detail = e?.detail as SoftFilterResult[] | undefined;
+        if (Array.isArray(detail)) {
+          const found = detail.find((r) => r.id === listing?.id) || null;
+          setSoftFilterResult(found);
+          return;
+        }
+      } catch {}
+      load();
+    };
+    window.addEventListener("softFilterUpdated", onUpdate as EventListener);
+    const onVisibility = () => { if (!document.hidden) load(); };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("softFilterUpdated", onUpdate as EventListener);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [listing?.id]);
 
 
 
@@ -427,52 +536,68 @@ export default function PublicListingDetailPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <a href={`tel:${listing.ownerPhone || ""}`}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-2.5 text-sm font-bold shadow-sm transition">
-                      <Phone className="h-4 w-4" />
-                      {listing.ownerPhone || "Chưa có SĐT"}
-                    </a>
-                    {listing.ownerPhone && <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition">
-                      <MessageCircle className="h-4 w-4" />
-                      Nhắn Zalo
-                    </a>}
-                  </div>
+                      <div className="flex gap-2">
+                        <a href={`tel:${listing.ownerPhone || ""}`}
+                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-2.5 text-sm font-bold shadow-sm transition">
+                          <Phone className="h-4 w-4" />
+                          {listing.ownerPhone || "Chưa có SĐT"}
+                        </a>
+                        {listing.ownerPhone && <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition">
+                          <MessageCircle className="h-4 w-4" />
+                          Nhắn Zalo
+                        </a>}
+                      </div>
+
+                      <div className="mt-3 flex gap-2">
+                        <button onClick={handleToggleSave} disabled={saving}
+                          className="flex-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
+                          {isSaved ? "Đã lưu" : "Lưu tin"}
+                        </button>
+                        <button onClick={() => setShowShareModal(true)}
+                          className="flex-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
+                          {shareCopied ? "Đã copy" : "Chia sẻ"}
+                        </button>
+                        <button onClick={() => { setReportReason(""); setReportDescription(""); setReportName(""); setReportPhone(""); setReportSuccess(false); setShowReportModal(true); }}
+                          className="flex-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
+                          Báo cáo
+                        </button>
+                      </div>
+                      {softFilterResult && (
+                        <div className="mt-4 rounded-2xl border border-orange-100 bg-white p-4 text-sm text-slate-700">
+                          <div className="text-center">
+                            <div className="text-base font-semibold text-slate-600">{Math.round(softFilterResult.total_score)}/100</div>
+                          </div>
+                          <div className="mt-3">
+                            <div className="font-bold text-slate-800">Điểm tốt</div>
+                            <div className="mt-2 space-y-3">
+                              {getPrefsFromResult(softFilterResult).good.map((p: any) => (
+                                <div key={p.field}>
+                                  <div className="font-semibold">{FIELD_FULL_LABELS[p.field] || p.field}</div>
+                                  <div className="text-xs text-slate-600">Lựa chọn của họ: <span className="font-medium text-slate-800">{p.profileLabel}</span></div>
+                                  <div className="text-xs text-slate-600">Lựa chọn của bạn: <span className="font-medium text-slate-800">{p.prefLabel}</span></div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <div className="font-bold text-slate-800">Điểm cần lưu ý</div>
+                            <div className="mt-2 space-y-3">
+                              {getPrefsFromResult(softFilterResult).caution.map((p: any) => (
+                                <div key={p.field}>
+                                  <div className="font-semibold">{FIELD_FULL_LABELS[p.field] || p.field}</div>
+                                  <div className="text-xs text-slate-600">Lựa chọn của họ: <span className="font-medium text-slate-800">{p.profileLabel}</span></div>
+                                  <div className="text-xs text-slate-600">Lựa chọn của bạn: <span className="font-medium text-slate-800">{p.prefLabel}</span></div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                 </div>
               )}
 
-              {/* Mobile Action Buttons */}
-              <div className="rounded-[24px] border border-orange-100 bg-white p-4 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)]">
-                <div className="flex items-center justify-center gap-3">
-                  <button onClick={handleToggleSave} disabled={saving}
-                    className="flex flex-1 flex-col items-center gap-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-xs font-semibold text-slate-600 hover:bg-orange-50 transition">
-                    {isSaved ? <BookmarkCheck className="h-5 w-5 text-orange-500" /> : <Bookmark className="h-5 w-5" />}
-                    {isSaved ? "Đã lưu" : "Lưu tin"}
-                  </button>
-                  <button onClick={handleCopyLink}
-                    className="flex flex-1 flex-col items-center gap-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-xs font-semibold text-slate-600 hover:bg-orange-50 transition">
-                    <Share2 className="h-5 w-5" />
-                    {shareCopied ? "Đã copy" : "Chia sẻ"}
-                  </button>
-                  <button onClick={() => { setReportReason(""); setReportDescription(""); setReportName(""); setReportPhone(""); setReportSuccess(false); setShowReportModal(true); }}
-                    className="flex flex-1 flex-col items-center gap-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-xs font-semibold text-slate-600 hover:bg-orange-50 transition">
-                    <Flag className="h-5 w-5" />
-                    Báo cáo
-                  </button>
-                </div>
-              </div>
-
-              {/* Mobile Share card */}
-              <div className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] space-y-4">
-                <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2"><Share2 className="h-4 w-4 text-blue-500" />Chia sẻ bài đăng</h3>
-                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
-                  <input readOnly value={window.location.href} className="flex-1 bg-transparent text-xs text-slate-600 outline-none truncate px-1" />
-                  <button onClick={handleCopyLink} className="flex-shrink-0 rounded-lg bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 text-xs font-semibold transition flex items-center gap-1">
-                    <Copy className="h-3.5 w-3.5" />{shareCopied ? "Đã copy" : "Copy"}
-                  </button>
-                </div>
-              </div>
+              {/* Mobile: action buttons moved into owner card above */}
             </div>
 
             {/* Right Column: Sticky Sidebar */}
@@ -535,65 +660,74 @@ export default function PublicListingDetailPage() {
                       Nhắn Zalo
                     </a>}
                   </div>
+
+                  <div className="mt-3 flex gap-2">
+                    <button onClick={handleToggleSave} disabled={saving}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
+                      {isSaved ? <BookmarkCheck className="h-4 w-4 text-orange-500" /> : <Bookmark className="h-4 w-4" />}
+                      <span>{isSaved ? "Đã lưu" : "Lưu tin"}</span>
+                    </button>
+                    <button onClick={() => setShowShareModal(true)}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
+                      <Share2 className="h-4 w-4" />
+                      <span>{shareCopied ? "Đã copy" : "Chia sẻ"}</span>
+                    </button>
+                    <button onClick={() => { setReportReason(""); setReportDescription(""); setReportName(""); setReportPhone(""); setReportSuccess(false); setShowReportModal(true); }}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
+                      <Flag className="h-4 w-4" />
+                      <span>Báo cáo</span>
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* Action Buttons Card */}
-              <div className="rounded-[24px] border border-orange-100 bg-white p-4 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)]">
-                <div className="flex items-center justify-center gap-3">
-                  <button
-                    onClick={handleToggleSave}
-                    disabled={saving}
-                    className="flex flex-1 flex-col items-center gap-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-xs font-semibold text-slate-600 hover:bg-orange-50 hover:border-orange-200 transition"
-                  >
-                    {isSaved ? <BookmarkCheck className="h-5 w-5 text-orange-500" /> : <Bookmark className="h-5 w-5" />}
-                    {isSaved ? "Đã lưu" : "Lưu tin"}
-                  </button>
-                  <button
-                    onClick={handleCopyLink}
-                    className="flex flex-1 flex-col items-center gap-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-xs font-semibold text-slate-600 hover:bg-orange-50 hover:border-orange-200 transition"
-                  >
-                    <Share2 className="h-5 w-5" />
-                    {shareCopied ? "Đã copy" : "Chia sẻ"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setReportReason("");
-                      setReportDescription("");
-                      setReportName("");
-                      setReportPhone("");
-                      setReportSuccess(false);
-                      setShowReportModal(true);
-                    }}
-                    className="flex flex-1 flex-col items-center gap-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-xs font-semibold text-slate-600 hover:bg-orange-50 hover:border-orange-200 transition"
-                  >
-                    <Flag className="h-5 w-5" />
-                    Báo cáo
-                  </button>
-                </div>
-              </div>
+              {/* Soft-filter score & details box (replaces separate action card) */}
+              {softFilterResult && (
+                <div className="rounded-[24px] border border-orange-100 bg-white p-4 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] space-y-4">
+                  <div className="text-center">
+                    <div className="text-sm font-semibold text-slate-600">Điểm khớp</div>
+                    <div className="text-3xl font-extrabold text-orange-600">{Math.round(softFilterResult.total_score)}/100</div>
+                  </div>
 
-              {/* Share Card */}
-              <div className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] space-y-4">
-                <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Share2 className="h-4 w-4 text-blue-500" />
-                  Chia sẻ bài đăng
-                </h3>
-                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
-                  <input
-                    readOnly
-                    value={window.location.href}
-                    className="flex-1 bg-transparent text-xs text-slate-600 outline-none truncate px-1"
-                  />
-                  <button
-                    onClick={handleCopyLink}
-                    className="flex-shrink-0 rounded-lg bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 text-xs font-semibold transition flex items-center gap-1"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                    {shareCopied ? "Đã copy" : "Copy"}
-                  </button>
+                  <div className="mt-2">
+                    <div className="text-sm font-bold text-slate-800 mb-2">Điểm tốt</div>
+                    <div className="rounded-2xl border border-green-100 bg-green-50 p-3">
+                      {getPrefsFromResult(softFilterResult).good.length > 0 ? (
+                        <div className="space-y-3 text-sm text-slate-700">
+                          {getPrefsFromResult(softFilterResult).good.map((p: any) => (
+                            <div key={p.field}>
+                              <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[p.field] || p.field}</div>
+                              <div className="mt-1 text-xs text-slate-600">Lựa chọn của họ: <span className="font-medium text-slate-800">{p.profileLabel}</span></div>
+                              <div className="text-xs text-slate-600">Lựa chọn của bạn: <span className="font-medium text-slate-800">{p.prefLabel}</span></div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-slate-500">Không có điểm tốt</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <div className="text-sm font-bold text-slate-800 mb-2">Điểm cần lưu ý</div>
+                    <div className="rounded-2xl border border-yellow-100 bg-yellow-50 p-3">
+                      {getPrefsFromResult(softFilterResult).caution.length > 0 ? (
+                        <div className="space-y-3 text-sm text-slate-700">
+                          {getPrefsFromResult(softFilterResult).caution.map((p: any) => (
+                            <div key={p.field}>
+                              <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[p.field] || p.field}</div>
+                              <div className="mt-1 text-xs text-slate-600">Lựa chọn của họ: <span className="font-medium text-slate-800">{p.profileLabel}</span></div>
+                              <div className="text-xs text-slate-600">Lựa chọn của bạn: <span className="font-medium text-slate-800">{p.prefLabel}</span></div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-slate-500">Không có điểm cần lưu ý</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </aside>
           </div>
         )}
@@ -723,6 +857,26 @@ export default function PublicListingDetailPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4 py-8" onClick={() => setShowShareModal(false)}>
+          <div className="relative w-full max-w-[560px] rounded-[24px] bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setShowShareModal(false)} className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition text-lg">×</button>
+
+            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Share2 className="h-5 w-5 text-blue-500" /> Chia sẻ bài đăng</h2>
+            <p className="text-sm text-slate-600 mt-3">Sao chép đường dẫn hoặc chia sẻ tới ứng dụng khác.</p>
+
+            <div className="mt-4 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+              <input readOnly value={window.location.href} className="flex-1 bg-transparent text-sm text-slate-600 outline-none truncate px-2" />
+              <button onClick={async () => { await handleCopyLink(); }} className="flex-shrink-0 rounded-lg bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 text-sm font-semibold transition flex items-center gap-2">
+                <Copy className="h-4 w-4" />
+                {shareCopied ? "Đã copy" : "Copy"}
+              </button>
+            </div>
           </div>
         </div>
       )}
