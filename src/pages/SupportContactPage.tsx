@@ -1,7 +1,20 @@
-import { Clock3, Headset, Mail, MessageCircleMore, Phone } from "lucide-react";
+import { CheckCircle2, Clock3, Copy, Headset, Mail, MessageCircleMore, Phone } from "lucide-react";
+import { useState } from "react";
 import UserShell from "../layouts/UserShell";
 
 export default function SupportContactPage() {
+  const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+
+  const handleCopyPhone = async (phone: string) => {
+    try {
+      await navigator.clipboard.writeText(phone);
+      setCopiedPhone(phone);
+      setTimeout(() => setCopiedPhone(null), 2000);
+    } catch {
+      console.error("Failed to copy phone number");
+    }
+  };
+
   return (
     <UserShell>
       <div className="mx-auto w-full max-w-[1100px] space-y-6">
@@ -27,13 +40,20 @@ export default function SupportContactPage() {
               <p className="mt-4 text-xl text-slate-700">Nếu bạn cần hỗ trợ đăng tin, vui lòng liên hệ số điện thoại bên dưới:</p>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
-                <a
-                  href="tel:0842494586"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#ff6a3d] px-6 py-3 text-lg font-semibold text-white shadow-sm transition hover:bg-[#e65a2f]"
+                <button
+                  onClick={() => handleCopyPhone("0842494586")}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#ff6a3d] px-6 py-3 text-lg font-semibold text-white shadow-sm transition hover:bg-[#e65a2f] cursor-pointer"
                 >
                   <Phone className="h-5 w-5" />
-                  DT: 0842494586
-                </a>
+                  <span>DT: 0842494586</span>
+                  <div className="w-5 h-5 flex items-center justify-center">
+                    {copiedPhone === "0842494586" ? (
+                      <CheckCircle2 className="h-5 w-5" />
+                    ) : (
+                      <Copy className="h-5 w-5" />
+                    )}
+                  </div>
+                </button>
                 <a
                   href="https://zalo.me/0704542270"
                   target="_blank"

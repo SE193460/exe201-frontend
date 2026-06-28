@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import type { SoftFilterResult } from "../api/services/lifestyle";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { useNavigate, useParams } from "react-router-dom";
-import { Bookmark, BookmarkCheck, Camera, CircleCheck, CircleX, Copy, ExternalLink, Info, MapPinned, MessageCircle, Phone, Send, ShieldCheck, Sparkles, Share2, Flag } from "lucide-react";
+import { Bookmark, BookmarkCheck, Camera, CheckCircle2, CircleCheck, CircleX, Copy, ExternalLink, Info, MapPinned, MessageCircle, Phone, Send, ShieldCheck, Sparkles, Share2, Flag } from "lucide-react";
 import { fetchPublicListingDetail, resolveListingImageUrl, toggleSaveListing, reportListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { trackEvent } from "../api/services/analytics";
 
 function formatDate(value: string | null) {
   if (!value) return "";
@@ -86,6 +87,34 @@ export default function PublicListingDetailPage() {
   const [submittingReport, setSubmittingReport] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
   const [softFilterResult, setSoftFilterResult] = useState<SoftFilterResult | null>(null);
+  const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+
+  const handleCopyPhone = async (phone: string) => {
+    try {
+      await navigator.clipboard.writeText(phone);
+      setCopiedPhone(phone);
+      if (listing?.id) {
+        trackEvent({
+          eventName: "listing_phone_click",
+          listingId: listing.id,
+          district: listing.district || null,
+        });
+      }
+      setTimeout(() => setCopiedPhone(null), 2000);
+    } catch {
+      console.error("Failed to copy phone number");
+    }
+  };
+
+  const handleZaloClick = useCallback(() => {
+    if (listing?.id) {
+      trackEvent({
+        eventName: "listing_zalo_click",
+        listingId: listing.id,
+        district: listing.district || null,
+      });
+    }
+  }, [listing?.id, listing?.district]);
 
   useEffect(() => {
     if (!id) return;
@@ -94,6 +123,12 @@ export default function PublicListingDetailPage() {
         setListing(data);
         setIsSaved(data.isSaved || false);
         setLoading(false);
+        trackEvent({
+          eventName: "listing_view",
+          listingId: id,
+          district: data?.district || null,
+          metadata: { source: "detail_page" },
+        });
       })
       .catch(() => {
         setError("Không thể tải thông tin chi tiết phòng hoặc phòng chưa được kiểm duyệt.");
@@ -540,12 +575,20 @@ export default function PublicListingDetailPage() {
                     </div>
                   </div>
                       <div className="flex gap-2">
-                        <a href={`tel:${listing.ownerPhone || ""}`}
-                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-2.5 text-sm font-bold shadow-sm transition">
+                        <button
+                          onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)}
+                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6a3d] text-white py-2.5 text-sm font-bold shadow-sm transition hover:bg-[#e65a2f] cursor-pointer">
                           <Phone className="h-4 w-4" />
-                          {listing.ownerPhone || "Chưa có SĐT"}
-                        </a>
-                        {listing.ownerPhone && <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer"
+                          <span>{listing?.ownerPhone || "Chưa có SĐT"}</span>
+                          <div className="ml-1 flex h-4 w-4 items-center justify-center">
+                            {copiedPhone === listing?.ownerPhone ? (
+                              <CheckCircle2 className="h-4 w-4" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </div>
+                        </button>
+                        {listing?.ownerPhone && <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick}
                           className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition">
                           <MessageCircle className="h-4 w-4" />
                           Nhắn Zalo
@@ -652,12 +695,20 @@ export default function PublicListingDetailPage() {
                   </div>
                   <hr className="border-orange-50" />
                   <div className="space-y-3">
-                    <a href={`tel:${listing.ownerPhone || ""}`}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-3 text-base font-black shadow-md shadow-orange-100 transition">
+                    <button
+                      onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)}
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] text-white py-3 text-base font-black shadow-md shadow-orange-100 transition hover:bg-[#e65a2f] cursor-pointer">
                       <Phone className="h-4 w-4" />
-                      {listing.ownerPhone || "Chưa có SĐT"}
-                    </a>
-                    {listing.ownerPhone && <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer"
+                      <span>{listing?.ownerPhone || "Chưa có SĐT"}</span>
+                      <div className="ml-1 flex h-5 w-5 items-center justify-center">
+                        {copiedPhone === listing?.ownerPhone ? (
+                          <CheckCircle2 className="h-5 w-5" />
+                        ) : (
+                          <Copy className="h-5 w-5" />
+                        )}
+                      </div>
+                    </button>
+                    {listing?.ownerPhone && <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick}
                       className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-base font-bold shadow-md shadow-blue-100 transition">
                       <MessageCircle className="h-4 w-4" />
                       Nhắn Zalo

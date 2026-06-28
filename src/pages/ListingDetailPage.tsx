@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Camera, CircleCheck, CircleX, Mail, MapPinned, MessageCircle, Phone, ShieldCheck } from "lucide-react";
+import { Camera, CheckCircle2, CircleCheck, CircleX, Copy, Mail, MapPinned, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import { getMyListingDetail, resolveListingImageUrl, submitMyListingForApproval } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
+import { trackEvent } from "../api/services/analytics";
 import UserShell from "../layouts/UserShell";
 
 function formatDate(value: string | null) {
@@ -42,6 +43,17 @@ export default function ListingDetailPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [selectedImgIdx, setSelectedImgIdx] = useState(0);
+  const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+
+  const handleCopyPhone = async (phone: string) => {
+    try {
+      await navigator.clipboard.writeText(phone);
+      setCopiedPhone(phone);
+      setTimeout(() => setCopiedPhone(null), 2000);
+    } catch {
+      console.error("Failed to copy phone number");
+    }
+  };
 
   const handleSubmitForApproval = async () => {
     if (!id) return;
@@ -365,17 +377,33 @@ export default function ListingDetailPage() {
                 </div>
                 
                 <div className="flex gap-2">
-                  <a
-                    href={`tel:${listing.ownerPhone || ""}`}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-2.5 text-sm font-bold shadow-sm transition text-center"
+                  <button
+                    onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)}
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6a3d] text-white py-2.5 text-sm font-bold shadow-sm transition hover:bg-[#e65a2f] cursor-pointer"
                   >
                     <Phone className="h-4 w-4" />
-                    {listing.ownerPhone || "Chưa có SĐT"}
-                  </a>
-                  {listing.ownerPhone && <a
+                    <span>{listing?.ownerPhone || "Chưa có SĐT"}</span>
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      {copiedPhone === listing?.ownerPhone ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </div>
+                  </button>
+                  {listing?.ownerPhone && <a
                     href={`https://zalo.me/${listing.ownerPhone}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => {
+                      if (listing?.id) {
+                        trackEvent({
+                          eventName: "listing_zalo_click",
+                          listingId: listing.id,
+                          district: listing.district || null,
+                        });
+                      }
+                    }}
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition text-center"
                   >
                     <MessageCircle className="h-4 w-4" />
@@ -411,17 +439,33 @@ export default function ListingDetailPage() {
                 <hr className="border-orange-50" />
 
                 <div className="space-y-3">
-                  <a
-                    href={`tel:${listing.ownerPhone || ""}`}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] hover:bg-[#e65a2f] text-white py-3 text-base font-black shadow-md shadow-orange-100 transition"
+                  <button
+                    onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] text-white py-3 text-base font-black shadow-md shadow-orange-100 transition hover:bg-[#e65a2f] cursor-pointer"
                   >
                     <Phone className="h-4 w-4" />
-                    {listing.ownerPhone || "Chưa có SĐT"}
-                  </a>
-                  {listing.ownerPhone && <a
+                    <span>{listing?.ownerPhone || "Chưa có SĐT"}</span>
+                    <div className="ml-1 flex h-5 w-5 items-center justify-center">
+                      {copiedPhone === listing?.ownerPhone ? (
+                        <CheckCircle2 className="h-5 w-5" />
+                      ) : (
+                        <Copy className="h-5 w-5" />
+                      )}
+                    </div>
+                  </button>
+                  {listing?.ownerPhone && <a
                     href={`https://zalo.me/${listing.ownerPhone}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => {
+                      if (listing?.id) {
+                        trackEvent({
+                          eventName: "listing_zalo_click",
+                          listingId: listing.id,
+                          district: listing.district || null,
+                        });
+                      }
+                    }}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-base font-bold shadow-md shadow-blue-100 transition"
                   >
                     <MessageCircle className="h-4 w-4" />

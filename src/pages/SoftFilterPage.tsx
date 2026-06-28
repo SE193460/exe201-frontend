@@ -15,6 +15,7 @@ import {
   priceRangeToBounds,
 } from "./listingRangeOptions";
 import { DISTRICT_OPTIONS, FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
+import { trackEvent } from "../api/services/analytics";
 
 type HardFiltersForm = {
   district: string;
@@ -89,6 +90,15 @@ export default function SoftFilterPage() {
     setStep(3);
     try {
       await updateRoommatePreferences(prefs);
+
+      trackEvent({
+        eventName: "listing_filter_applied",
+        metadata: {
+          district: hardFilters.district || null,
+          priceRange: hardFilters.price_range,
+          areaRange: hardFilters.area_range,
+        },
+      });
 
       const response = await runSoftFilter({
         user_type: "NO_ROOM",

@@ -11,6 +11,7 @@ import Footer from "../components/Footer";
 import Pagination from "../components/Pagination";
 import { matchAreaRange, matchPriceRange, AREA_OPTIONS, PRICE_OPTIONS } from "./listingRangeOptions";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
+import { trackEvent } from "../api/services/analytics";
 export default function PublicListingsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -225,6 +226,13 @@ export default function PublicListingsPage() {
       await updateRoommatePreferences(softFilterPrefs);
 
       // Chạy soft filter
+      await trackEvent({
+        eventName: "listing_filter_applied",
+        metadata: {
+          source: "soft_filter",
+        },
+      });
+
       const response = await runSoftFilter({
         user_type: "NO_ROOM",
         hard_filters: {
@@ -455,8 +463,14 @@ export default function PublicListingsPage() {
                 <select
                   value={district}
                   onChange={(e) => {
-                    setDistrict(e.target.value);
+                    const nextDistrict = e.target.value;
+                    setDistrict(nextDistrict);
                     setPage(1);
+                    trackEvent({
+                      eventName: "listing_filter_applied",
+                      district: nextDistrict === "all" ? null : nextDistrict,
+                      metadata: { filterType: "district", value: nextDistrict },
+                    });
                   }}
                   className="bg-transparent outline-none text-sm"
                 >
@@ -850,7 +864,15 @@ export default function PublicListingsPage() {
                 <article
                   key={listing.id}
                   data-listing-id={listing.id}
-                  onClick={() => navigate(`/listings/${listing.id}`)}
+                  onClick={() => {
+                    trackEvent({
+                      eventName: "listing_card_click",
+                      listingId: listing.id,
+                      district: listing.district || null,
+                      source: softFilterResults[listing.id] ? "recommended" : "normal",
+                    });
+                    navigate(`/listings/${listing.id}`);
+                  }}
                   className={`group cursor-pointer overflow-hidden rounded-[24px] border bg-white shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] transition hover:-translate-y-1 hover:shadow-[0_30px_60px_-25px_rgba(255,115,0,0.45)] ${highlightListingId === listing.id ? "border-[#ff6a3d] ring-2 ring-orange-300" : "border-orange-100"}`}
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-orange-50">

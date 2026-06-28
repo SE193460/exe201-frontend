@@ -6,6 +6,7 @@ import {
 } from "../api/services/lifestyle";
 import type { LifestyleProfile } from "../api/services/lifestyle";
 import { PROFILE_OPTIONS } from "./lifestyleOptions";
+import { trackEvent } from "../api/services/analytics";
 
 function selectClassName() {
   return "mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300";
@@ -45,6 +46,7 @@ export default function LifestyleProfilePage() {
     try {
       const saved = await updateLifestyleProfile(form);
       setForm(saved);
+      trackEvent({ eventName: "lifestyle_profile_updated" });
       setStatus("Đã lưu hồ sơ lối sống.");
     } catch {
       setError("Lưu hồ sơ thất bại. Vui lòng thử lại.");

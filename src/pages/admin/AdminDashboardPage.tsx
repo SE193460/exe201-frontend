@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../api/services/auth";
 import { fetchAdminDashboard, type AdminDashboardSummary } from "../../api/services/admin";
+import { fetchAnalyticsSummary, type AnalyticsSummary } from "../../api/services/analytics";
 import Sidebar from "../../components/Sidebar";
 
 const quickLinks = [
@@ -207,11 +208,26 @@ function buildBarChart(values: number[], width = 320, height = 130, gap = 8) {
   });
 }
 
+function renderAnalyticsBarChart(values: number[], labels: string[]) {
+  if (values.length === 0) {
+    return <div className="flex h-40 items-center justify-center text-sm text-slate-500">Chưa có dữ liệu</div>;
+  }
+
+  return (
+    <div className="mt-4 rounded-[20px] border border-slate-100 bg-slate-50 p-4">
+      <div className="h-48 w-full">
+        {renderBarChart(values, labels, () => undefined, () => undefined)}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [dashboard, setDashboard] = useState<AdminDashboardSummary | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [areaTooltip, setAreaTooltip] = useState<string | null>(null);
   const [barTooltip, setBarTooltip] = useState<string | null>(null);
   const [areaMonthlyTooltip, setAreaMonthlyTooltip] = useState<string | null>(null);
@@ -245,10 +261,19 @@ export default function AdminDashboardPage() {
     setLoading(true);
     setError("");
 
-    fetchAdminDashboard()
-      .then((data) => {
+    Promise.allSettled([fetchAdminDashboard(), fetchAnalyticsSummary()])
+      .then(([dashboardResult, analyticsResult]) => {
         if (!isMounted) return;
-        setDashboard(data);
+        if (dashboardResult.status === "fulfilled") {
+          setDashboard(dashboardResult.value);
+        } else {
+          setError("Không thể tải dữ liệu dashboard.");
+        }
+        if (analyticsResult.status === "fulfilled") {
+          setAnalytics(analyticsResult.value);
+        } else if (dashboardResult.status === "rejected") {
+          setError("Không thể tải dữ liệu dashboard hoặc analytics.");
+        }
       })
       .catch(() => {
         if (!isMounted) return;
@@ -308,6 +333,13 @@ export default function AdminDashboardPage() {
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
   const dailyLabels = dashboard ? dashboard.userGrowthWeekly.map((point) => point.day) : [];
   const monthlyLabels = dashboard ? dashboard.userGrowthYearly.map((point) => point.month) : [];
+  const analyticsSeries = analytics
+    ? [...analytics.activeUsersByMonth].sort((a, b) => a.month.localeCompare(b.month))
+    : [];
+  const analyticsMonths = analyticsSeries.map((entry) => entry.month);
+  const analyticsActiveUsers = analyticsSeries.map((entry) => entry.activeUsers);
+  const topListings = analytics ? analytics.topListings : [];
+  const areaStats = analytics ? analytics.areaStats : [];
 
   return (
     <div className="min-h-screen bg-[#fff7f2] text-slate-800">
@@ -453,6 +485,150 @@ export default function AdminDashboardPage() {
                         {barMonthlyTooltip}
                       </div>
                     ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-orange-500">Analytics Users</p>
+                <h2 className="text-lg font-semibold text-slate-800">Phân tích hành vi và hiệu suất đăng tin</h2>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
+              <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Số người hoạt động theo tháng</p>
+                    <p className="mt-2 text-2xl font-bold text-slate-800">{analytics ? analytics.activeUsersByMonth.reduce((sum, item) => sum + item.activeUsers, 0) : loading ? "--" : "0"}</p>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-500">Năm 2026</span>
+                </div>
+                {renderAnalyticsBarChart(analyticsActiveUsers, analyticsMonths)}
+              </div>
+
+              <div className="grid gap-4">
+                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tổng lượt xem chi tiết bài đăng</p>
+                  <p className="mt-3 text-2xl font-bold text-slate-800">{analytics ? analytics.totals.detailViewCount : loading ? "--" : "0"}</p>
+                </div>
+                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tổng lượt click Zalo button</p>
+                  <p className="mt-3 text-2xl font-bold text-slate-800">{analytics ? analytics.totals.zaloClickCount : loading ? "--" : "0"}</p>
+                </div>
+                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tổng click Phone button</p>
+                  <p className="mt-3 text-2xl font-bold text-slate-800">{analytics ? analytics.totals.phoneClickCount : loading ? "--" : "0"}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
+                <h3 className="text-sm font-semibold text-slate-800">Top bài đăng nổi bật</h3>
+                <div className="mt-4 overflow-x-auto">
+                  <div className="max-h-[18rem] overflow-y-auto rounded-xl border border-slate-200 bg-white">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="sticky top-0 z-10 bg-white">
+                        <tr className="border-b border-slate-200 text-slate-500">
+                          <th className="px-3 py-2 pr-3">Bài đăng</th>
+                          <th className="px-3 py-2 pr-3">View</th>
+                          <th className="px-3 py-2 pr-3">Phone</th>
+                          <th className="px-3 py-2">Zalo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {topListings.length > 0 ? topListings.map((listing) => (
+                          <tr key={listing.id} className="border-b border-slate-100 last:border-0">
+                            <td className="px-3 py-2 pr-3">
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/listings/${listing.id}`)}
+                                className="text-left font-semibold text-slate-700 transition hover:text-orange-600"
+                              >
+                                {listing.title}
+                              </button>
+                              <div className="text-xs text-slate-500">{listing.district || "—"}</div>
+                            </td>
+                            <td className="px-3 py-2 pr-3">{listing.detailViewCount}</td>
+                            <td className="px-3 py-2 pr-3">{listing.phoneClickCount}</td>
+                            <td className="px-3 py-2">{listing.zaloClickCount}</td>
+                          </tr>
+                        )) : (
+                          <tr>
+                            <td colSpan={4} className="px-3 py-3 text-slate-500">Chưa có dữ liệu tracking</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
+                <h3 className="text-sm font-semibold text-slate-800">Thống kê theo khu vực</h3>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-slate-500">
+                        <th className="pb-2 pr-3">Khu vực</th>
+                        <th className="pb-2 pr-3">Số lần lọc</th>
+                        <th className="pb-2 pr-3">Click bài</th>
+                        <th className="pb-2">Bài đăng</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {areaStats.length > 0 ? areaStats.map((area) => (
+                        <tr key={area.district} className="border-b border-slate-100 last:border-0">
+                          <td className="py-2 pr-3 font-semibold text-slate-700">{area.district}</td>
+                          <td className="py-2 pr-3">{area.filterCount}</td>
+                          <td className="py-2 pr-3">{area.detailClickCount}</td>
+                          <td className="py-2">{area.listingCount}</td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan={4} className="py-3 text-slate-500">Chưa có dữ liệu khu vực</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
+                <h3 className="text-sm font-semibold text-slate-800">Tỷ lệ click bài đăng được đề xuất và bài thường</h3>
+                <div className="mt-4 space-y-3 text-sm text-slate-600">
+                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
+                    <span>Đề xuất</span>
+                    <span className="font-semibold text-slate-800">{analytics ? analytics.recommendationStats.recommendedClicks : 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
+                    <span>Bình thường</span>
+                    <span className="font-semibold text-slate-800">{analytics ? analytics.recommendationStats.normalClicks : 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
+                    <span>Tỷ lệ đề xuất</span>
+                    <span className="font-semibold text-orange-700">{analytics ? `${Math.round(analytics.recommendationStats.recommendedRate * 100)}%` : "0%"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
+                <h3 className="text-sm font-semibold text-slate-800">Số lần cập nhật Hồ sơ lối sống và Bộ lọc mềm</h3>
+                <div className="mt-4 space-y-3 text-sm text-slate-600">
+                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
+                    <span>Hồ sơ lối sống</span>
+                    <span className="font-semibold text-slate-800">{analytics ? analytics.updates.lifestyleProfileUpdates : 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
+                    <span>Bộ lọc mềm</span>
+                    <span className="font-semibold text-slate-800">{analytics ? analytics.updates.softFilterUpdates : 0}</span>
                   </div>
                 </div>
               </div>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Compass, Home, Sparkles } from "lucide-react";
 import { updateLifestyleProfile, updateRoommatePreferences, type LifestyleProfile, type RoommatePreferences } from "../api/services/lifestyle";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS, PROFILE_OPTIONS } from "./lifestyleOptions";
+import { trackEvent } from "../api/services/analytics";
 
 type UserType = "HAS_ROOM" | "NO_ROOM" | null;
 
@@ -279,6 +280,10 @@ export default function OnboardingPage() {
         ) as RoommatePreferences;
         await updateRoommatePreferences(payload);
       }
+
+      trackEvent({
+        eventName: userType === "HAS_ROOM" ? "lifestyle_profile_updated" : "soft_filter_updated",
+      });
 
       const key = `roomie_onboarding_completed_${window.location.hostname}`;
       localStorage.setItem(key, "true");
