@@ -1,12 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import UserShell from "../layouts/UserShell";
-import { listMyListings } from "../api/services/listings";
 import {
   fetchLifestyleProfile,
   updateLifestyleProfile,
 } from "../api/services/lifestyle";
 import type { LifestyleProfile } from "../api/services/lifestyle";
-import { DISTRICT_OPTIONS, PROFILE_OPTIONS } from "./lifestyleOptions";
+import { PROFILE_OPTIONS } from "./lifestyleOptions";
 
 function selectClassName() {
   return "mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300";
@@ -18,21 +17,17 @@ export default function LifestyleProfilePage() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
-  const [hasApprovedListing, setHasApprovedListing] = useState(false);
 
   useEffect(() => {
-    Promise.all([fetchLifestyleProfile(), listMyListings()])
-      .then(([profile, myListings]) => {
+    fetchLifestyleProfile()
+      .then((profile) => {
         setForm(profile || {});
-        setHasApprovedListing(myListings.some((listing) => listing.status === "APPROVED"));
       })
       .catch(() => {
         setError("Không thể tải hồ sơ lối sống.");
       })
       .finally(() => setLoading(false));
   }, []);
-
-  const hasNoApprovedListing = useMemo(() => !hasApprovedListing, [hasApprovedListing]);
 
   const setNumberField = (field: keyof LifestyleProfile, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value === "" ? null : Number(value) }));
@@ -48,11 +43,7 @@ export default function LifestyleProfilePage() {
     setError("");
     setSaving(true);
     try {
-      const payload: LifestyleProfile = {
-        ...form,
-        preferred_district: hasNoApprovedListing ? (form.preferred_district ?? null) : null,
-      };
-      const saved = await updateLifestyleProfile(payload);
+      const saved = await updateLifestyleProfile(form);
       setForm(saved);
       setStatus("Đã lưu hồ sơ lối sống.");
     } catch {
@@ -82,22 +73,6 @@ export default function LifestyleProfilePage() {
         <form onSubmit={submit} className="mt-6 space-y-8">
           <section className="space-y-4 rounded-2xl border border-orange-100 p-5">
             <h2 className="text-base font-semibold">Sinh hoạt cơ bản</h2>
-
-            {hasNoApprovedListing && (
-              <label className="block text-sm font-medium text-slate-700">
-                Khu vực bạn mong muốn tìm được người ở ghép phù hợp 
-                <select
-                  className={selectClassName()}
-                  value={form.preferred_district ?? ""}
-                  onChange={(e) => setTextField("preferred_district", e.target.value)}
-                >
-                  <option value="">Chọn khu vực</option>
-                  {DISTRICT_OPTIONS.map((district) => (
-                    <option key={district} value={district}>{district}</option>
-                  ))}
-                </select>
-              </label>
-            )}
 
             <label className="block text-sm font-medium text-slate-700">
               1. Mức độ sạch sẽ của bạn 

@@ -3,7 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { changePassword, fetchProfile, resolveAvatarUrl, updateProfile, uploadAvatar } from "../api/services/user";
+import { updateLifestyleProfile, updateRoommatePreferences } from "../api/services/lifestyle";
 import { useNavigate } from "react-router-dom";
+import { RotateCcw } from "lucide-react";
 import UserShell from "../layouts/UserShell";
 
 const profileSchema = z.object({
@@ -66,6 +68,8 @@ export default function ProfilePage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [resettingOnboarding, setResettingOnboarding] = useState(false);
+  const [resetStatus, setResetStatus] = useState<string>("");
   const navigate = useNavigate();
 
   const form = useForm<ProfileForm>({
@@ -136,6 +140,58 @@ export default function ProfilePage() {
       setPasswordError(message || "Đổi mật khẩu thất bại. Vui lòng thử lại.");
     }
   });
+
+  const handleResetOnboarding = async () => {
+    setResettingOnboarding(true);
+    setResetStatus("");
+    try {
+      // Clear onboarding flag
+      const onboardingKey = `roomie_onboarding_completed_${window.location.hostname}`;
+      localStorage.removeItem(onboardingKey);
+
+      // Reset lifestyle profile data
+      await updateLifestyleProfile({
+        cleanliness: null,
+        ac_usage: null,
+        pet_status: null,
+        smoking_status: null,
+        cooking: null,
+        guest: null,
+        home_frequency: null,
+        work_schedule: null,
+        sharing: null,
+        noise: null,
+        call_frequency: null,
+        game_mic: null,
+      });
+
+      // Reset roommate preferences data
+      await updateRoommatePreferences({
+        pref_cleanliness: null,
+        pref_ac_usage: null,
+        pref_cooking: null,
+        pref_guest: null,
+        pref_home_frequency: null,
+        pref_noise: null,
+        pref_call_frequency: null,
+        pref_game_mic: null,
+        pref_pet: null,
+        pref_smoking: null,
+        pref_work_schedule: null,
+        pref_sharing: null,
+      });
+
+      setResetStatus("Đã reset onboarding. Đang chuyển hướng...");
+      setTimeout(() => {
+        navigate("/onboarding");
+      }, 1000);
+    } catch (err) {
+      console.error("Reset onboarding error:", err);
+      setResetStatus("Lỗi khi reset onboarding. Vui lòng thử lại.");
+    } finally {
+      setResettingOnboarding(false);
+    }
+  };
 
   return (
     <UserShell>
@@ -303,6 +359,26 @@ export default function ProfilePage() {
               Cập nhật mật khẩu
             </button>
           </form>
+        </div>
+
+        <div className="mt-10 border-t border-orange-100 pt-8">
+          <h2 className="text-xl font-bold">Lại làm onboarding</h2>
+          <p className="mt-1 text-sm text-slate-500">Bạn có thể làm lại quy trình setup hồ sơ để thay đổi tùy chọn lifestyle và soft-filter preferences.</p>
+
+          {resetStatus && (
+            <p className={`mt-4 rounded-lg px-4 py-2 text-sm ${resetStatus.includes("Lỗi") ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"}`}>
+              {resetStatus}
+            </p>
+          )}
+
+          <button
+            onClick={handleResetOnboarding}
+            disabled={resettingOnboarding}
+            className="mt-4 inline-flex items-center gap-2 rounded-2xl border-2 border-orange-200 px-4 py-3 text-sm font-semibold text-orange-600 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <RotateCcw className="h-4 w-4" />
+            {resettingOnboarding ? "Đang reset..." : "Reset Onboarding"}
+          </button>
         </div>
       </div>
     </UserShell>

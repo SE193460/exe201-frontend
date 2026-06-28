@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,6 +6,7 @@ import * as z from "zod";
 import { UsersRound, HeartHandshake } from "lucide-react";
 import { login, register } from "../api/services/auth";
 import { fetchProfile } from "../api/services/user";
+import { fetchLifestyleProfile, fetchRoommatePreferences } from "../api/services/lifestyle";
 
 const loginSchema = z.object({
   email: z.string().email("Email không hợp lệ"),
@@ -61,42 +62,6 @@ export default function AuthPage() {
   const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
-  const queryMessage = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("success") === "google") {
-      const token = params.get("accessToken");
-      if (token) {
-        localStorage.setItem("access_token", token);
-        setTimeout(async () => {
-          try {
-            const profile = await fetchProfile();
-            if (profile.roleName === "admin") {
-              navigate("/admin/dashboard");
-              return;
-            }
-          } catch {
-            // ignore profile error
-          }
-          navigate("/");
-        }, 300);
-        return "";
-      }
-    }
-    if (params.get("error") === "google") {
-      return "Đăng nhập Google thất bại.";
-    }
-    if (params.get("error") === "inactive") {
-      return "Tài khoản đã bị vô hiệu hóa.";
-    }
-    return "";
-  }, []);
-
-  useEffect(() => {
-    if (queryMessage) {
-      setStatus(queryMessage);
-    }
-  }, [queryMessage]);
-
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
@@ -129,6 +94,27 @@ export default function AuthPage() {
       } catch {
         // ignore profile error
       }
+
+      const onboardingKey = `roomie_onboarding_completed_${window.location.hostname}`;
+      const alreadyCompleted = localStorage.getItem(onboardingKey) === "true";
+      if (!alreadyCompleted) {
+        try {
+          const [lifestyleProfile, roommatePreferences] = await Promise.all([
+            fetchLifestyleProfile(),
+            fetchRoommatePreferences(),
+          ]);
+          const hasLifestyleData = Object.values(lifestyleProfile || {}).some((value) => value !== null && value !== undefined && value !== "");
+          const hasPreferencesData = Object.values(roommatePreferences || {}).some((value) => value !== null && value !== undefined && value !== "");
+          if (!hasLifestyleData && !hasPreferencesData) {
+            navigate("/onboarding");
+            return;
+          }
+        } catch {
+          navigate("/onboarding");
+          return;
+        }
+      }
+
       navigate("/");
     } catch (err) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
