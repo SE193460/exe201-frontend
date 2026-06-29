@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell } from "lucide-react";
+import { Bell, Menu, X } from "lucide-react";
 import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from "../api/services/notifications";
 
 export type AdminSidebarKey = "dashboard" | "users" | "listings" | "imported-listings" | "amenities" | "payments" | "reports" | "feedbacks";
@@ -27,6 +27,7 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     loadNotifications();
@@ -41,6 +42,15 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   const loadNotifications = async () => {
     try {
@@ -67,6 +77,7 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
       navigate(`/listings/${n.listing_id}`);
     }
     setNotifOpen(false);
+    setMobileOpen(false);
   };
 
   const handleMarkAllRead = async () => {
@@ -77,18 +88,62 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
     } catch { /* ignore */ }
   };
 
+  const handleNav = (path: string) => {
+    navigate(path);
+    setMobileOpen(false);
+  };
+
   return (
-    <aside className="w-full max-w-[250px] rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)] flex flex-col justify-between">
-      <div>
-        <div className="flex items-center gap-2 text-lg font-semibold">
+    <>
+      {/* Mobile hamburger toggle — visible only on small screens */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed left-4 top-20 z-50 flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-lg border border-slate-200 md:hidden"
+        aria-label="Open admin menu"
+      >
+        <Menu className="h-5 w-5 text-slate-700" />
+      </button>
+
+      {/* Backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed top-0 left-0 z-50 flex h-full w-[260px] flex-col bg-white p-5 shadow-xl transition-transform duration-200
+          md:static md:z-auto md:h-auto md:w-full md:max-w-[250px] md:rounded-[24px] md:p-6 md:shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
+      >
+        {/* Mobile close button */}
+        <div className="flex items-center justify-between md:hidden">
+          <div className="flex items-center gap-2 text-lg font-semibold">
+            <img src="/logo-roomie.svg" alt="ROOMIE logo" className="h-8 w-8 object-contain" />
+            Admin
+          </div>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Desktop logo */}
+        <div className="hidden items-center gap-2 text-lg font-semibold md:flex">
           <img src="/logo-roomie.svg" alt="ROOMIE logo" className="h-9 w-9 object-contain" />
           ROOMIE Admin
         </div>
 
-        <div className="mt-8 space-y-2 text-sm font-semibold">
+        <div className="mt-6 flex-1 space-y-1 text-sm font-semibold md:mt-8">
           <button
-            onClick={() => navigate("/home")}
-            className="w-full rounded-full px-4 py-2 text-left text-slate-600 hover:bg-orange-50"
+            onClick={() => handleNav("/home")}
+            className="w-full rounded-full px-4 py-2.5 text-left text-slate-600 hover:bg-orange-50 transition"
           >
             Trang chủ
           </button>
@@ -98,8 +153,8 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
             return (
               <button
                 key={item.key}
-                onClick={() => navigate(item.path)}
-                className={`w-full rounded-full px-4 py-2 text-left transition ${
+                onClick={() => handleNav(item.path)}
+                className={`w-full rounded-full px-4 py-2.5 text-left transition ${
                   isActive ? "bg-orange-100 text-orange-700" : "text-slate-600 hover:bg-orange-50"
                 }`}
               >
@@ -112,7 +167,7 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
           <div className="relative pt-2" ref={notifRef}>
             <button
               onClick={() => { setNotifOpen((prev) => !prev); loadNotifications(); }}
-              className="relative flex w-full items-center gap-2.5 rounded-full px-4 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-orange-50 transition"
+              className="relative flex w-full items-center gap-2.5 rounded-full px-4 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-orange-50 transition"
             >
               <Bell className="h-4 w-4" />
               Thông báo
@@ -124,7 +179,7 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
             </button>
 
             {notifOpen && (
-              <div className="absolute left-0 top-full z-50 mt-1 w-[300px] overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-[0_20px_50px_-20px_rgba(255,115,0,0.3)]">
+              <div className="absolute left-0 top-full z-50 mt-1 w-[calc(100vw-80px)] max-w-[300px] overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-[0_20px_50px_-20px_rgba(255,115,0,0.3)]">
                 <div className="flex items-center justify-between border-b border-orange-50 px-4 py-3">
                   <span className="text-sm font-bold text-slate-700">Thông báo</span>
                   {unreadCount > 0 && (
@@ -154,14 +209,14 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
             )}
           </div>
         </div>
-      </div>
 
-      <button
-        onClick={onLogout}
-        className="w-full rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-orange-50"
-      >
-        Đăng xuất
-      </button>
-    </aside>
+        <button
+          onClick={() => { onLogout(); setMobileOpen(false); }}
+          className="mt-4 w-full rounded-full border border-orange-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-orange-50 transition"
+        >
+          Đăng xuất
+        </button>
+      </aside>
+    </>
   );
 }

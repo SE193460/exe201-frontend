@@ -125,10 +125,10 @@ export default function AdminListingsPage() {
           </section>
 
           {/* List + Detail */}
-          <div className="flex gap-6 items-start">
+          <div className="flex flex-col gap-6 md:flex-row md:gap-6 items-start">
 
             {/* Left list */}
-            <div className="w-[340px] flex-shrink-0 rounded-[24px] bg-white shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)] flex flex-col" style={{ maxHeight: "calc(100vh - 260px)" }}>
+            <div className="w-full md:w-[340px] flex-shrink-0 rounded-[24px] bg-white shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)] flex flex-col" style={{ maxHeight: "calc(100vh - 260px)" }}>
               <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-orange-50">
                 <h2 className="text-sm font-bold text-slate-700">Danh sách ({filteredListings.length})</h2>
                 {loading && <span className="text-xs text-slate-400">Đang tải...</span>}

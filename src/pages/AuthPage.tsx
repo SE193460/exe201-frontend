@@ -150,7 +150,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="mx-auto flex min-h-screen w-full max-w-[1280px] flex-col overflow-hidden rounded-[28px] border border-orange-100 bg-white shadow-[0_25px_80px_-40px_rgba(255,115,0,0.6)] lg:min-h-[92vh] lg:flex-row">
-        <section className="relative flex w-full flex-col justify-between overflow-hidden bg-gradient-to-br from-[#ff6a3d] via-[#ff7b44] to-[#ffa75b] px-10 py-12 text-white lg:w-[48%]">
+        <section className="relative flex w-full flex-col justify-between overflow-hidden bg-gradient-to-br from-[#ff6a3d] via-[#ff7b44] to-[#ffa75b] px-6 py-8 sm:px-10 sm:py-12 text-white lg:w-[48%]">
           <div className="absolute inset-0 opacity-30" style={{
             backgroundImage:
               "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35), transparent 55%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.3), transparent 45%)",
@@ -166,7 +166,7 @@ export default function AuthPage() {
                 ROOMIE
               </button>
             </div>
-            <h1 className="mt-12 text-4xl font-extrabold leading-tight md:text-5xl">
+            <h1 className="mt-12 text-2xl sm:text-3xl font-extrabold leading-tight md:text-5xl">
               Tìm người ở ghép<br />hợp gu, hợp túi tiền.
             </h1>
             <p className="mt-5 max-w-sm text-sm text-white/90 md:text-base">
@@ -193,7 +193,7 @@ export default function AuthPage() {
         </section>
 
         <section className="flex w-full flex-1 items-center justify-center bg-gradient-to-br from-white via-white to-[#fff7f1] px-6 py-12">
-          <div className="w-full max-w-md rounded-[24px] border border-orange-100 bg-white/90 p-8 shadow-[0_20px_50px_-30px_rgba(255,136,0,0.5)]">
+          <div className="w-full max-w-md rounded-[24px] border border-orange-100 bg-white/90 p-5 sm:p-8 shadow-[0_20px_50px_-30px_rgba(255,136,0,0.5)]">
             <div className="mb-8 flex rounded-full bg-[#f3efe9] p-1 text-sm font-semibold text-slate-600">
               <button
                 className={`flex-1 rounded-full px-4 py-2 transition ${mode === "login" ? "bg-white text-slate-900 shadow" : "opacity-70"

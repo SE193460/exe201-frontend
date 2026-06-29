@@ -232,7 +232,7 @@ export default function EditListingPage() {
 
   return (
     <UserShell>
-      <div className="mx-auto w-full max-w-[860px] rounded-[28px] border border-orange-100 bg-white p-8 shadow-[0_25px_80px_-40px_rgba(255,115,0,0.6)]">
+      <div className="mx-auto w-full max-w-[860px] rounded-[28px] border border-orange-100 bg-white p-4 sm:p-8 shadow-[0_25px_80px_-40px_rgba(255,115,0,0.6)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">Chỉnh sửa bài đăng</h1>
@@ -422,7 +422,7 @@ export default function EditListingPage() {
             />
           </label>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
               <input
                 type="checkbox"
