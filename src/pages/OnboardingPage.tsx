@@ -334,7 +334,7 @@ export default function OnboardingPage() {
                     Chỉ cần chọn loại hồ sơ phù hợp, trả lời các câu hỏi ngắn và hệ thống sẽ dùng thông tin đó để đề xuất roommate phù hợp hơn.
                   </p>
 
-                  <div className="mt-8 rounded-[24px] border border-orange-100 bg-[#fff7f2] p-5">
+                  <div className="mt-8 rounded-[24px] border border-orange-100 bg-white p-5">
                     <p className="text-sm font-semibold text-slate-700">Thời gian hoàn thành</p>
                     <div className="mt-2 flex items-end gap-2">
                       <span className="text-3xl font-black text-orange-600">≈ {estimatedMinutes} phút</span>
@@ -407,7 +407,7 @@ export default function OnboardingPage() {
                 <div className="h-full rounded-full bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] transition-all duration-300" style={{ width: `${progress}%` }} />
               </div>
 
-              <div className="mt-6 rounded-[22px] border border-orange-100 bg-[#fff7f2] p-4">
+              <div className="mt-6 rounded-[22px] border border-orange-100 bg-white p-4">
                 <div className="flex items-center gap-2 text-sm font-semibold text-orange-600"><Sparkles className="h-4 w-4" /> Vì sao chúng tôi hỏi điều này?</div>
                 <p className="mt-3 text-sm leading-7 text-slate-600">{currentQuestion.explanation}</p>
               </div>

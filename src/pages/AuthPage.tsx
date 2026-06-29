@@ -148,7 +148,7 @@ export default function AuthPage() {
     });
 
   return (
-    <div className="min-h-screen bg-[#fff7f2] text-slate-800">
+    <div className="min-h-screen bg-white text-slate-800">
       <div className="mx-auto flex min-h-screen w-full max-w-[1280px] flex-col overflow-hidden rounded-[28px] border border-orange-100 bg-white shadow-[0_25px_80px_-40px_rgba(255,115,0,0.6)] lg:min-h-[92vh] lg:flex-row">
         <section className="relative flex w-full flex-col justify-between overflow-hidden bg-gradient-to-br from-[#ff6a3d] via-[#ff7b44] to-[#ffa75b] px-10 py-12 text-white lg:w-[48%]">
           <div className="absolute inset-0 opacity-30" style={{

@@ -336,7 +336,7 @@ export default function PublicListingDetailPage() {
 
 
   return (
-    <div className="min-h-screen bg-[#fff7f2] text-slate-800 flex flex-col">
+    <div className="min-h-screen bg-white text-slate-800 flex flex-col">
       <Navbar />
 
       <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-6 px-6 pb-16 pt-10">
@@ -531,7 +531,7 @@ export default function PublicListingDetailPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
+                <div className="rounded-2xl bg-white border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
                   <p className="inline-flex w-full items-center justify-center gap-1.5 font-bold text-slate-700 text-center">
                     <Info className="h-4 w-4 text-orange-500" />
                     Lưu ý quan trọng:
@@ -664,7 +664,7 @@ export default function PublicListingDetailPage() {
                     <ExternalLink className="h-4 w-4" />
                     Xem bài đăng gốc
                   </a>
-                  <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-600 leading-relaxed">
+                  <div className="rounded-2xl bg-white border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-600 leading-relaxed">
                     <p className="inline-flex w-full items-center justify-center gap-1.5 font-bold text-slate-700 text-center"><Info className="h-3.5 w-3.5" />Lưu ý quan trọng:</p>
                     <p>• Thông tin từ bài đăng được thu thập từ nguồn bên ngoài, vui lòng kiểm tra kỹ trước khi liên hệ.</p>
                     <p>• Không đặt cọc khi chưa xác thực danh tính chủ nhà.</p>

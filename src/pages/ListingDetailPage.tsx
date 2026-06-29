@@ -354,7 +354,7 @@ export default function ListingDetailPage() {
                 </div>
 
                 {/* Notice Box */}
-                <div className="rounded-2xl bg-[#fff7f2] border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
+                <div className="rounded-2xl bg-white border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
                   <p className="font-bold text-slate-700 text-center">💡 Lưu ý quan trọng:</p>
                   <p>• Chỉ đặt cọc giữ chỗ khi đã xác thực danh tính chủ nhà và có thỏa thuận biên nhận rõ ràng.</p>
                   <p>• Kiểm tra kỹ điều khoản hợp đồng trước khi thực hiện ký kết.</p>

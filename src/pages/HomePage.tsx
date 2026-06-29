@@ -38,7 +38,7 @@ export default function HomePage() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-[#fff7f2] text-slate-800 flex flex-col">
+    <div className="min-h-screen bg-white text-slate-800 flex flex-col">
       <Navbar />
 
       <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-12 px-6 pb-16 pt-10">

@@ -31,7 +31,7 @@ export default function SavedListingsPage() {
   const pagedListings = listings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="min-h-screen bg-[#fff7f2] text-slate-800 flex flex-col">
+    <div className="min-h-screen bg-white text-slate-800 flex flex-col">
       <Navbar />
       <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col gap-6 px-6 pb-16 pt-10">
         <header className="flex flex-wrap items-center justify-between gap-3">

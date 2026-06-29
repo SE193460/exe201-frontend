@@ -324,7 +324,7 @@ export default function AdminImportedListingsPage() {
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="min-h-screen bg-[#fff7f2] text-slate-800">
+    <div className="min-h-screen bg-white text-slate-800">
       <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
         <Sidebar activeKey="imported-listings" onLogout={handleLogout} />
 
