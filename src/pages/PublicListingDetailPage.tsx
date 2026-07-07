@@ -2,14 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import type { SoftFilterResult } from "../api/services/lifestyle";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { useNavigate, useParams } from "react-router-dom";
-import { Bookmark, BookmarkCheck, Camera, CheckCircle2, CircleCheck, CircleX, Copy, ExternalLink, Info, MapPinned, MessageCircle, Phone, Send, ShieldCheck, Sparkles, Share2, Flag } from "lucide-react";
-import { fetchPublicListingDetail, resolveListingImageUrl, toggleSaveListing, reportListing } from "../api/services/listings";
+import { Bookmark, BookmarkCheck, Camera, CheckCircle2, CircleCheck, CircleX, Copy, ExternalLink, Home, ChevronRight, Info, MapPinned, MessageCircle, Phone, Send, ShieldCheck, Sparkles, Share2, Flag } from "lucide-react";
+import { fetchPublicListingDetail, fetchPublicListings, resolveListingImageUrl, toggleSaveListing, reportListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { trackEvent } from "../api/services/analytics";
 
-function formatDate(value: string | null) {
+function formatDate(value: string | null | undefined) {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -66,7 +66,6 @@ const REPORT_REASONS = [
 ];
 
 export default function PublicListingDetailPage() {
-  const MAX_THUMBNAILS = 8;
   const navigate = useNavigate();
   const { id } = useParams();
   const [listing, setListing] = useState<Listing | null>(null);
@@ -88,6 +87,7 @@ export default function PublicListingDetailPage() {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [softFilterResult, setSoftFilterResult] = useState<SoftFilterResult | null>(null);
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+  const [similarListings, setSimilarListings] = useState<Listing[]>([]);
 
   const handleCopyPhone = async (phone: string) => {
     try {
@@ -135,6 +135,38 @@ export default function PublicListingDetailPage() {
         setLoading(false);
       });
   }, [id]);
+
+  useEffect(() => {
+    if (!listing?.id) return;
+    let cancelled = false;
+
+    fetchPublicListings()
+      .then((items) => {
+        if (cancelled) return;
+        const baseDistrict = (listing.district || "").toLowerCase();
+        const baseCity = (listing.city || "").toLowerCase();
+        const filtered = items
+          .filter((item) => item.id !== listing.id)
+          .filter((item) => {
+            const status = String(item.status || "").toUpperCase();
+            return !status || status === "APPROVED" || status === "PUBLISHED";
+          })
+          .filter((item) => {
+            const sameDistrict = baseDistrict && (item.district || "").toLowerCase() === baseDistrict;
+            const sameCity = baseCity && (item.city || "").toLowerCase() === baseCity;
+            return sameDistrict || sameCity;
+          })
+          .slice(0, 3);
+        setSimilarListings(filtered);
+      })
+      .catch(() => {
+        if (!cancelled) setSimilarListings([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [listing?.id, listing?.district, listing?.city]);
 
   const handleToggleSave = useCallback(async () => {
     if (!listing?.id) return;
@@ -336,453 +368,336 @@ export default function PublicListingDetailPage() {
 
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col">
       <Navbar />
 
-      <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-6 px-6 pb-16 pt-10">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Chi tiết phòng ở ghép</h1>
-            <p className="mt-1 text-sm text-slate-700">Thông tin chi tiết về không gian sống và yêu cầu ghép phòng.</p>
+      <main className="flex-1">
+        <div className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-3">
+            <nav className="flex items-center gap-2 text-xs text-slate-500">
+              <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-[#a55b00] transition">
+                <Home className="h-3.5 w-3.5" /> Trang chủ
+              </button>
+              <ChevronRight className="h-3 w-3" />
+              <button onClick={() => navigate("/listings")} className="hover:text-[#a55b00] transition">Phòng trọ</button>
+              <ChevronRight className="h-3 w-3" />
+              <span className="max-w-[220px] truncate font-medium text-slate-800">{listing?.title || "..."}</span>
+            </nav>
           </div>
-          <button
-            onClick={() => navigate("/listings")}
-            className="rounded-full border border-orange-200 bg-white px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition shadow-sm"
-          >
-            ← Quay lại danh sách
-          </button>
-        </header>
+        </div>
 
         {loading && (
-          <div className="flex h-64 items-center justify-center rounded-[24px] border border-orange-100 bg-white shadow-sm">
+          <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-20 flex items-center justify-center">
             <div className="text-center">
-              <span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"></span>
-              <p className="mt-2 text-sm text-slate-700 font-semibold">Đang tải thông tin chi tiết...</p>
+              <span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[#a55b00] border-t-transparent" />
+              <p className="mt-3 text-sm text-slate-500">Đang tải thông tin chi tiết...</p>
             </div>
           </div>
         )}
 
         {error && (
-          <div className="rounded-[24px] border border-red-100 bg-white px-6 py-8 text-center text-red-600 shadow-sm">
-            {error}
+          <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-20">
+            <div className="rounded-xl border border-red-200 bg-white p-8 text-center text-red-600">{error}</div>
           </div>
         )}
 
         {listing && (
-          <div className="grid gap-6 lg:grid-cols-[1.4fr_0.75fr] items-start">
-            {/* Left Column */}
-            <div className="space-y-6">
-              {/* Image Slider */}
-              <div className="rounded-[24px] overflow-hidden border border-orange-100 bg-white p-4 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)]">
+          <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6 lg:py-8">
+            <div className="mb-4 text-xs font-medium text-slate-500">
+              TP. Hồ Chí Minh <span className="mx-1 text-slate-300">›</span> Quận 7 <span className="mx-1 text-slate-300">›</span> <span className="text-slate-700">{listingAddress || "Căn hộ Sunrise City"}</span>
+            </div>
+
+            <section className="space-y-3 mb-8">
+              <div className="group relative aspect-[16/9] w-full overflow-hidden rounded-[20px] bg-slate-100 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.35)] cursor-pointer" onClick={() => openImageModal(selectedImgIdx)}>
                 {listing.images && listing.images.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-orange-50">
-                      <img
-                        src={resolveListingImageUrl(listing.images[selectedImgIdx].imageUrl)}
-                        alt={listing.title}
-                        className="h-full w-full object-cover select-none cursor-zoom-in"
-                        onClick={() => openImageModal(selectedImgIdx)}
-                      />
-                      {listing.images.length > 1 && (
-                        <>
-                          <button onClick={handlePrevImg} className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/60 text-white font-extrabold hover:bg-slate-950 transition">‹</button>
-                          <button onClick={handleNextImg} className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/60 text-white font-extrabold hover:bg-slate-950 transition">›</button>
-                          <span className="absolute bottom-4 right-4 rounded-full bg-slate-900/70 backdrop-blur px-3 py-1 text-xs font-semibold text-white">
-                            <span className="inline-flex items-center gap-1.5"><Camera className="h-3.5 w-3.5" />{selectedImgIdx + 1} / {listing.images.length}</span>
-                          </span>
-                        </>
-                      )}
-                    </div>
+                  <>
+                    <img
+                      src={resolveListingImageUrl(listing.images[selectedImgIdx].imageUrl)}
+                      alt={listing.title}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                    />
                     {listing.images.length > 1 && (
-                      <div className="flex gap-2 overflow-x-auto pb-1 max-w-full">
-                        {listing.images.slice(0, MAX_THUMBNAILS).map((image, idx) => {
-                          const extraCount = listing.images.length - MAX_THUMBNAILS;
-                          const isLastVisible = idx === MAX_THUMBNAILS - 1;
-                          const shouldShowExtra = isLastVisible && extraCount > 0;
-                          return (
-                            <button
-                              key={image.id}
-                              onClick={() => setSelectedImgIdx(idx)}
-                              className={`relative h-16 w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition ${selectedImgIdx === idx ? "border-orange-500 shadow-md shadow-orange-100" : "border-transparent opacity-60 hover:opacity-100"}`}
-                            >
-                              <img src={resolveListingImageUrl(image.imageUrl)} alt="Thumbnail" className="h-full w-full object-cover" />
-                              {shouldShowExtra && (
-                                <span className="absolute inset-0 flex items-center justify-center bg-slate-900/65 text-sm font-bold text-white">
-                                  +{extraCount}
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
+                      <>
+                        <button onClick={(e) => { e.stopPropagation(); handlePrevImg(); }} className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">‹</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleNextImg(); }} className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">›</button>
+                        <div className="absolute bottom-4 right-4 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur flex items-center gap-1.5">
+                          <Camera className="h-3.5 w-3.5" /> {selectedImgIdx + 1}/{listing.images.length}
+                        </div>
+                      </>
                     )}
-                  </div>
+                  </>
                 ) : (
-                  <div className="aspect-[16/9] w-full flex items-center justify-center rounded-2xl bg-orange-50 text-orange-300 font-bold text-sm">
+                  <div className="flex h-full min-h-[330px] items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-500">
                     Bài đăng không đính kèm hình ảnh
                   </div>
                 )}
               </div>
 
-              {/* Listing Details */}
-              <div className="rounded-[24px] border border-orange-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] space-y-6">
-                <div>
-                  {listing.promoExpiresAt && new Date(listing.promoExpiresAt) > new Date() && (
-                  <span className="inline-flex items-center gap-1.5 rounded bg-red-100 border border-red-200 px-2.5 py-0.5 text-[10px] font-black uppercase text-red-700 tracking-wider">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {listing.promoType === "premium" ? "TIN VIP CAO CẤP" : "TIN VIP NỔI BẬT"}
-                  </span>
-                  )}
-                  <h2 className="mt-2 text-xl md:text-2xl font-extrabold text-red-600 uppercase leading-snug">{listing.title}</h2>
-                  <p className="mt-2 text-xs text-slate-600 font-medium">
-                    Địa chỉ: {listing.address || [listing.ward, listing.district, listing.city].filter(Boolean).join(", ")}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex-1 min-w-[120px] rounded-2xl bg-orange-50/50 p-4 border border-orange-100">
-                    <p className="text-[10px] font-bold uppercase text-orange-400">Giá thuê</p>
-                    <p className="text-xl font-black text-[#ff6a3d] mt-1">{listing.rentPrice.toLocaleString("vi-VN")} đ/tháng</p>
-                  </div>
-                  <div className="flex-1 min-w-[120px] rounded-2xl bg-orange-50/50 p-4 border border-orange-100">
-                    <p className="text-[10px] font-bold uppercase text-orange-400">Diện tích</p>
-                    <p className="text-xl font-black text-slate-800 mt-1">{listing.roomAreaSqm ? `${listing.roomAreaSqm} m²` : "Chưa rõ"}</p>
-                  </div>
-                  <div className="flex-1 min-w-[120px] rounded-2xl bg-orange-50/50 p-4 border border-orange-100">
-                    <p className="text-[10px] font-bold uppercase text-orange-400">Cập nhật</p>
-                    <p className="text-sm font-black text-slate-700 mt-2">{formatDate(listing.updatedAt)}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 pt-4 border-t border-slate-100">
-                  <h3 className="text-base font-bold text-slate-800">Thông tin thuộc tính</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
-                    <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-700">Quận/Huyện:</span>
-                      <strong className="text-slate-800">{listing.district || "Chưa cập nhật"}</strong>
-                    </div>
-                    <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-700">Khu vực:</span>
-                      <strong className="text-slate-800">{listing.ward || "Chưa cập nhật"}</strong>
-                    </div>
-                    <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-700">Mã tin đăng:</span>
-                      <strong className="text-[#ff6a3d]">#{listing.id.slice(0, 8).toUpperCase()}</strong>
-                    </div>
-                    <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-700">Loại phòng:</span>
-                      <strong className="text-slate-800">{listing.roomType || "Phòng trọ ở ghép"}</strong>
-                    </div>
-                    <div className="flex justify-between py-1.5 border-b border-slate-50">
-                      <span className="text-slate-700">Đối tượng ưu tiên:</span>
-                      <strong className="text-slate-800">{listing.preferredGender || "Không yêu cầu"}</strong>
-                    </div>
-
-                  </div>
-                </div>
-
-                <div className="space-y-3 pt-4 border-t border-slate-100">
-                  <h3 className="text-base font-bold text-slate-800">Thông tin mô tả</h3>
-                  <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{renderDescription(listing.description)}</div>
-                </div>
-
-                {!listing.source && (
-                  <div className="flex flex-wrap gap-2.5 pt-4 border-t border-slate-100">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${listing.smokingAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
-                      {listing.smokingAllowed ? <CircleCheck className="h-3.5 w-3.5" /> : <CircleX className="h-3.5 w-3.5" />}
-                      {listing.smokingAllowed ? "Cho phép hút thuốc" : "Không hút thuốc"}
-                    </span>
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${listing.petAllowed ? 'bg-orange-50 border-orange-100 text-orange-700' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
-                      {listing.petAllowed ? <CircleCheck className="h-3.5 w-3.5" /> : <CircleX className="h-3.5 w-3.5" />}
-                      {listing.petAllowed ? "Nuôi thú cưng" : "Không nuôi thú cưng"}
-                    </span>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {(listing.images || []).slice(1, 6).map((image, idx) => (
+                  <button key={image.id} className="relative h-20 w-28 flex-shrink-0 overflow-hidden rounded-[16px] bg-slate-100 shadow-[0_12px_24px_-18px_rgba(0,0,0,0.35)]" onClick={() => openImageModal(idx + 1)}>
+                    <img src={resolveListingImageUrl(image.imageUrl)} alt="" className="h-full w-full object-cover" />
+                    {idx === 3 && listing.images.length > 5 && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-semibold text-white">Xem tất cả ({listing.images.length})</span>
+                    )}
+                  </button>
+                ))}
+                {(!listing.images || listing.images.length <= 1) && (
+                  <div className="flex h-20 min-w-[11rem] items-center justify-center rounded-[16px] border border-dashed border-slate-200 bg-white p-5 text-sm text-slate-400">
+                    Chưa có thêm ảnh
                   </div>
                 )}
+              </div>
+            </section>
 
-                {listing.amenities && listing.amenities.length > 0 && (
-                  <div className="space-y-3 pt-4 border-t border-slate-100">
-                    <h3 className="text-base font-bold text-slate-800">Tiện nghi</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {listing.amenities.map((amenity) => (
-                        <span key={amenity.id} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border bg-orange-50 border-orange-100 text-orange-700">
-                          <CircleCheck className="h-3.5 w-3.5" />
-                          {amenity.name}
-                        </span>
+            <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px] items-start">
+              <div className="space-y-6">
+                <section className="flex flex-wrap gap-2">
+                  {listing.promoExpiresAt && new Date(listing.promoExpiresAt) > new Date() && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-red-600">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      {listing.promoType === "premium" ? "TIN VIP CAO CẤP" : "TIN VIP NỔI BẬT"}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-[11px] font-semibold text-amber-700">Phòng riêng</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-700">Sẵn sàng ngay</span>
+                </section>
+
+                <section className="rounded-[24px] bg-white px-5 py-6 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.18)] border border-slate-200">
+                  <h1 className="text-3xl md:text-[34px] font-extrabold leading-[1.1] text-slate-900 max-w-[850px]">{listing.title}</h1>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                    <MapPinned className="h-4 w-4 text-[#a55b00]" />
+                    <span>{listingAddress || "Chưa cập nhật"}</span>
+                  </div>
+                  <div className="mt-4 text-2xl md:text-[30px] font-extrabold text-[#a55b00]">
+                    {listing.rentPrice.toLocaleString("vi-VN")} <span className="text-base font-semibold text-slate-500">/ tháng</span>
+                  </div>
+
+                  <div className="mt-6 border-t border-slate-100 pt-5">
+                    <h3 className="text-base font-bold text-slate-900">Mô tả chi tiết</h3>
+                    <div className="mt-3 text-[15px] leading-7 text-slate-600 whitespace-pre-wrap">{renderDescription(listing.description)}</div>
+                  </div>
+
+                  <div className="mt-6 border-t border-slate-100 pt-5">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {[
+                        ["Mã tin đăng", `#${listing.id.slice(0, 8).toUpperCase()}`],
+                        ["Quận/Huyện", listing.district || "—"],
+                        ["Khu vực", listing.ward || "—"],
+                        ["Diện tích", listing.roomAreaSqm ? `${listing.roomAreaSqm} m²` : "—"],
+                        ["Loại phòng", listing.roomType || "Phòng trọ ở ghép"],
+                        ["Đối tượng ưu tiên", listing.preferredGender || "Không yêu cầu"],
+                        ["Cập nhật", formatDate(listing.updatedAt)],
+                      ].map(([label, value]) => (
+                        <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+                          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+                          <div className="mt-1 text-sm font-bold text-slate-900">{value}</div>
+                        </div>
                       ))}
                     </div>
                   </div>
+
+                  {!listing.source && (
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${listing.smokingAllowed ? "bg-orange-50 border-orange-200 text-orange-700" : "bg-slate-50 border-slate-200 text-slate-500"}`}>
+                        {listing.smokingAllowed ? <CircleCheck className="h-3.5 w-3.5" /> : <CircleX className="h-3.5 w-3.5" />}
+                        {listing.smokingAllowed ? "Cho phép hút thuốc" : "Không hút thuốc"}
+                      </span>
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${listing.petAllowed ? "bg-orange-50 border-orange-200 text-orange-700" : "bg-slate-50 border-slate-200 text-slate-500"}`}>
+                        {listing.petAllowed ? <CircleCheck className="h-3.5 w-3.5" /> : <CircleX className="h-3.5 w-3.5" />}
+                        {listing.petAllowed ? "Nuôi thú cưng" : "Không nuôi thú cưng"}
+                      </span>
+                    </div>
+                  )}
+
+                  {listing.amenities && listing.amenities.length > 0 && (
+                    <div className="mt-6 border-t border-slate-100 pt-5">
+                      <h3 className="text-base font-bold text-slate-900">Tiện nghi</h3>
+                      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                        {listing.amenities.map((amenity) => (
+                          <span key={amenity.id} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm">
+                            <CircleCheck className="h-4 w-4 text-[#a55b00] flex-shrink-0" />
+                            {amenity.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-6 border-t border-slate-100 pt-5">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <h3 className="text-base font-bold text-slate-900">Vị trí</h3>
+                      <button onClick={openMapModal} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                        <ExternalLink className="h-3.5 w-3.5 text-[#a55b00]" /> Chỉ đường Google Maps
+                      </button>
+                    </div>
+                    <div className="relative overflow-hidden rounded-[18px] border border-slate-200 bg-slate-100 shadow-[0_18px_40px_-30px_rgba(0,0,0,0.35)]">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.78),rgba(255,255,255,0.18)_28%,rgba(17,24,39,0.62)_100%)] pointer-events-none" />
+                      <iframe
+                        title="Google Maps"
+                        width="100%"
+                        height="330"
+                        style={{ border: 0 }}
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(listingAddress)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                        allowFullScreen
+                        className="relative"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mx-0 mt-6 rounded-[18px] border border-[#edd7be] bg-[#fff6eb] p-4 text-left text-xs space-y-1.5 text-[#9a6a3c] leading-relaxed">
+                    <p className="inline-flex w-full items-center justify-center gap-1.5 font-bold text-[#8d4d08] text-center">
+                      <Info className="h-4 w-4 text-[#a55b00]" /> Lưu ý quan trọng:
+                    </p>
+                    <p>• Chỉ đặt cọc giữ chỗ khi đã xác thực danh tính chủ nhà và có thỏa thuận biên nhận rõ ràng.</p>
+                    <p>• Kiểm tra kỹ điều khoản hợp đồng trước khi thực hiện ký kết.</p>
+                  </div>
+                </section>
+              </div>
+
+              <aside className="space-y-4 lg:sticky lg:top-6">
+                {listing.source ? (
+                  <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.14)] text-center space-y-4">
+                    <div className="space-y-1">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Thông tin liên hệ</span>
+                      <p className="text-sm text-slate-600">Thông tin liên hệ được quản lý tại bài đăng gốc.</p>
+                    </div>
+                    <a href={listing.source} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b63ff] hover:bg-[#0058eb] text-white py-3 text-sm font-bold transition">
+                      <ExternalLink className="h-4 w-4" /> Xem bài đăng gốc
+                    </a>
+                  </div>
+                ) : (
+                  <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.16)]">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#d38f5d] bg-[#f6efe9] text-lg font-semibold text-[#a55b00]">
+                        {listing.ownerName?.slice(0, 1).toUpperCase() || "C"}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="truncate text-lg font-semibold text-slate-900">{listing.ownerName || "Chủ phòng trọ"}</h4>
+                        <p className="text-xs text-emerald-600">Đã xác thực danh tính</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-[18px] border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600 space-y-2">
+                      <div>Thành viên từ: {formatDate(listing.ownerCreatedAt)}</div>
+                      <div>Phản hồi: {activeLabel}</div>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <button onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#8f4f00]">
+                        <Phone className="h-4 w-4" /> {listing?.ownerPhone || "Chưa có SĐT"}
+                        <span className="ml-1">{copiedPhone === listing?.ownerPhone ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</span>
+                      </button>
+                      {listing?.ownerPhone && (
+                        <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b63ff] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0058eb]">
+                          <MessageCircle className="h-4 w-4" /> Liên hệ qua Zalo
+                        </a>
+                      )}
+                      {listing?.ownerPhone && (
+                        <a href={`mailto:?subject=Thông tin phòng: ${listing.title}&body=Xem chi tiết tại: ${window.location.href}`} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
+                          <Send className="h-4 w-4" /> Gửi Email
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="mt-4 flex gap-2">
+                      <button onClick={handleToggleSave} disabled={saving} className={`flex-1 rounded-2xl border px-3 py-2.5 text-xs font-semibold transition ${isSaved ? "border-[#a55b00] bg-[#a55b00]/5 text-[#a55b00]" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+                        <span className="inline-flex items-center justify-center gap-1.5">
+                          {isSaved ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />} {isSaved ? "Đã lưu" : "Lưu tin"}
+                        </span>
+                      </button>
+                      <button onClick={() => setShowShareModal(true)} className="flex-1 rounded-2xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
+                        <span className="inline-flex items-center justify-center gap-1.5">
+                          <Share2 className="h-3.5 w-3.5" /> {shareCopied ? "Đã copy" : "Chia sẻ"}
+                        </span>
+                      </button>
+                    </div>
+
+                    <button onClick={() => { setReportReason(""); setReportDescription(""); setReportName(""); setReportPhone(""); setReportSuccess(false); setShowReportModal(true); }} className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                      <Flag className="h-4 w-4" /> Báo cáo
+                    </button>
+                  </div>
                 )}
 
-                <div className="space-y-3 pt-4 border-t border-slate-100">
-                  <h3 className="text-base font-bold text-slate-800">Vị trí & bản đồ</h3>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
-                    <p className="inline-flex items-center gap-1.5">
-                      <MapPinned className="h-3.5 w-3.5 text-orange-500" />
-                      Địa chỉ: <span className="font-semibold text-slate-700">{listingAddress || "Chưa cập nhật"}</span>
-                    </p>
-                    <button onClick={openMapModal} className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 font-semibold text-orange-700 transition hover:bg-orange-100">
-                      Xem bản đồ lớn
-                    </button>
-                  </div>
-                  <div className="h-72 w-full overflow-hidden rounded-2xl border border-orange-100">
-                    <iframe title="Google Maps" width="100%" height="100%" style={{ border: 0 }}
-                      src={`https://maps.google.com/maps?q=${encodeURIComponent(listingAddress)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                      allowFullScreen></iframe>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-white border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-500 leading-relaxed">
-                  <p className="inline-flex w-full items-center justify-center gap-1.5 font-bold text-slate-700 text-center">
-                    <Info className="h-4 w-4 text-orange-500" />
-                    Lưu ý quan trọng:
-                  </p>
-                  <p>• Chỉ đặt cọc giữ chỗ khi đã xác thực danh tính chủ nhà và có thỏa thuận biên nhận rõ ràng.</p>
-                  <p>• Kiểm tra kỹ điều khoản hợp đồng trước khi thực hiện ký kết.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile Contact + Actions (hidden on lg+) */}
-            <div className="lg:hidden space-y-4">
-              {listing.source ? (
-                <div className="rounded-[24px] border border-blue-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] text-center space-y-5">
-                  <div>
-                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-blue-400 mr-2"></span>
-                    <span className="text-xs font-bold text-slate-600">THÔNG TIN LIÊN HỆ</span>
-                  </div>
-                  <p className="text-sm text-slate-700">Thông tin liên hệ được quản lý tại bài đăng gốc.</p>
-                  <a href={listing.source} target="_blank" rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-sm font-bold shadow-sm transition">
-                    <ExternalLink className="h-4 w-4" />
-                    Xem bài đăng gốc
-                  </a>
-                </div>
-              ) : (
-                <div className="rounded-[24px] border border-orange-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] text-center space-y-4">
-                  <span className="text-xs font-bold text-slate-600">CHỦ BÀI ĐĂNG</span>
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="h-16 w-16 overflow-hidden rounded-full border border-orange-200 bg-orange-100">
-                      <div className="flex h-full w-full items-center justify-center text-xl font-bold text-orange-600">
-                        {listing.ownerName?.slice(0, 1).toUpperCase() || "C"}
-                      </div>
+                {softFilterResult && (
+                  <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.14)] space-y-4">
+                    <div className="text-center">
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Điểm khớp</div>
+                      <div className="mt-1 text-3xl font-extrabold text-[#a55b00]">{Math.round(softFilterResult.total_score)}/100</div>
                     </div>
-                    <div>
-                      <h4 className="font-extrabold text-slate-800 text-base">{listing.ownerName || "Chủ phòng trọ"}</h4>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-[10px] font-bold text-green-700 border border-green-100 mt-1">
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        {activeLabel}
-                      </span>
-                    </div>
-                  </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)}
-                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#ff6a3d] text-white py-2.5 text-sm font-bold shadow-sm transition hover:bg-[#e65a2f] cursor-pointer">
-                          <Phone className="h-4 w-4" />
-                          <span>{listing?.ownerPhone || "Chưa có SĐT"}</span>
-                          <div className="ml-1 flex h-4 w-4 items-center justify-center">
-                            {copiedPhone === listing?.ownerPhone ? (
-                              <CheckCircle2 className="h-4 w-4" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </div>
-                        </button>
-                        {listing?.ownerPhone && <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick}
-                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 text-sm font-bold shadow-sm transition">
-                          <MessageCircle className="h-4 w-4" />
-                          Nhắn Zalo
-                        </a>}
-                      </div>
-
-                      <div className="mt-3 flex gap-2">
-                        <button onClick={handleToggleSave} disabled={saving}
-                          className="flex-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
-                          {isSaved ? "Đã lưu" : "Lưu tin"}
-                        </button>
-                        <button onClick={() => setShowShareModal(true)}
-                          className="flex-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
-                          {shareCopied ? "Đã copy" : "Chia sẻ"}
-                        </button>
-                        <button onClick={() => { setReportReason(""); setReportDescription(""); setReportName(""); setReportPhone(""); setReportSuccess(false); setShowReportModal(true); }}
-                          className="flex-1 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
-                          Báo cáo
-                        </button>
-                      </div>
-                      {softFilterResult && (
-                        <div className="mt-4 rounded-2xl border border-orange-100 bg-white p-4 text-sm text-slate-700">
-                          <div className="text-center">
-                            <div className="text-base font-semibold text-slate-600">{Math.round(softFilterResult.total_score)}/100</div>
-                          </div>
-                          <div className="mt-3">
-                            <div className="font-bold text-slate-800">Điểm tốt</div>
-                            <div className="mt-2 space-y-3">
-                              {getPrefsFromResult(softFilterResult).good.map((p: any) => (
-                                <div key={p.field}>
-                                  <div className="font-semibold">{FIELD_FULL_LABELS[p.field] || p.field}</div>
-                                  <div className="text-xs text-slate-600">Lựa chọn của họ: <span className="font-medium text-slate-800">{p.profileLabel}</span></div>
-                                  <div className="text-xs text-slate-600">Lựa chọn của bạn: <span className="font-medium text-slate-800">{p.prefLabel}</span></div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="mt-3">
-                            <div className="font-bold text-slate-800">Điểm cần lưu ý</div>
-                            <div className="mt-2 space-y-3">
-                              {getPrefsFromResult(softFilterResult).caution.map((p: any) => (
-                                <div key={p.field}>
-                                  <div className="font-semibold">{FIELD_FULL_LABELS[p.field] || p.field}</div>
-                                  <div className="text-xs text-slate-600">Lựa chọn của họ: <span className="font-medium text-slate-800">{p.profileLabel}</span></div>
-                                  <div className="text-xs text-slate-600">Lựa chọn của bạn: <span className="font-medium text-slate-800">{p.prefLabel}</span></div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                </div>
-              )}
-
-              {/* Mobile: action buttons moved into owner card above */}
-            </div>
-
-            {/* Right Column: Sticky Sidebar */}
-            <aside className="hidden lg:block sticky top-6 space-y-6">
-              {/* Contact Card */}
-              {listing.source ? (
-                <div className="rounded-[24px] border border-blue-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] text-center space-y-5">
-                  <div>
-                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-blue-400 mr-2"></span>
-                    <span className="text-xs font-bold text-slate-600">THÔNG TIN LIÊN HỆ</span>
-                  </div>
-                  <div className="space-y-2 text-sm text-slate-700">
-                    <p className="leading-relaxed">Thông tin liên hệ được quản lý tại bài đăng gốc.</p>
-                    <p className="text-xs text-slate-400">Xem chi tiết và liên hệ người đăng tại:</p>
-                  </div>
-                  <a href={listing.source} target="_blank" rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-base font-bold shadow-md shadow-blue-100 transition">
-                    <ExternalLink className="h-4 w-4" />
-                    Xem bài đăng gốc
-                  </a>
-                  <div className="rounded-2xl bg-white border border-orange-100 p-4 text-left text-xs space-y-1.5 text-slate-600 leading-relaxed">
-                    <p className="inline-flex w-full items-center justify-center gap-1.5 font-bold text-slate-700 text-center"><Info className="h-3.5 w-3.5" />Lưu ý quan trọng:</p>
-                    <p>• Thông tin từ bài đăng được thu thập từ nguồn bên ngoài, vui lòng kiểm tra kỹ trước khi liên hệ.</p>
-                    <p>• Không đặt cọc khi chưa xác thực danh tính chủ nhà.</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-[24px] border border-orange-100 bg-white p-6 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] text-center space-y-5">
-                  <div>
-                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-green-500 mr-2 animate-ping"></span>
-                    <span className="text-xs font-bold text-slate-600">CHỦ BÀI ĐĂNG</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="h-20 w-20 overflow-hidden rounded-full border border-orange-200 bg-orange-100">
-                      <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-orange-600">
-                        {listing.ownerName?.slice(0, 1).toUpperCase() || "C"}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-black text-slate-800 text-lg">{listing.ownerName || "Chủ phòng trọ"}</h4>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-[10px] font-bold text-green-700 border border-green-100 mt-1">
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        {activeLabel}
-                      </span>
-                      {listing.ownerListingsCount !== undefined && (
-                        <p className="text-[10px] text-slate-400 mt-1">{listing.ownerListingsCount} bài đăng</p>
-                      )}
-                    </div>
-                  </div>
-                  <hr className="border-orange-50" />
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ff6a3d] text-white py-3 text-base font-black shadow-md shadow-orange-100 transition hover:bg-[#e65a2f] cursor-pointer">
-                      <Phone className="h-4 w-4" />
-                      <span>{listing?.ownerPhone || "Chưa có SĐT"}</span>
-                      <div className="ml-1 flex h-5 w-5 items-center justify-center">
-                        {copiedPhone === listing?.ownerPhone ? (
-                          <CheckCircle2 className="h-5 w-5" />
-                        ) : (
-                          <Copy className="h-5 w-5" />
-                        )}
-                      </div>
-                    </button>
-                    {listing?.ownerPhone && <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white py-3 text-base font-bold shadow-md shadow-blue-100 transition">
-                      <MessageCircle className="h-4 w-4" />
-                      Nhắn Zalo
-                    </a>}
-                  </div>
-
-                  <div className="mt-3 flex gap-2">
-                    <button onClick={handleToggleSave} disabled={saving}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
-                      {isSaved ? <BookmarkCheck className="h-4 w-4 text-orange-500" /> : <Bookmark className="h-4 w-4" />}
-                      <span>{isSaved ? "Đã lưu" : "Lưu tin"}</span>
-                    </button>
-                    <button onClick={() => setShowShareModal(true)}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
-                      <Share2 className="h-4 w-4" />
-                      <span>{shareCopied ? "Đã copy" : "Chia sẻ"}</span>
-                    </button>
-                    <button onClick={() => { setReportReason(""); setReportDescription(""); setReportName(""); setReportPhone(""); setReportSuccess(false); setShowReportModal(true); }}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-orange-100 bg-white px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-orange-50 transition">
-                      <Flag className="h-4 w-4" />
-                      <span>Báo cáo</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Soft-filter score & details box (replaces separate action card) */}
-              {softFilterResult && (
-                <div className="rounded-[24px] border border-orange-100 bg-white p-4 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] space-y-4">
-                  <div className="text-center">
-                    <div className="text-sm font-semibold text-slate-600">Điểm khớp</div>
-                    <div className="text-3xl font-extrabold text-orange-600">{Math.round(softFilterResult.total_score)}/100</div>
-                  </div>
-
-                  <div className="mt-2">
-                    <div className="text-sm font-bold text-slate-800 mb-2">Điểm tốt</div>
-                    <div className="rounded-2xl border border-green-100 bg-green-50 p-3">
-                      {getPrefsFromResult(softFilterResult).good.length > 0 ? (
-                        <div className="space-y-3 text-sm text-slate-700">
+                    {getPrefsFromResult(softFilterResult).good.length > 0 && (
+                      <div>
+                        <div className="text-xs font-bold text-slate-700 mb-2">Điểm tốt</div>
+                        <div className="space-y-2 rounded-2xl border border-emerald-100 bg-emerald-50 p-3">
                           {getPrefsFromResult(softFilterResult).good.map((p: any) => (
-                            <div key={p.field}>
+                            <div key={p.field} className="text-xs">
                               <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[p.field] || p.field}</div>
-                              <div className="mt-1 text-xs text-slate-600">Lựa chọn của họ: <span className="font-medium text-slate-800">{p.profileLabel}</span></div>
-                              <div className="text-xs text-slate-600">Lựa chọn của bạn: <span className="font-medium text-slate-800">{p.prefLabel}</span></div>
+                              <div className="text-slate-500">Họ: <span className="text-slate-700">{p.profileLabel}</span> · Bạn: <span className="text-slate-700">{p.prefLabel}</span></div>
                             </div>
                           ))}
                         </div>
-                      ) : (
-                        <div className="text-sm text-slate-500">Không có điểm tốt</div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <div className="text-sm font-bold text-slate-800 mb-2">Điểm cần lưu ý</div>
-                    <div className="rounded-2xl border border-yellow-100 bg-yellow-50 p-3">
-                      {getPrefsFromResult(softFilterResult).caution.length > 0 ? (
-                        <div className="space-y-3 text-sm text-slate-700">
+                      </div>
+                    )}
+                    {getPrefsFromResult(softFilterResult).caution.length > 0 && (
+                      <div>
+                        <div className="text-xs font-bold text-slate-700 mb-2">Cần lưu ý</div>
+                        <div className="space-y-2 rounded-2xl border border-amber-100 bg-amber-50 p-3">
                           {getPrefsFromResult(softFilterResult).caution.map((p: any) => (
-                            <div key={p.field}>
+                            <div key={p.field} className="text-xs">
                               <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[p.field] || p.field}</div>
-                              <div className="mt-1 text-xs text-slate-600">Lựa chọn của họ: <span className="font-medium text-slate-800">{p.profileLabel}</span></div>
-                              <div className="text-xs text-slate-600">Lựa chọn của bạn: <span className="font-medium text-slate-800">{p.prefLabel}</span></div>
+                              <div className="text-slate-500">Họ: <span className="text-slate-700">{p.profileLabel}</span> · Bạn: <span className="text-slate-700">{p.prefLabel}</span></div>
                             </div>
                           ))}
                         </div>
-                      ) : (
-                        <div className="text-sm text-slate-500">Không có điểm cần lưu ý</div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
+                )}
+
+                <div className="rounded-[24px] border border-[#edd7be] bg-[#fff6eb] p-4 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.12)]">
+                  <p className="text-xs font-bold text-[#8d4d08] flex items-center gap-1.5 mb-1.5">
+                    <ShieldCheck className="h-4 w-4 text-[#a55b00]" /> Mẹo an toàn
+                  </p>
+                  <p className="text-xs leading-5 text-[#9a6a3c]">Không chuyển khoản đặt cọc khi chưa xem phòng trực tiếp và xác nhận thông tin chủ nhà.</p>
                 </div>
+              </aside>
+            </div>
+
+            <section className="mt-8 rounded-[24px] border border-slate-200 bg-white px-5 py-6 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.14)]">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Phòng tương tự trong khu vực</h3>
+              {similarListings.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-3">
+                  {similarListings.map((item) => {
+                    const thumbnail = resolveListingImageUrl(item.images?.[0]?.imageUrl || "");
+                    const location = [item.ward, item.district, item.city].filter(Boolean).join(", ");
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => navigate(`/listings/${item.id}`)}
+                        className="group overflow-hidden rounded-[18px] border border-slate-200 bg-white text-left shadow-[0_16px_32px_-28px_rgba(0,0,0,0.25)] transition hover:-translate-y-1 hover:shadow-[0_24px_42px_-25px_rgba(0,0,0,0.3)]"
+                      >
+                        <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
+                          {thumbnail ? (
+                            <img src={thumbnail} alt={item.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">Chưa có ảnh</div>
+                          )}
+                          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-bold text-[#a55b00] shadow-sm">
+                            {item.rentPrice.toLocaleString("vi-VN")} / tháng
+                          </span>
+                        </div>
+                        <div className="p-4">
+                          <h4 className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-[#a55b00]">{item.title}</h4>
+                          <p className="mt-2 line-clamp-1 text-xs text-slate-500">{location || "Chưa cập nhật địa chỉ"}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">Tính năng đang được phát triển.</p>
               )}
-            </aside>
+            </section>
           </div>
         )}
       </main>

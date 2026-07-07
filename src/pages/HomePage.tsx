@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPinned, Heart, Shield, MessageCircle, Lock, ChevronRight, Zap, DollarSign, User, Sparkles, MapPin } from "lucide-react";
-import { fetchProfile } from "../api/services/user";
-import { fetchPublicListings, resolveListingImageUrl } from "../api/services/listings";
+import { fetchProfile, resolveAvatarUrl } from "../api/services/user";
+import { fetchPublicListings, resolveListingImageUrl, toggleSaveListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import { PRICE_OPTIONS } from "./listingRangeOptions";
 import Navbar from "../components/Navbar";
@@ -37,6 +37,7 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [listings, setListings] = useState<Listing[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [selectedPrice, setSelectedPrice] = useState("all");
   const [selectedGender, setSelectedGender] = useState("all");
   const [selectedInterest, setSelectedInterest] = useState("all");
@@ -73,7 +74,15 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchPublicListings()
-      .then((data) => setListings(data.slice(0, 6)))
+      .then((data) => {
+        const filtered = data
+          .filter((l) => l.status === "APPROVED" && l.images && l.images.length > 0)
+          .sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime());
+        setListings(filtered.slice(0, 3));
+        const saved = new Set<string>();
+        data.forEach((l) => { if (l.isSaved) saved.add(l.id); });
+        setSavedIds(saved);
+      })
       .catch(() => {});
   }, []);
 
@@ -214,6 +223,19 @@ export default function HomePage() {
     navigate(`/listings?${params.toString()}`);
   };
 
+  const handleToggleSave = async (e: React.MouseEvent, listingId: string) => {
+    e.stopPropagation();
+    try {
+      const { isSaved } = await toggleSaveListing(listingId);
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        if (isSaved) next.add(listingId);
+        else next.delete(listingId);
+        return next;
+      });
+    } catch { /* ignore */ }
+  };
+
   const getLabel = (options: Array<{ id: string; label: string }>, value: string) => {
     return options.find((o) => o.id === value)?.label || "Tất cả";
   };
@@ -343,6 +365,8 @@ export default function HomePage() {
             {listings.slice(0, 3).map((listing) => {
               const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
               const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
+              const avatarUrl = resolveAvatarUrl(listing.ownerAvatar || "");
+              const isSaved = savedIds.has(listing.id);
 
               return (
                 <div
@@ -351,11 +375,7 @@ export default function HomePage() {
                   onClick={() => navigate(`/listings/${listing.id}`)}
                 >
                   <div className="relative h-48 overflow-hidden bg-slate-100">
-                    {thumbnail ? (
-                      <img src={thumbnail} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-sm text-slate-300">Chưa có ảnh</div>
-                    )}
+                    <img src={thumbnail} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-emerald-600 backdrop-blur-sm">
                       <Shield className="h-3 w-3" /> Đã xác thực
                     </span>
@@ -385,17 +405,24 @@ export default function HomePage() {
 
                     <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
                       <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-full bg-[var(--primary-container)]" />
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+                        ) : (
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--primary-container)] text-[10px] font-bold text-[var(--primary)]">
+                            {(listing.ownerName || "C")[0].toUpperCase()}
+                          </div>
+                        )}
                         <div>
                           <p className="text-xs font-bold text-slate-700">{listing.ownerName || "Chủ phòng"}</p>
-                          <p className="text-[10px] text-slate-400">Đang tìm 1 bạn nam</p>
                         </div>
                       </div>
                       <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                        onClick={(e) => handleToggleSave(e, listing.id)}
+                        className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
+                          isSaved ? "text-red-500 hover:bg-red-50" : "text-slate-400 hover:bg-red-50 hover:text-red-500"
+                        }`}
                       >
-                        <Heart className="h-4 w-4" />
+                        <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500" : ""}`} />
                       </button>
                     </div>
                   </div>
