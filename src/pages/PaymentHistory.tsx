@@ -78,7 +78,7 @@ export default function PaymentHistory() {
             Lịch sử thanh toán
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Quản lý và theo dõi tất cả các giao dịch tài chính của bạn tại RoomieMatch.
+            Quản lý và theo dõi tất cả các giao dịch tài chính của bạn tại Roomie.
           </p>
         </header>
 

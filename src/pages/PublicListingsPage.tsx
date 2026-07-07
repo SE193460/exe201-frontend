@@ -15,13 +15,18 @@ import { trackEvent } from "../api/services/analytics";
 export default function PublicListingsPage() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const initialParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [district, setDistrict] = useState("all");
-  const [price, setPrice] = useState("all");
+  const [district, setDistrict] = useState(initialParams.get("area") || "all");
+  const [price, setPrice] = useState(initialParams.get("price") || "all");
   const [area, setArea] = useState("all");
-  const [searchLocation, setSearchLocation] = useState("");
+  const [searchLocation, setSearchLocation] = useState(initialParams.get("q") || "");
+  const [genderFilter, setGenderFilter] = useState(initialParams.get("gender") || "all");
+  const [interestFilter] = useState(initialParams.get("interest") || "all");
   
   const [page, setPage] = useState(1);
   const [softFilterResults, setSoftFilterResults] = useState<Record<string, SoftFilterResult>>({});
@@ -333,7 +338,16 @@ export default function PublicListingsPage() {
       const matchesArea = matchAreaRange(item.roomAreaSqm, area);
       const locationStr = [item.ward, item.district, item.city].filter(Boolean).join(" ").toLowerCase();
       const matchesSearch = searchLocation.trim() ? locationStr.includes(searchLocation.trim().toLowerCase()) : true;
-      return matchesDistrict && matchesPrice && matchesArea && matchesSearch;
+      const matchesGender = genderFilter === "all" ? true : item.preferredGender === genderFilter;
+      const matchesInterest = interestFilter === "all" ? true : (
+        interestFilter === "clean" ? (item.amenities?.some((a) => a.name.toLowerCase().includes("sạch")) || false) :
+        interestFilter === "quiet" ? (item.amenities?.some((a) => a.name.toLowerCase().includes("yên tĩnh")) || false) :
+        interestFilter === "pet" ? (item.petAllowed === true) :
+        interestFilter === "cooking" ? (item.amenities?.some((a) => a.name.toLowerCase().includes("nấu ăn")) || false) :
+        interestFilter === "social" ? true :
+        true
+      );
+      return matchesDistrict && matchesPrice && matchesArea && matchesSearch && matchesGender && matchesInterest;
     });
 
     // Tách thành 2 nhóm: user created (source = null) và imported (source != null)
@@ -515,6 +529,23 @@ export default function PublicListingsPage() {
                       {option.label}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-2 text-sm">
+                <span className="text-slate-500">Giới tính</span>
+                <select
+                  value={genderFilter}
+                  onChange={(e) => {
+                    setGenderFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="bg-transparent outline-none text-sm"
+                >
+                  <option value="all">Tất cả</option>
+                  <option value="FEMALE">Nữ</option>
+                  <option value="MALE">Nam</option>
+                  <option value="ANY">Nam/Nữ</option>
                 </select>
               </div>
 

@@ -53,10 +53,10 @@ export default function Footer() {
                 className="text-xl font-extrabold italic text-[#ff8c00]"
                 style={{ fontFamily: "'Georgia', serif" }}
               >
-                RoomieMatch
+                Roomie
               </button>
               <p className="mt-2 text-sm text-slate-500">
-                © {new Date().getFullYear()} RoomieMatch Inc. All rights reserved.
+                © {new Date().getFullYear()} Roomie Inc. All rights reserved.
               </p>
             </div>
 
@@ -95,7 +95,7 @@ export default function Footer() {
       {openFeedback && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/45 px-4">
           <div className="w-full max-w-xl rounded-[24px] border border-slate-200 bg-white p-6 shadow-2xl">
-            <h3 className="text-2xl font-bold text-slate-800">Góp ý cho RoomieMatch</h3>
+            <h3 className="text-2xl font-bold text-slate-800">Góp ý cho Roomie</h3>
             <p className="mt-1 text-sm text-slate-500">Bạn nghĩ gì về hệ thống?</p>
 
             <textarea

@@ -13,6 +13,7 @@ import ListingDetailPage from "./pages/ListingDetailPage";
 import EditListingPage from "./pages/EditListingPage";
 import PublicListingsPage from "./pages/PublicListingsPage";
 import PublicListingDetailPage from "./pages/PublicListingDetailPage";
+import HomePage from "./pages/HomePage";
 import AdminImportedListingsPage from "./pages/admin/AdminImportedListingsPage";
 import LifestyleProfilePage from "./pages/LifestyleProfilePage";
 import SoftFilterPage from "./pages/SoftFilterPage";
@@ -123,7 +124,7 @@ export default function App() {
     <>
       <GoogleCallbackHandler />
       <Routes>
-      <Route path="/" element={<PublicListingsPage />} />
+      <Route path="/" element={<HomePage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/home" element={<Navigate to="/" replace />} />
       <Route path="/profile" element={<ProfilePage />} />

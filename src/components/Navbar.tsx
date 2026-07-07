@@ -137,7 +137,7 @@ export default function Navbar() {
             style={{ fontFamily: "'Georgia', serif" }}
           >
             <img src="/logo-roomie.svg" alt="ROOMIE logo" className="h-8 w-8 object-contain md:h-9 md:w-9" />
-            <span className="hidden sm:inline">RoomieMatch</span>
+            <span className="hidden sm:inline">Roomie</span>
           </button>
 
           <nav className="hidden items-center gap-1 md:flex">
