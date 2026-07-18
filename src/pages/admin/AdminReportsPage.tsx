@@ -64,101 +64,75 @@ export default function AdminReportsPage() {
     const pagedReports = reports.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     return (
-        <div className="min-h-screen bg-white text-slate-800">
+        <div className="min-h-screen bg-slate-50">
             <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
                 <Sidebar activeKey="reports" onLogout={handleLogout} />
 
                 <main className="flex-1 space-y-6">
-                    <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <p className="text-sm font-semibold text-orange-500">Quản lý báo cáo</p>
-                                <h2 className="text-2xl font-bold">Lịch sử báo cáo</h2>
-                            </div>
-                            <span className="rounded-full bg-orange-100 px-4 py-2 text-sm font-semibold text-orange-700">
-                                {reports.length} báo cáo
-                            </span>
+                    <section className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">Quản lý báo cáo</p>
+                            <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>Lịch sử báo cáo</h1>
                         </div>
+                        <span className="rounded-full bg-orange-50 px-4 py-2 text-xs font-bold text-[var(--primary)] border border-orange-200">{reports.length} báo cáo</span>
                     </section>
 
                     {error && (
-                        <section className="rounded-[24px] border border-red-100 bg-white p-4 text-sm text-red-600 shadow-sm">
-                            {error}
-                        </section>
+                        <div className="rounded-lg border border-red-200 bg-white p-4 text-sm text-red-600">{error}</div>
                     )}
 
-                    <div className="rounded-[24px] border border-orange-100 bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)] overflow-x-auto">
+                    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
                         <table className="w-full">
-                            <thead className="bg-orange-50">
-                                <tr className="text-left">
-                                    <th className="px-6 py-4 text-sm font-semibold text-slate-600">Người báo cáo</th>
-                                    <th className="px-6 py-4 text-sm font-semibold text-slate-600">Bài đăng</th>
-                                    <th className="px-6 py-4 text-sm font-semibold text-slate-600">Chủ bài</th>
-                                    <th className="px-6 py-4 text-sm font-semibold text-slate-600">Lý do</th>
-                                    <th className="px-6 py-4 text-sm font-semibold text-slate-600">Mô tả</th>
-                                    <th className="px-6 py-4 text-sm font-semibold text-slate-600">Ngày</th>
-                                    <th className="px-6 py-4 text-sm font-semibold text-slate-600">Trạng thái</th>
-                                    <th className="px-6 py-4 text-sm font-semibold text-slate-600">Thao tác</th>
+                            <thead>
+                                <tr className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                    <th className="px-6 py-3 text-left">Người báo cáo</th>
+                                    <th className="px-6 py-3 text-left">Bài đăng</th>
+                                    <th className="px-6 py-3 text-left">Chủ bài</th>
+                                    <th className="px-6 py-3 text-left">Lý do</th>
+                                    <th className="px-6 py-3 text-left">Mô tả</th>
+                                    <th className="px-6 py-3 text-left">Ngày</th>
+                                    <th className="px-6 py-3 text-left">Trạng thái</th>
+                                    <th className="px-6 py-3 text-left">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {pagedReports.map(item => (
-                                    <tr key={item.id} className="border-t border-orange-50 hover:bg-orange-50/40 transition">
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium">{item.reporterName || "-"}</div>
+                                    <tr key={item.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition">
+                                        <td className="px-6 py-3">
+                                            <div className="font-medium text-sm">{item.reporterName || "-"}</div>
                                             <div className="text-xs text-slate-400">{item.reporterEmail || ""}</div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-3">
                                             {item.listingTitle ? (
-                                                <button
-                                                    onClick={() => navigate(`/listings/${item.listingId}`)}
-                                                    className="text-orange-600 hover:underline text-sm font-medium"
-                                                >
-                                                    {item.listingTitle}
-                                                </button>
-                                            ) : "-"}
+                                                <button onClick={() => navigate(`/listings/${item.listingId}`)}
+                                                    className="text-[var(--primary)] hover:underline text-sm font-medium">{item.listingTitle}</button>
+                                            ) : <span className="text-slate-400">-</span>}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-slate-500">{item.listingOwner || "-"}</td>
-                                        <td className="px-6 py-4 text-sm whitespace-pre-wrap break-words max-w-[280px]">{item.reason}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-500 whitespace-pre-wrap break-words max-w-[280px]">{item.description || "-"}</td>
-                                        <td className="px-6 py-4 text-sm text-slate-500">{new Date(item.createdAt).toLocaleString()}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(item.status)}`}>
-                                                {item.status}
-                                            </span>
+                                        <td className="px-6 py-3 text-sm text-slate-500">{item.listingOwner || "-"}</td>
+                                        <td className="px-6 py-3 text-sm whitespace-pre-wrap break-words max-w-[280px]">{item.reason}</td>
+                                        <td className="px-6 py-3 text-sm text-slate-500 whitespace-pre-wrap break-words max-w-[280px]">{item.description || "-"}</td>
+                                        <td className="px-6 py-3 text-sm text-slate-500">{new Date(item.createdAt).toLocaleString()}</td>
+                                        <td className="px-6 py-3">
+                                            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${statusBadge(item.status)}`}>{item.status}</span>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-3">
                                             {item.status === "PENDING" ? (
                                                 <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => handleResolve(item.id, "RESOLVED")}
-                                                        className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-200"
-                                                    >
-                                                        Duyệt
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleResolve(item.id, "DISMISSED")}
-                                                        className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200"
-                                                    >
-                                                        Bỏ qua
-                                                    </button>
+                                                    <button onClick={() => handleResolve(item.id, "RESOLVED")}
+                                                        className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700 border border-green-200 hover:bg-green-100">Duyệt</button>
+                                                    <button onClick={() => handleResolve(item.id, "DISMISSED")}
+                                                        className="rounded-full bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-100">Bỏ qua</button>
                                                 </div>
-                                            ) : (
-                                                <span className="text-xs text-slate-400">—</span>
-                                            )}
+                                            ) : <span className="text-xs text-slate-400">—</span>}
                                         </td>
                                     </tr>
                                 ))}
                                 {reports.length === 0 && (
-                                    <tr>
-                                        <td colSpan={8} className="px-6 py-12 text-center text-sm text-slate-400">
-                                            Chưa có báo cáo nào
-                                        </td>
-                                    </tr>
+                                    <tr><td colSpan={8} className="px-6 py-12 text-center text-sm text-slate-400">Chưa có báo cáo nào</td></tr>
                                 )}
                             </tbody>
                         </table>
-                        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+                        <div className="px-6 pb-4"><Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} /></div>
                     </div>
                 </main>
             </div>

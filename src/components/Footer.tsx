@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { submitFeedback } from "../api/services/feedback";
 import { useToast } from "../contexts/ToastContext";
 // Social icons as inline SVGs (lucide-react doesn't ship brand icons)
 
 export default function Footer() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [openFeedback, setOpenFeedback] = useState(false);
   const [content, setContent] = useState("");
@@ -20,8 +22,8 @@ export default function Footer() {
   const handleSubmit = async () => {
     const message = content.trim();
     if (!message) {
-      setError("Vui lòng nhập nội dung góp ý.");
-      showToast({ type: "warning", message: "Vui lòng nhập nội dung góp ý." });
+      setError(t("Vui lòng nhập nội dung góp ý."));
+      showToast({ type: "warning", message: t("Vui lòng nhập nội dung góp ý.") });
       return;
     }
 
@@ -30,12 +32,12 @@ export default function Footer() {
       await submitFeedback(message);
       showToast({
         type: "success",
-        message: "Đã gửi feedback thành công. Cảm ơn bạn đã góp ý!",
+        message: t("Đã gửi feedback thành công. Cảm ơn bạn đã góp ý!"),
       });
       handleClose();
     } catch {
-      setError("Không thể gửi góp ý, vui lòng thử lại.");
-      showToast({ type: "error", message: "Không thể gửi góp ý, vui lòng thử lại." });
+      setError(t("Không thể gửi góp ý, vui lòng thử lại."));
+      showToast({ type: "error", message: t("Không thể gửi góp ý, vui lòng thử lại.") });
     } finally {
       setSubmitting(false);
     }
@@ -95,8 +97,8 @@ export default function Footer() {
       {openFeedback && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/45 px-4">
           <div className="w-full max-w-xl rounded-[24px] border border-slate-200 bg-white p-6 shadow-2xl">
-            <h3 className="text-2xl font-bold text-slate-800">Góp ý cho Roomie</h3>
-            <p className="mt-1 text-sm text-slate-500">Bạn nghĩ gì về hệ thống?</p>
+            <h3 className="text-2xl font-bold text-slate-800">{t("Góp ý cho Roomie")}</h3>
+            <p className="mt-1 text-sm text-slate-500">{t("Bạn nghĩ gì về hệ thống?")}</p>
 
             <textarea
               value={content}
@@ -115,14 +117,14 @@ export default function Footer() {
                 disabled={submitting}
                 className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-60"
               >
-                Hủy
+                {t("Hủy")}
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
                 className="rounded-full bg-[#ff8c00] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#a5681f] disabled:opacity-60"
               >
-                {submitting ? "Đang gửi..." : "Gửi"}
+                {submitting ? t("Đang gửi...") : t("Gửi")}
               </button>
             </div>
           </div>

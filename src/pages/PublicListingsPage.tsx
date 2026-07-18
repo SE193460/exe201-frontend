@@ -1,6 +1,7 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BadgeDollarSign, MapPin, X, Sparkles, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { MapPin, X, Sparkles, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { fetchPublicListings, resolveListingImageUrl } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import type { SoftFilterResult, RoommatePreferences } from "../api/services/lifestyle";
@@ -13,6 +14,7 @@ import { matchAreaRange, matchPriceRange, AREA_OPTIONS, PRICE_OPTIONS } from "./
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { trackEvent } from "../api/services/analytics";
 export default function PublicListingsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -44,23 +46,27 @@ export default function PublicListingsPage() {
 
   const districtOptions = useMemo(() => {
     const districts = Array.from(new Set(listings.map((item) => item.district).filter(Boolean)));
-    return ["all", ...districts];
-  }, [listings]);
+    const all = ["all", ...districts];
+    if (district !== "all" && !all.includes(district)) {
+      all.splice(1, 0, district);
+    }
+    return all;
+  }, [listings, district]);
 
   // Mapping để lấy label đầy đủ cho mỗi field
   const FIELD_FULL_LABELS: Record<string, string> = {
-    cleanliness: "Mức độ sạch sẽ",
-    ac_usage: "Tần suất sử dụng điều hòa",
-    pet: "Thú cưng",
-    smoking: "Hút thuốc",
-    cooking: "Nấu ăn",
-    guest: "Tần suất dẫn bạn bè về phòng",
-    home_frequency: "Tần suất ở trong phòng",
-    work_schedule: "Thời gian làm việc",
-    sharing: "Mức độ chia sẻ đồ dùng",
-    noise: "Mức độ giữ yên tĩnh",
-    call_frequency: "Tần suất gọi điện/video call",
-    game_mic: "Mức độ chơi game voice chat",
+    cleanliness: t("Mức độ sạch sẽ"),
+    ac_usage: t("Tần suất sử dụng điều hòa"),
+    pet: t("Thú cưng"),
+    smoking: t("Hút thuốc"),
+    cooking: t("Nấu ăn"),
+    guest: t("Tần suất dẫn bạn bè về phòng"),
+    home_frequency: t("Tần suất ở trong phòng"),
+    work_schedule: t("Thời gian làm việc"),
+    sharing: t("Mức độ chia sẻ đồ dùng"),
+    noise: t("Mức độ giữ yên tĩnh"),
+    call_frequency: t("Tần suất gọi điện/video call"),
+    game_mic: t("Mức độ chơi game voice chat"),
   };
 
   // Helper function để lấy label cho một giá trị field cụ thể
@@ -77,49 +83,49 @@ export default function PublicListingsPage() {
         // Try PROFILE_OPTIONS first (cho dữ liệu từ profile)
         const profileOptions: Record<string, Array<{ value: number; label: string }>> = {
           cleanliness: [
-            { value: 1, label: "Rất sạch: Dọn dẹp thường xuyên, khó chịu khi phòng bừa bộn" },
-            { value: 2, label: "Khá sạch: Giữ phòng gọn gàng, dọn dẹp định kỳ" },
-            { value: 3, label: "Bình thường: Dọn dẹp khi cần thiết, không quá khắt khe nhưng vẫn muốn không gian sạch sẽ" },
-            { value: 4, label: "Ít quan tâm: Không đặt nặng việc dọn dẹp thường xuyên, ưu tiên sự thoải mái trong sinh hoạt" },
+            { value: 1, label: t("Rất sạch: Dọn dẹp thường xuyên, khó chịu khi phòng bừa bộn") },
+            { value: 2, label: t("Khá sạch: Giữ phòng gọn gàng, dọn dẹp định kỳ") },
+            { value: 3, label: t("Bình thường: Dọn dẹp khi cần thiết, không quá khắt khe nhưng vẫn muốn không gian sạch sẽ") },
+            { value: 4, label: t("Ít quan tâm: Không đặt nặng việc dọn dẹp thường xuyên, ưu tiên sự thoải mái trong sinh hoạt") },
           ],
           ac_usage: [
-            { value: 1, label: "Hầu như không dùng: Chỉ bật trong những ngày rất nóng" },
-            { value: 2, label: "Ít: Thỉnh thoảng bật khi cảm thấy nóng" },
-            { value: 3, label: "Bình thường: Bật khi thời tiết nóng hoặc lúc ngủ" },
-            { value: 4, label: "Nhiều: Bật thường xuyên khi ở trong phòng" },
-            { value: 5, label: "Gần như luôn bật: Bật gần như toàn bộ thời gian ở phòng" },
+            { value: 1, label: t("Hầu như không dùng: Chỉ bật trong những ngày rất nóng") },
+            { value: 2, label: t("Ít: Thỉnh thoảng bật khi cảm thấy nóng") },
+            { value: 3, label: t("Bình thường: Bật khi thời tiết nóng hoặc lúc ngủ") },
+            { value: 4, label: t("Nhiều: Bật thường xuyên khi ở trong phòng") },
+            { value: 5, label: t("Gần như luôn bật: Bật gần như toàn bộ thời gian ở phòng") },
           ],
           cooking: [
-            { value: 1, label: "Thường xuyên" },
-            { value: 2, label: "Thỉnh thoảng" },
-            { value: 3, label: "Hiếm khi" },
+            { value: 1, label: t("Thường xuyên") },
+            { value: 2, label: t("Thỉnh thoảng") },
+            { value: 3, label: t("Hiếm khi") },
           ],
           guest: [
-            { value: 1, label: "Hiếm khi: Chỉ trong những dịp đặc biệt." },
-            { value: 2, label: "Thỉnh thoảng: Đôi khi có bạn bè ghé chơi hoặc trò chuyện." },
-            { value: 3, label: "Thường xuyên: Khá thường xuyên có bạn bè tới phòng." },
+            { value: 1, label: t("Hiếm khi: Chỉ trong những dịp đặc biệt.") },
+            { value: 2, label: t("Thỉnh thoảng: Đôi khi có bạn bè ghé chơi hoặc trò chuyện.") },
+            { value: 3, label: t("Thường xuyên: Khá thường xuyên có bạn bè tới phòng.") },
           ],
           home_frequency: [
-            { value: 3, label: "Thường xuyên: Dành phần lớn thời gian trong ngày ở phòng" },
-            { value: 2, label: "Bình thường" },
-            { value: 1, label: "Ít: Phần lớn thời gian trong ngày ở bên ngoài" },
+            { value: 3, label: t("Thường xuyên: Dành phần lớn thời gian trong ngày ở phòng") },
+            { value: 2, label: t("Bình thường") },
+            { value: 1, label: t("Ít: Phần lớn thời gian trong ngày ở bên ngoài") },
           ],
           noise: [
-            { value: 1, label: "Yên tĩnh: Thường đeo tai nghe, hạn chế tạo tiếng ồn ảnh hưởng tới người khác." },
-            { value: 2, label: "Bình thường: Có tạo tiếng ồn trong sinh hoạt nhưng ở mức hợp lý." },
-            { value: 3, label: "Khá ồn ào: Thường xuyên mở loa ngoài, hát, chơi nhạc hoặc tạo tiếng ồn trong phòng." },
+            { value: 1, label: t("Yên tĩnh: Thường đeo tai nghe, hạn chế tạo tiếng ồn ảnh hưởng tới người khác.") },
+            { value: 2, label: t("Bình thường: Có tạo tiếng ồn trong sinh hoạt nhưng ở mức hợp lý.") },
+            { value: 3, label: t("Khá ồn ào: Thường xuyên mở loa ngoài, hát, chơi nhạc hoặc tạo tiếng ồn trong phòng.") },
           ],
           call_frequency: [
-            { value: 1, label: "Hiếm khi" },
-            { value: 2, label: "Thỉnh thoảng" },
-            { value: 3, label: "Khá thường xuyên" },
-            { value: 4, label: "Thường xuyên" },
+            { value: 1, label: t("Hiếm khi") },
+            { value: 2, label: t("Thỉnh thoảng") },
+            { value: 3, label: t("Khá thường xuyên") },
+            { value: 4, label: t("Thường xuyên") },
           ],
           game_mic: [
-            { value: 1, label: "Hầu như không: Ít hoặc không chơi game có sử dụng mic" },
-            { value: 2, label: "Thỉnh thoảng: Đôi khi chơi game có sử dụng mic hoặc voice chat" },
-            { value: 3, label: "Khá thường xuyên: Chơi game có sử dụng mic tương đối đều đặn" },
-            { value: 4, label: "Thường xuyên: Dành khá nhiều thời gian chơi game có sử dụng mic hoặc voice chat" },
+            { value: 1, label: t("Hầu như không: Ít hoặc không chơi game có sử dụng mic") },
+            { value: 2, label: t("Thỉnh thoảng: Đôi khi chơi game có sử dụng mic hoặc voice chat") },
+            { value: 3, label: t("Khá thường xuyên: Chơi game có sử dụng mic tương đối đều đặn") },
+            { value: 4, label: t("Thường xuyên: Dành khá nhiều thời gian chơi game có sử dụng mic hoặc voice chat") },
           ],
         };
         
@@ -132,22 +138,22 @@ export default function PublicListingsPage() {
       // Các field text từ PROFILE_OPTIONS
       const textProfileOptions: Record<string, Array<{ value: string | number; label: string }>> = {
         pet: [
-          { value: 0, label: "Không nuôi thú cưng" },
-          { value: 1, label: "Có nuôi thú cưng" },
+          { value: 0, label: t("Không nuôi thú cưng") },
+          { value: 1, label: t("Có nuôi thú cưng") },
         ],
         smoking: [
-          { value: 0, label: "Không hút thuốc" },
-          { value: 1, label: "Có hút thuốc" },
+          { value: 0, label: t("Không hút thuốc") },
+          { value: 1, label: t("Có hút thuốc") },
         ],
         work_schedule: [
-          { value: "DAY", label: "Chủ yếu ban ngày: Học tập hoặc làm việc chủ yếu vào ban ngày" },
-          { value: "FLEXIBLE", label: "Không cố định: Lịch sinh hoạt thay đổi hoặc không cố định" },
-          { value: "NIGHT", label: "Chủ yếu ban đêm: Học tập hoặc làm việc chủ yếu vào buổi tối hoặc ban đêm" },
+          { value: "DAY", label: t("Chủ yếu ban ngày: Học tập hoặc làm việc chủ yếu vào ban ngày") },
+          { value: "FLEXIBLE", label: t("Không cố định: Lịch sinh hoạt thay đổi hoặc không cố định") },
+          { value: "NIGHT", label: t("Chủ yếu ban đêm: Học tập hoặc làm việc chủ yếu vào buổi tối hoặc ban đêm") },
         ],
         sharing: [
-          { value: 1, label: "Thoải mái: Không quá để ý việc roommate sử dụng các đồ dùng chung hoặc mượn những vật dụng nhỏ." },
-          { value: 2, label: "Hỏi trước: Thoải mái chia sẻ nhưng muốn được hỏi hoặc báo trước." },
-          { value: 3, label: "Không thích: Ưu tiên sử dụng đồ dùng riêng, không thích việc dùng chung đồ cá nhân." },
+          { value: 1, label: t("Thoải mái: Không quá để ý việc roommate sử dụng các đồ dùng chung hoặc mượn những vật dụng nhỏ.") },
+          { value: 2, label: t("Hỏi trước: Thoải mái chia sẻ nhưng muốn được hỏi hoặc báo trước.") },
+          { value: 3, label: t("Không thích: Ưu tiên sử dụng đồ dùng riêng, không thích việc dùng chung đồ cá nhân.") },
         ],
       };
 
@@ -296,7 +302,7 @@ export default function PublicListingsPage() {
     }
 
     if (errorParam) {
-      setError(errorParam === "inactive" ? "Tài khoản đã bị vô hiệu hóa." : "Đăng nhập Google thất bại.");
+      setError(errorParam === "inactive" ? t("Tài khoản đã bị vô hiệu hóa.") : t("Đăng nhập Google thất bại."));
       navigate("/", { replace: true });
     }
   }, [navigate]);
@@ -308,7 +314,7 @@ export default function PublicListingsPage() {
         setLoading(false);
       })
       .catch(() => {
-        setError("Không thể tải danh sách phòng ở ghép.");
+        setError(t("Không thể tải danh sách phòng ở ghép."));
         setLoading(false);
       });
 
@@ -332,13 +338,27 @@ export default function PublicListingsPage() {
   }, []);
 
   const filteredListings = (() => {
+    const normalizeStr = (s: string) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/đ/g, "d").replace(/[^a-z0-9]/g, "");
+
     const filtered = listings.filter((item) => {
-      const matchesDistrict = district === "all" ? true : item.district === district;
+      const matchesDistrict = district === "all" ? true : normalizeStr(item.district || "").includes(normalizeStr(district));
       const matchesPrice = matchPriceRange(item.rentPrice, price);
       const matchesArea = matchAreaRange(item.roomAreaSqm, area);
       const locationStr = [item.ward, item.district, item.city].filter(Boolean).join(" ").toLowerCase();
-      const matchesSearch = searchLocation.trim() ? locationStr.includes(searchLocation.trim().toLowerCase()) : true;
-      const matchesGender = genderFilter === "all" ? true : item.preferredGender === genderFilter;
+      const matchesSearch = searchLocation.trim()
+        ? locationStr.includes(searchLocation.trim().toLowerCase()) ||
+          (item.title || "").toLowerCase().includes(searchLocation.trim().toLowerCase()) ||
+          (item.description || "").toLowerCase().includes(searchLocation.trim().toLowerCase())
+        : true;
+      const matchesGender = genderFilter === "all" ? true : (() => {
+        const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+        const listingGender = norm(item.preferredGender || "");
+        const filterVal = norm(genderFilter);
+        if (filterVal === "FEMALE") return listingGender.includes("NU") || listingGender.includes("FEMALE") || listingGender.includes("NỮ");
+        if (filterVal === "MALE") return listingGender.includes("NAM") || listingGender.includes("MALE");
+        return listingGender.includes("KHONG YEU CAU") || listingGender.includes("BAT KY") || listingGender.includes("ANY") || listingGender === "";
+      })();
       const matchesInterest = interestFilter === "all" ? true : (
         interestFilter === "clean" ? (item.amenities?.some((a) => a.name.toLowerCase().includes("sạch")) || false) :
         interestFilter === "quiet" ? (item.amenities?.some((a) => a.name.toLowerCase().includes("yên tĩnh")) || false) :
@@ -445,35 +465,45 @@ export default function PublicListingsPage() {
     <div className="min-h-screen bg-white text-slate-800 flex flex-col">
       <Navbar />
 
-      <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-8 px-6 pb-16 pt-10">
-        {/* Header removed as requested */}
+      <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col gap-6 px-4 md:px-6 pb-16 pt-8">
+        {/* Header */}
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-extrabold text-[var(--on-surface)] md:text-3xl" style={{ fontFamily: "var(--font-main)" }}>
+              {t("Danh sách phòng trọ")}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              {loading ? t("Đang tải...") : t("Tìm thấy {{count}} phòng phù hợp.", { count: filteredListings.length })}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setIsDropdownOpen(!isDropdownOpen);
+              setSoftFilterSection(1);
+            }}
+            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+          >
+            <Sparkles className="h-4 w-4 text-[var(--primary)]" />
+            {t("Bộ lọc mềm")}
+          </button>
+        </header>
 
         {/* Filters */}
         <div className="relative">
-          <section className="bg-white rounded-3xl p-5 border border-orange-100 shadow-[0_15px_40px_-25px_rgba(255,115,0,0.25)]">
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => {
-                  setIsDropdownOpen(!isDropdownOpen);
-                  setSoftFilterSection(1);
-                }}
-                className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:shadow-sm"
-              >
-                <Sparkles className="h-4 w-4 text-orange-500" /> Filters
-              </button>
-
-              <div className="flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-2 text-sm">
+          <section className="bg-white rounded-[var(--radius-md)] p-4 border border-slate-200">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm">
                 <Search className="h-4 w-4 text-slate-400" />
                 <input
                   value={searchLocation}
                   onChange={(e) => setSearchLocation(e.target.value)}
-                  placeholder="Tìm kiếm theo địa chỉ"
-                  className="bg-transparent outline-none text-sm w-48"
+                  placeholder={t("Tìm kiếm theo địa chỉ")}
+                  className="bg-transparent outline-none text-sm w-40 md:w-48"
                 />
               </div>
 
-              <div className="flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-2 text-sm">
-                <MapPin className="h-4 w-4 text-orange-500" />
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm">
+                <MapPin className="h-4 w-4 text-[var(--primary)]" />
                 <select
                   value={district}
                   onChange={(e) => {
@@ -488,73 +518,58 @@ export default function PublicListingsPage() {
                   }}
                   className="bg-transparent outline-none text-sm"
                 >
-                  {districtOptions.map((d) => (
-                    <option key={d} value={d}>
-                      {d === "all" ? "Tất cả" : d}
-                    </option>
+                    {districtOptions.map((d) => (
+                    <option key={d} value={d}>{d === "all" ? t("Tất cả") : d}</option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-2 text-sm">
-                <span className="text-orange-500">$</span>
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm">
+                <span className="text-sm text-slate-500">{t("Giá")}</span>
                 <select
                   value={price}
-                  onChange={(e) => {
-                    setPrice(e.target.value);
-                    setPage(1);
-                  }}
+                  onChange={(e) => { setPrice(e.target.value); setPage(1); }}
                   className="bg-transparent outline-none text-sm"
                 >
                   {PRICE_OPTIONS.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
+                    <option key={option.id} value={option.id}>{option.label}</option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-2 text-sm">
-                <span className="text-slate-500">Diện tích</span>
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm">
+                <span className="text-sm text-slate-500">{t("Diện tích")}</span>
                 <select
                   value={area}
-                  onChange={(e) => {
-                    setArea(e.target.value);
-                    setPage(1);
-                  }}
+                  onChange={(e) => { setArea(e.target.value); setPage(1); }}
                   className="bg-transparent outline-none text-sm"
                 >
                   {AREA_OPTIONS.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
+                    <option key={option.id} value={option.id}>{option.label}</option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-2 text-sm">
-                <span className="text-slate-500">Giới tính</span>
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm">
+                <span className="text-sm text-slate-500">{t("Giới tính")}</span>
                 <select
                   value={genderFilter}
-                  onChange={(e) => {
-                    setGenderFilter(e.target.value);
-                    setPage(1);
-                  }}
+                  onChange={(e) => { setGenderFilter(e.target.value); setPage(1); }}
                   className="bg-transparent outline-none text-sm"
                 >
-                  <option value="all">Tất cả</option>
-                  <option value="FEMALE">Nữ</option>
-                  <option value="MALE">Nam</option>
-                  <option value="ANY">Nam/Nữ</option>
+                  <option value="all">{t("Tất cả")}</option>
+                  <option value="FEMALE">{t("Nữ")}</option>
+                  <option value="MALE">{t("Nam")}</option>
+                  <option value="ANY">{t("Nam/Nữ")}</option>
                 </select>
               </div>
 
-              <div className="ml-auto flex items-center gap-2">
+              <div className="ml-auto">
                 <button
                   onClick={() => setIsMapModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-2 text-sm hover:shadow-sm"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
                 >
-                  <MapPin className="h-4 w-4 text-orange-500" /> Xem bản đồ
+                  <MapPin className="h-4 w-4 text-[var(--primary)]" /> {t("Xem bản đồ")}
                 </button>
               </div>
             </div>
@@ -562,13 +577,13 @@ export default function PublicListingsPage() {
 
           {/* Soft Filter Dropdown */}
           {isDropdownOpen && (
-            <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-3xl border border-orange-100 shadow-[0_20px_60px_-20px_rgba(255,115,0,0.35)] z-50 overflow-hidden">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+            <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-[var(--radius-md)] border border-slate-200 shadow-lg z-50 overflow-hidden">
+              <div className="bg-[var(--primary)] px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div>
-                      <h3 className="text-lg font-bold text-white">Bộ lọc mềm</h3>
-                      <p className="text-xs text-orange-50 mt-1">Chọn sở thích để lọc phù hợp với bạn</p>
+                      <h3 className="text-lg font-bold text-white" style={{ fontFamily: "var(--font-main)" }}>{t("Bộ lọc mềm")}</h3>
+                      <p className="text-xs text-white/80 mt-1">{t("Chọn sở thích để lọc phù hợp với bạn")}</p>
                     </div>
                     <div className="hidden sm:flex items-center gap-2">
                       {[1,2,3].map((s) => (
@@ -578,258 +593,146 @@ export default function PublicListingsPage() {
                       ))}
                     </div>
                   </div>
-                  <button
-                    onClick={() => setIsDropdownOpen(false)}
-                    className="p-1 hover:bg-white/20 rounded-lg transition"
-                  >
+                  <button onClick={() => setIsDropdownOpen(false)} className="p-1 hover:bg-white/20 rounded-lg transition">
                     <X className="h-5 w-5 text-white" />
                   </button>
                 </div>
               </div>
 
               <form onSubmit={submitSoftFilterForm} className="p-6">
-                {/* Section 1: Sinh hoạt cơ bản */}
                 {softFilterSection === 1 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Bạn mong muốn roommate có mức độ sạch sẽ như thế nào?</div>
-                      <select
-                        value={softFilterPrefs.pref_cleanliness ?? ""}
-                        onChange={(e) => setPrefNumber("pref_cleanliness", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {FILTER_LINEAR_OPTIONS.cleanliness.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Bạn mong muốn roommate có mức độ sạch sẽ như thế nào?")}</div>
+                      <select value={softFilterPrefs.pref_cleanliness ?? ""} onChange={(e) => setPrefNumber("pref_cleanliness", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {FILTER_LINEAR_OPTIONS.cleanliness.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                         <option value="99">{PREF_OPTIONS.intAny.label}</option>
                       </select>
                     </label>
-
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Tần suất sử dụng điều hòa mong muốn của roommate</div>
-                      <select
-                        value={softFilterPrefs.pref_ac_usage ?? ""}
-                        onChange={(e) => setPrefNumber("pref_ac_usage", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {FILTER_LINEAR_OPTIONS.ac_usage.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Tần suất sử dụng điều hòa mong muốn của roommate")}</div>
+                      <select value={softFilterPrefs.pref_ac_usage ?? ""} onChange={(e) => setPrefNumber("pref_ac_usage", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {FILTER_LINEAR_OPTIONS.ac_usage.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                         <option value="99">{PREF_OPTIONS.intAny.label}</option>
                       </select>
                     </label>
-
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Bạn có muốn roommate nuôi thú cưng không?</div>
-                      <select
-                        value={softFilterPrefs.pref_pet ?? ""}
-                        onChange={(e) => setPrefText("pref_pet", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {PREF_OPTIONS.pet.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Bạn có muốn roommate nuôi thú cưng không?")}</div>
+                      <select value={softFilterPrefs.pref_pet ?? ""} onChange={(e) => setPrefText("pref_pet", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {PREF_OPTIONS.pet.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                       </select>
                     </label>
-
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Bạn có muốn roommate hút thuốc không?</div>
-                      <select
-                        value={softFilterPrefs.pref_smoking ?? ""}
-                        onChange={(e) => setPrefText("pref_smoking", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {PREF_OPTIONS.smoking.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Bạn có muốn roommate hút thuốc không?")}</div>
+                      <select value={softFilterPrefs.pref_smoking ?? ""} onChange={(e) => setPrefText("pref_smoking", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {PREF_OPTIONS.smoking.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                       </select>
                     </label>
                   </div>
                 )}
 
-                {/* Section 2: Thói quen ở phòng */}
                 {softFilterSection === 2 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Bạn mong muốn roommate nấu ăn ở mức nào?</div>
-                      <select
-                        value={softFilterPrefs.pref_cooking ?? ""}
-                        onChange={(e) => setPrefNumber("pref_cooking", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {FILTER_LINEAR_OPTIONS.cooking.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Bạn mong muốn roommate nấu ăn ở mức nào?")}</div>
+                      <select value={softFilterPrefs.pref_cooking ?? ""} onChange={(e) => setPrefNumber("pref_cooking", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {FILTER_LINEAR_OPTIONS.cooking.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                         <option value="99">{PREF_OPTIONS.intAny.label}</option>
                       </select>
                     </label>
-
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Tần suất dẫn bạn bè về phòng mong muốn của roommate</div>
-                      <select
-                        value={softFilterPrefs.pref_guest ?? ""}
-                        onChange={(e) => setPrefNumber("pref_guest", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {FILTER_LINEAR_OPTIONS.guest.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Tần suất dẫn bạn bè về phòng mong muốn của roommate")}</div>
+                      <select value={softFilterPrefs.pref_guest ?? ""} onChange={(e) => setPrefNumber("pref_guest", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {FILTER_LINEAR_OPTIONS.guest.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                         <option value="99">{PREF_OPTIONS.intAny.label}</option>
                       </select>
                     </label>
-
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Tần suất ở trong phòng mong muốn của roommate</div>
-                      <select
-                        value={softFilterPrefs.pref_home_frequency ?? ""}
-                        onChange={(e) => setPrefNumber("pref_home_frequency", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {FILTER_LINEAR_OPTIONS.home_frequency.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Tần suất ở trong phòng mong muốn của roommate")}</div>
+                      <select value={softFilterPrefs.pref_home_frequency ?? ""} onChange={(e) => setPrefNumber("pref_home_frequency", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {FILTER_LINEAR_OPTIONS.home_frequency.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                         <option value="99">{PREF_OPTIONS.intAny.label}</option>
                       </select>
                     </label>
-
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Thời gian làm việc mong muốn của roommate</div>
-                      <select
-                        value={softFilterPrefs.pref_work_schedule ?? ""}
-                        onChange={(e) => setPrefText("pref_work_schedule", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {PREF_OPTIONS.work_schedule.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Thời gian làm việc mong muốn của roommate")}</div>
+                      <select value={softFilterPrefs.pref_work_schedule ?? ""} onChange={(e) => setPrefText("pref_work_schedule", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {PREF_OPTIONS.work_schedule.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                       </select>
                     </label>
                   </div>
                 )}
 
-                {/* Section 3: Môi trường sống chung */}
                 {softFilterSection === 3 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Mức độ chia sẻ đồ dùng mong muốn của roommate</div>
-                      <select
-                        value={softFilterPrefs.pref_sharing ?? ""}
-                        onChange={(e) => setPrefText("pref_sharing", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {PREF_OPTIONS.sharing.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Mức độ chia sẻ đồ dùng mong muốn của roommate")}</div>
+                      <select value={softFilterPrefs.pref_sharing ?? ""} onChange={(e) => setPrefText("pref_sharing", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {PREF_OPTIONS.sharing.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                       </select>
                     </label>
-
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Mức độ giữ yên tĩnh trong không gian chung mong muốn của roommate</div>
-                      <select
-                        value={softFilterPrefs.pref_noise ?? ""}
-                        onChange={(e) => setPrefNumber("pref_noise", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {FILTER_LINEAR_OPTIONS.noise.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Mức độ giữ yên tĩnh trong không gian chung mong muốn của roommate")}</div>
+                      <select value={softFilterPrefs.pref_noise ?? ""} onChange={(e) => setPrefNumber("pref_noise", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {FILTER_LINEAR_OPTIONS.noise.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                         <option value="99">{PREF_OPTIONS.intAny.label}</option>
                       </select>
                     </label>
-
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Mức độ gọi điện/video call mong muốn của roommate</div>
-                      <select
-                        value={softFilterPrefs.pref_call_frequency ?? ""}
-                        onChange={(e) => setPrefNumber("pref_call_frequency", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {FILTER_LINEAR_OPTIONS.call_frequency.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Mức độ gọi điện/video call mong muốn của roommate")}</div>
+                      <select value={softFilterPrefs.pref_call_frequency ?? ""} onChange={(e) => setPrefNumber("pref_call_frequency", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {FILTER_LINEAR_OPTIONS.call_frequency.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                         <option value="99">{PREF_OPTIONS.intAny.label}</option>
                       </select>
                     </label>
-
-                    <label className="block bg-white rounded-xl border border-orange-50 p-3">
-                      <div className="text-sm font-semibold text-slate-700 mb-2">Mức độ chơi game có sử dụng mic hoặc voice chat mong muốn của roommate</div>
-                      <select
-                        value={softFilterPrefs.pref_game_mic ?? ""}
-                        onChange={(e) => setPrefNumber("pref_game_mic", e.target.value)}
-                        className="w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
-                      >
-                        <option value="">Bỏ trống</option>
-                        {FILTER_LINEAR_OPTIONS.game_mic.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
+                      <div className="text-sm font-semibold text-slate-700 mb-2">{t("Mức độ chơi game có sử dụng mic hoặc voice chat mong muốn của roommate")}</div>
+                      <select value={softFilterPrefs.pref_game_mic ?? ""} onChange={(e) => setPrefNumber("pref_game_mic", e.target.value)}
+                        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
+                        <option value="">{t("Bỏ trống")}</option>
+                        {FILTER_LINEAR_OPTIONS.game_mic.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
                         <option value="99">{PREF_OPTIONS.intAny.label}</option>
                       </select>
                     </label>
                   </div>
                 )}
 
-                {/* Navigation Buttons */}
-                <div className="flex gap-2 mt-6 pt-4 border-t border-orange-100">
-                  <button
-                    type="button"
-                    onClick={() => setSoftFilterSection(Math.max(1, softFilterSection - 1))}
-                    disabled={softFilterSection === 1}
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-orange-200 bg-white px-4 py-2.5 text-sm font-semibold text-orange-700 hover:bg-orange-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="h-4 w-4" /> Trước
+                <div className="flex gap-2 mt-6 pt-4 border-t border-slate-200">
+                  <button type="button" onClick={() => setSoftFilterSection(Math.max(1, softFilterSection - 1))} disabled={softFilterSection === 1}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    <ChevronLeft className="h-4 w-4" /> {t("Trước")}
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSoftFilterSection(Math.min(3, softFilterSection + 1))}
-                    disabled={softFilterSection === 3}
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-orange-100 px-4 py-2.5 text-sm font-semibold text-orange-700 hover:bg-orange-200 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Tiếp <ChevronRight className="h-4 w-4" />
+                  <button type="button" onClick={() => setSoftFilterSection(Math.min(3, softFilterSection + 1))} disabled={softFilterSection === 3}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary-container)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--primary)]/70 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    {t("Tiếp")} <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={softFilterLoading}
-                  className="w-full mt-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:from-orange-600 hover:to-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {softFilterLoading ? "Đang xử lý..." : "Áp dụng bộ lọc"}
+                <button type="submit" disabled={softFilterLoading}
+                  className="w-full mt-3 rounded-[var(--radius-md)] bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                  {softFilterLoading ? t("Đang xử lý...") : t("Áp dụng bộ lọc")}
                 </button>
               </form>
             </div>
@@ -837,135 +740,128 @@ export default function PublicListingsPage() {
         </div>
 
         {loading && (
-          <div className="flex h-64 items-center justify-center rounded-[24px] border border-orange-100 bg-white shadow-sm">
-            <div className="text-center">
-              <span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"></span>
-              <p className="mt-2 text-sm text-slate-500 font-semibold">Đang tải danh sách phòng...</p>
-            </div>
+          <div className="flex h-60 items-center justify-center rounded-[var(--radius-md)] border border-slate-200 bg-white">
+            <span className="inline-block h-7 w-7 animate-spin rounded-full border-[3px] border-[var(--primary)] border-t-transparent" />
           </div>
         )}
 
         {error && (
-          <div className="rounded-[24px] border border-red-100 bg-white px-6 py-6 text-center text-red-600 shadow-sm">
+          <div className="rounded-[var(--radius-md)] border border-red-100 bg-white px-6 py-8 text-center text-sm text-red-600">
             {error}
           </div>
         )}
 
         {isMapModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
-            <div className="relative w-full max-w-4xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
+            <div className="relative w-full max-w-4xl overflow-hidden rounded-[var(--radius-md)] bg-white shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Bản đồ Thủ Đức</h2>
-                  <p className="text-sm text-slate-500">Xem vị trí Thủ Đức trên bản đồ</p>
+                  <h2 className="text-lg font-semibold text-slate-900">{t("Bản đồ khu vực")}</h2>
+                  <p className="text-sm text-slate-500">{t("Xem vị trí trên bản đồ")}</p>
                 </div>
-                <button
-                  onClick={() => setIsMapModalOpen(false)}
-                  className="rounded-full bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200"
-                >
+                <button onClick={() => setIsMapModalOpen(false)} className="rounded-full bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200">
                   <X className="h-5 w-5" />
                 </button>
               </div>
               <div className="aspect-[16/9] bg-slate-100">
-                <iframe
-                  title="Bản đồ Thủ Đức"
-                  src="https://maps.google.com/maps?q=Thủ+Đức&output=embed"
-                  className="h-full w-full border-0"
-                  allowFullScreen
-                  loading="lazy"
-                />
+                <iframe title={t("Bản đồ")} src="https://maps.google.com/maps?q=Thủ+Đức&output=embed" className="h-full w-full border-0" allowFullScreen loading="lazy" />
               </div>
             </div>
           </div>
         )}
 
         {!loading && !error && filteredListings.length === 0 && (
-          <div className="rounded-[24px] border border-orange-100 bg-white px-6 py-12 text-center text-slate-500 shadow-sm">
-            ❌ Không tìm thấy phòng phù hợp với tìm kiếm của bạn.
+          <div className="rounded-[var(--radius-md)] border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--primary-container)]">
+              <Search className="h-6 w-6 text-[var(--primary)]" />
+            </div>
+            <p className="mt-4 text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>
+              {t("Không tìm thấy phòng phù hợp")}
+            </p>
+            <p className="mt-1 text-sm text-slate-500">{t("Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác.")}</p>
           </div>
         )}
 
         {!loading && !error && filteredListings.length > 0 && (
           <>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {pagedListings.map((listing) => {
-              const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
-              const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
-              return (
-                <article
-                  key={listing.id}
-                  data-listing-id={listing.id}
-                  onClick={() => {
-                    trackEvent({
-                      eventName: "listing_card_click",
-                      listingId: listing.id,
-                      district: listing.district || null,
-                      source: softFilterResults[listing.id] ? "recommended" : "normal",
-                    });
-                    navigate(`/listings/${listing.id}`);
-                  }}
-                  className={`group cursor-pointer overflow-hidden rounded-[24px] border bg-white shadow-[0_20px_50px_-35px_rgba(255,136,0,0.3)] transition hover:-translate-y-1 hover:shadow-[0_30px_60px_-25px_rgba(255,115,0,0.45)] ${highlightListingId === listing.id ? "border-[#ff6a3d] ring-2 ring-orange-300" : "border-orange-100"}`}
-                >
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-orange-50">
-                    {thumbnail ? (
-                      <img
-                        src={thumbnail}
-                        alt={listing.title}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-orange-300">
-                        Chưa cập nhật hình ảnh
-                      </div>
-                    )}
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {pagedListings.map((listing) => {
+                const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
+                const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
+                const badge = listing.preferredGender === "FEMALE" ? { text: t("Nữ ở ghép"), color: "bg-amber-600" }
+                  : listing.preferredGender === "MALE" ? { text: t("Nam ở ghép"), color: "bg-amber-600" }
+                  : listing.preferredGender === "ANY" ? { text: t("Nam/Nữ"), color: "bg-amber-600" }
+                  : { text: t("Tìm người ở ghép"), color: "bg-amber-600" };
 
-                    <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-orange-600 shadow">
-                      <BadgeDollarSign className="h-3.5 w-3.5 text-orange-600" />
-                      {listing.rentPrice.toLocaleString("vi-VN")} đ/tháng
-                    </span>
-                  </div>
-
-                  <div className="p-5">
-                    <h3 className="text-lg font-semibold text-slate-900 line-clamp-2 group-hover:text-[#ff6a3d] transition">
-                      {listing.title}
-                    </h3>
-
-                    <div className="mt-2 flex items-center text-xs text-slate-500 gap-3">
-                      <MapPin className="h-3.5 w-3.5 text-orange-500" />
-                      <span className="line-clamp-1">{location || "Chưa cập nhật địa chỉ"}</span>
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-slate-700">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-1 text-[11px] font-semibold text-orange-700">{listing.preferredGender || "Mọi giới tính"}</span>
-                      </div>
-
-                      {softFilterResults[listing.id] ? (
-                        <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
-                          {Math.round(softFilterResults[listing.id].total_score)}/100
+                return (
+                  <article
+                    key={listing.id}
+                    data-listing-id={listing.id}
+                    onClick={() => {
+                      trackEvent({ eventName: "listing_card_click", listingId: listing.id, district: listing.district || null, source: softFilterResults[listing.id] ? "recommended" : "normal" });
+                      navigate(`/listings/${listing.id}`);
+                    }}
+                    className={`group cursor-pointer overflow-hidden rounded-[var(--radius-md)] border bg-white transition hover:-translate-y-0.5 hover:shadow-lg ${highlightListingId === listing.id ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/30" : "border-slate-200"}`}
+                  >
+                    <div className="relative h-52 overflow-hidden bg-slate-100">
+                      {thumbnail ? (
+                        <img src={thumbnail} alt={listing.title} referrerPolicy="no-referrer" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm text-slate-300">{t("Chưa có ảnh")}</div>
+                      )}
+                      <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-xs font-bold text-white ${badge.color}`}>
+                        {badge.text}
+                      </span>
+                      {listing.promoExpiresAt && new Date(listing.promoExpiresAt) > new Date() && (
+                        <span className="absolute top-3 right-3 rounded-full bg-red-500/90 backdrop-blur px-2.5 py-1 text-[10px] font-bold text-white flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" /> VIP
                         </span>
-                      ) : null}
+                      )}
                     </div>
 
-                    {softFilterResults[listing.id] && getAllLifestylePrefs(softFilterResults[listing.id]).length > 0 && (
-                      <div className="mt-4 grid grid-cols-2 gap-2">
-                        {getAllLifestylePrefs(softFilterResults[listing.id]).map((pref) => (
-                          <div key={pref.field} className="flex items-start gap-2">
-                            <div className="h-2.5 w-2.5 mt-1 rounded-full bg-orange-200" />
-                            <div className="text-[12px] text-slate-700">
-                              <div className="font-medium text-slate-800">{FIELD_FULL_LABELS[pref.field] || pref.field}</div>
-                              <div className="text-[11px] text-slate-600">{pref.label}</div>
-                            </div>
-                          </div>
-                        ))}
+                    <div className="p-4">
+                      <h3 className="text-base font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>
+                        {listing.title}
+                      </h3>
+                      <p className="mt-1.5 flex items-center gap-1 text-xs text-slate-500">
+                        <MapPin className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
+                        {location || t("Chưa cập nhật")}
+                      </p>
+
+                      {softFilterResults[listing.id] && getAllLifestylePrefs(softFilterResults[listing.id]).length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {getAllLifestylePrefs(softFilterResults[listing.id]).slice(0, 2).map((pref) => (
+                            <span key={pref.field} className="rounded-full border border-slate-200 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">
+                              {FIELD_FULL_LABELS[pref.field] || pref.field}: {pref.label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="mt-4 flex items-end justify-between border-t border-slate-100 pt-3">
+                        <p className="text-base font-extrabold text-[var(--primary)]">
+                          {listing.rentPrice >= 1000000
+                            ? `${(listing.rentPrice / 1000000).toFixed(listing.rentPrice % 1000000 === 0 ? 0 : 1)}Tr`
+                            : listing.rentPrice.toLocaleString("vi-VN")}
+                          <span className="text-xs font-medium text-slate-400">{t("đ/tháng")}</span>
+                        </p>
+                        <div className="flex items-center gap-2">
+                          {softFilterResults[listing.id] && (
+                            <span className="text-[11px] font-bold text-[var(--primary)] bg-[var(--primary-container)] rounded-full px-2 py-0.5">
+                              {Math.round(softFilterResults[listing.id].total_score)}%
+                            </span>
+                          )}
+                          <span className="text-xs font-semibold text-[var(--primary)] transition group-hover:underline">
+                            {t("Chi tiết")}
+                          </span>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
       </main>

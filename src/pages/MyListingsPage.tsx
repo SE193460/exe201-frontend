@@ -158,7 +158,7 @@ export default function MyListingsPage() {
     return (
       <div
         key={listing.id}
-        className="post-card group col-span-2 overflow-hidden rounded-[var(--radius-md)] border border-slate-200 bg-white cursor-pointer"
+        className="post-card group overflow-hidden rounded-[var(--radius-md)] border border-slate-200 bg-white cursor-pointer"
         onClick={() => navigate(`/my-listings/${listing.id}`)}
       >
         <div className="flex flex-col md:flex-row">
@@ -266,7 +266,7 @@ export default function MyListingsPage() {
     return (
       <div
         key={listing.id}
-        className="post-card group col-span-1 overflow-hidden rounded-[var(--radius-md)] border border-slate-200 bg-white cursor-pointer"
+        className="post-card group overflow-hidden rounded-[var(--radius-md)] border border-slate-200 bg-white cursor-pointer"
         onClick={() => navigate(`/my-listings/${listing.id}`)}
       >
         <div className="relative h-44 overflow-hidden bg-[var(--surface)]">
@@ -346,47 +346,33 @@ export default function MyListingsPage() {
     const items = paginatedListings;
     if (items.length === 0) return null;
 
+    const featured = items.filter((_, i) => i % 3 === 0);
+    const standard = items.filter((_, i) => i % 3 !== 0);
     const result: React.ReactNode[] = [];
-    let i = 0;
-    let row = 0;
 
-    while (i < items.length) {
-      if (row % 2 === 0) {
-        if (i + 1 < items.length) {
-          result.push(
-            <div key={`row-${row}`} className="grid gap-5 md:grid-cols-[1.6fr_1fr]">
-              {renderFeaturedCard(items[i])}
-              {renderStandardCard(items[i + 1])}
-            </div>
-          );
-          i += 2;
-        } else {
-          result.push(
-            <div key={`row-${row}`} className="grid gap-5">
-              {renderFeaturedCard(items[i])}
-            </div>
-          );
-          i += 1;
-        }
+    featured.forEach((item) => {
+      result.push(
+        <div key={`row-f-${item.id}`} className="grid gap-5">
+          {renderFeaturedCard(item)}
+        </div>
+      );
+    });
+
+    for (let i = 0; i < standard.length; i += 2) {
+      if (i + 1 < standard.length) {
+        result.push(
+          <div key={`row-s-${i}`} className="grid gap-5 md:grid-cols-2">
+            {renderStandardCard(standard[i])}
+            {renderStandardCard(standard[i + 1])}
+          </div>
+        );
       } else {
-        if (i + 1 < items.length) {
-          result.push(
-            <div key={`row-${row}`} className="grid gap-5 md:grid-cols-[1fr_1.6fr]">
-              {renderStandardCard(items[i])}
-              {renderFeaturedCard(items[i + 1])}
-            </div>
-          );
-          i += 2;
-        } else {
-          result.push(
-            <div key={`row-${row}`} className="grid gap-5">
-              {renderStandardCard(items[i])}
-            </div>
-          );
-          i += 1;
-        }
+        result.push(
+          <div key={`row-s-${i}`} className="grid gap-5">
+            {renderStandardCard(standard[i])}
+          </div>
+        );
       }
-      row++;
     }
 
     return <div className="space-y-5">{result}</div>;
@@ -405,13 +391,6 @@ export default function MyListingsPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-[var(--primary-container)] flex items-center justify-center text-[var(--primary)] text-lg font-bold">👁️</div>
-              <div className="text-right">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tổng lượt xem</p>
-                <p className="text-lg font-extrabold text-[var(--primary)]">—</p>
-              </div>
-            </div>
             <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 shadow-sm">
               <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-[var(--primary-container)] flex items-center justify-center text-[var(--primary)] text-lg font-bold">📄</div>
               <div className="text-right">

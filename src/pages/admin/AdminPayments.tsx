@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { logout } from "../../api/services/auth";
 import {
     fetchAllPaymentHistory,
@@ -18,6 +19,7 @@ const PACKAGE_OPTIONS = [
 
 export default function AdminPayments() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [error, setError] = useState("");
     const [payments, setPayments] = useState<PaymentTransaction[]>([]);
     const [pending, setPending] = useState<(PaymentTransaction & { listing_id: string; user_id: string })[]>([]);
@@ -40,7 +42,7 @@ export default function AdminPayments() {
             setPayments(data);
             setPending(pendingData);
         } catch {
-            setError("Không tải được dữ liệu");
+            setError(t("Không tải được dữ liệu"));
         }
     };
 
@@ -49,16 +51,16 @@ export default function AdminPayments() {
             await adminConfirmPayment(transactionId);
             loadData();
         } catch {
-            alert("Xác nhận thất bại");
+            alert(t("Xác nhận thất bại"));
         }
     };
 
     const handleViewListing = (listingId?: string | null) => {
         if (!listingId) {
-            alert("Giao dịch này không có bài đăng liên kết.");
+            alert(t("Giao dịch này không có bài đăng liên kết."));
             return;
         }
-        navigate(`/?highlightListingId=${listingId}`);
+        navigate(`/listings/${listingId}`);
     };
 
     const handleLogout = async () => {
@@ -80,8 +82,8 @@ export default function AdminPayments() {
 
     const statusLabel = (status: string) => {
         switch (status) {
-            case "PENDING": return "Chờ duyệt";
-            case "COMPLETED": return "Hoàn thành";
+            case "PENDING": return t("Chờ duyệt");
+            case "COMPLETED": return t("Hoàn thành");
             default: return status;
         }
     };
@@ -113,175 +115,109 @@ export default function AdminPayments() {
     const pagedPayments = filteredPayments.slice((paymentsPage - 1) * PAGE_SIZE, paymentsPage * PAGE_SIZE);
 
     return (
-        <div className="min-h-screen bg-white text-slate-800">
+        <div className="min-h-screen bg-slate-50">
             <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
                 <Sidebar activeKey="payments" onLogout={handleLogout} />
 
                 <main className="flex-1 space-y-6">
-                    <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-                        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                            <div>
-                                <p className="text-sm font-semibold text-orange-500">Quản lý thanh toán</p>
-                                <h2 className="text-2xl font-bold">Lịch sử giao dịch</h2>
-                            </div>
-                            <span className="rounded-full bg-orange-100 px-4 py-2 text-sm font-semibold text-orange-700">
-                                {filteredPayments.length} / {payments.length} giao dịch
-                            </span>
+                    <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Quản lý thanh toán")}</p>
+                            <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>{t("Lịch sử giao dịch")}</h1>
                         </div>
-
-                        {/* Search & Filter bar */}
-                        <div className="flex flex-wrap gap-3">
-                            <input
-                                type="text"
-                                value={searchCode}
-                                onChange={(e) => setSearchCode(e.target.value)}
-                                placeholder="Tìm theo mã (VD: RM260001)"
-                                className="w-56 rounded-2xl border border-orange-100 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300 focus:ring-1 focus:ring-orange-100"
-                            />
-                            <select
-                                value={filterPackage}
-                                onChange={(e) => setFilterPackage(e.target.value)}
-                                className="rounded-2xl border border-orange-100 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-orange-300"
-                            >
-                                {PACKAGE_OPTIONS.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
-                            {(searchCode || filterPackage) && (
-                                <button
-                                    onClick={() => { setSearchCode(""); setFilterPackage(""); }}
-                                    className="rounded-2xl border border-orange-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-orange-50 transition"
-                                >
-                                    Xóa bộ lọc
-                                </button>
-                            )}
-                        </div>
+                        <span className="self-start rounded-full bg-orange-50 px-4 py-2 text-xs font-bold text-[var(--primary)] border border-orange-200">{filteredPayments.length} / {payments.length} {t("giao dịch")}</span>
                     </section>
 
+                    <div className="flex flex-wrap gap-3">
+                        <input type="text" value={searchCode} onChange={(e) => setSearchCode(e.target.value)}
+                            placeholder={t("Tìm theo mã (VD: RM260001)")}
+                            className="w-56 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[var(--primary)]" />
+                        <select value={filterPackage} onChange={(e) => setFilterPackage(e.target.value)}
+                            className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[var(--primary)]">
+                            {PACKAGE_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                        </select>
+                        {(searchCode || filterPackage) && (
+                            <button onClick={() => { setSearchCode(""); setFilterPackage(""); }}
+                                className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">{t("Xóa bộ lọc")}</button>
+                        )}
+                    </div>
+
                     {error && (
-                        <section className="rounded-[24px] border border-red-100 bg-white p-4 text-sm text-red-600 shadow-sm">
-                            {error}
-                        </section>
+                        <div className="rounded-lg border border-red-200 bg-white p-4 text-sm text-red-600">{error}</div>
                     )}
 
-                    {/* Pending payments section */}
                     {filteredPending.length > 0 && (
-                        <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)] border-2 border-yellow-200">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-bold text-yellow-700">Chờ xác nhận ({filteredPending.length})</h3>
-                            </div>
-                            <div className="overflow-x-auto rounded-[20px] border border-yellow-100">
+                        <section className="rounded-lg border border-amber-200 bg-white p-6">
+                            <h3 className="mb-4 text-sm font-bold text-amber-700 uppercase tracking-wider">{t("Chờ xác nhận")} ({filteredPending.length})</h3>
+                            <div className="overflow-x-auto rounded-lg border border-slate-100">
                                 <table className="w-full">
-                                    <thead className="bg-yellow-50">
-                                        <tr className="text-left">
-                                            <th className="px-4 py-4 text-sm font-semibold text-slate-600">Mã GD</th>
-                                            <th className="px-4 py-4 text-sm font-semibold text-slate-600">Người dùng</th>
-                                            <th className="px-4 py-4 text-sm font-semibold text-slate-600">Gói</th>
-                                            <th className="px-4 py-4 text-sm font-semibold text-slate-600">Tiền</th>
-                                            <th className="px-4 py-4 text-sm font-semibold text-slate-600">Ngày</th>
-                                            <th className="px-4 py-4 text-sm font-semibold text-slate-600">Thao tác</th>
+                                    <thead>
+                                        <tr className="border-b border-slate-200 bg-amber-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                            <th className="px-4 py-3 text-left">{t("Mã GD")}</th>
+                                            <th className="px-4 py-3 text-left">{t("Người dùng")}</th>
+                                            <th className="px-4 py-3 text-left">{t("Gói")}</th>
+                                            <th className="px-4 py-3 text-left">{t("Tiền")}</th>
+                                            <th className="px-4 py-3 text-left">{t("Ngày")}</th>
+                                            <th className="px-4 py-3 text-left">{t("Thao tác")}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {pagedPending.map((item) => (
-                                            <tr key={item.id} className="border-t border-yellow-50 hover:bg-yellow-50/40 transition">
-                                                <td className="px-4 py-4">
-                                                    <span className="font-mono font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg text-sm">
-                                                        {item.code ?? "-"}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-4">
-                                                    <div className="font-medium">{item.userName || "-"}</div>
-                                                    <div className="text-xs text-slate-400">{item.userEmail || ""}</div>
-                                                </td>
-                                                <td className="px-4 py-4">
-                                                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">{item.packageName}</span>
-                                                </td>
-                                                <td className="px-4 py-4 font-bold text-[#ff6a3d]">{item.amount.toLocaleString()}đ</td>
-                                                <td className="px-4 py-4 text-sm text-slate-500">{new Date(item.created_at).toLocaleString("vi-VN")}</td>
-                                                <td className="px-4 py-4 space-x-2">
-                                                    <button
-                                                        onClick={() => handleViewListing(item.listingId || item.listing_id)}
-                                                        className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
-                                                    >
-                                                        Xem bài đăng
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleConfirm(item.id)}
-                                                        className="rounded-full bg-green-100 px-4 py-2 text-xs font-bold text-green-700 hover:bg-green-200 transition"
-                                                    >
-                                                        Xác nhận
-                                                    </button>
+                                            <tr key={item.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition">
+                                                <td className="px-4 py-3"><span className="font-mono font-bold text-[var(--primary)] text-sm">{item.code ?? "-"}</span></td>
+                                                <td className="px-4 py-3"><div className="font-medium text-sm">{item.userName || "-"}</div><div className="text-xs text-slate-400">{item.userEmail || ""}</div></td>
+                                                <td className="px-4 py-3"><span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200">{item.packageName}</span></td>
+                                                <td className="px-4 py-3 font-bold text-[var(--primary)] text-sm">{item.amount.toLocaleString()}đ</td>
+                                                <td className="px-4 py-3 text-sm text-slate-500">{new Date(item.created_at).toLocaleString("vi-VN")}</td>
+                                                <td className="px-4 py-3 space-x-2">
+                                                    <button onClick={() => handleViewListing(item.listingId || item.listing_id)}
+                                                        className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition">{t("Xem bài đăng")}</button>
+                                                    <button onClick={() => handleConfirm(item.id)}
+                                                        className="rounded-full bg-green-50 px-3 py-1.5 text-xs font-bold text-green-700 border border-green-200 hover:bg-green-100 transition">{t("Xác nhận")}</button>
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
-                            <Pagination currentPage={pendingPage} totalPages={pendingTotalPages} onPageChange={setPendingPage} />
+                            <div className="mt-3"><Pagination currentPage={pendingPage} totalPages={pendingTotalPages} onPageChange={setPendingPage} /></div>
                         </section>
                     )}
 
-                    {/* All transactions */}
-                    <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-                        <h3 className="mb-4 text-base font-bold text-slate-700">Tất cả giao dịch</h3>
-                        <div className="overflow-x-auto rounded-[20px] border border-orange-100">
+                    <section className="rounded-lg border border-slate-200 bg-white p-6">
+                        <h3 className="mb-4 text-sm font-bold text-slate-700 uppercase tracking-wider">{t("Tất cả giao dịch")}</h3>
+                        <div className="overflow-x-auto rounded-lg border border-slate-100">
                             <table className="w-full">
-                                <thead className="bg-orange-50">
-                                    <tr className="text-left">
-                                        <th className="px-4 py-4 text-sm font-semibold text-slate-600">Mã GD</th>
-                                        <th className="px-4 py-4 text-sm font-semibold text-slate-600">Người dùng</th>
-                                        <th className="px-4 py-4 text-sm font-semibold text-slate-600">Gói</th>
-                                        <th className="px-4 py-4 text-sm font-semibold text-slate-600">Tiền</th>
-                                        <th className="px-4 py-4 text-sm font-semibold text-slate-600">Trạng thái</th>
-                                        <th className="px-4 py-4 text-sm font-semibold text-slate-600">Ngày</th>
-                                        <th className="px-4 py-4 text-sm font-semibold text-slate-600">Thao tác</th>
+                                <thead>
+                                    <tr className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                        <th className="px-4 py-3 text-left">{t("Mã GD")}</th>
+                                        <th className="px-4 py-3 text-left">{t("Người dùng")}</th>
+                                        <th className="px-4 py-3 text-left">{t("Gói")}</th>
+                                        <th className="px-4 py-3 text-left">{t("Tiền")}</th>
+                                        <th className="px-4 py-3 text-left">{t("Trạng thái")}</th>
+                                        <th className="px-4 py-3 text-left">{t("Ngày")}</th>
+                                        <th className="px-4 py-3 text-left">{t("Thao tác")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredPayments.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
-                                                Không tìm thấy giao dịch phù hợp.
-                                            </td>
+                                        <tr><td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">{t("Không tìm thấy giao dịch phù hợp.")}</td></tr>
+                                    ) : pagedPayments.map((item) => (
+                                        <tr key={item.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition">
+                                            <td className="px-4 py-3"><span className="font-mono font-bold text-[var(--primary)] text-sm">{item.code ?? "-"}</span></td>
+                                            <td className="px-4 py-3"><div className="font-medium text-sm">{item.userName || "-"}</div><div className="text-xs text-slate-400">{item.userEmail || ""}</div></td>
+                                            <td className="px-4 py-3"><span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200">{item.packageName}</span></td>
+                                            <td className="px-4 py-3 font-bold text-[var(--primary)] text-sm">{item.amount.toLocaleString()}đ</td>
+                                            <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${statusBadge(item.status)}`}>{statusLabel(item.status)}</span></td>
+                                            <td className="px-4 py-3 text-sm text-slate-500">{new Date(item.created_at).toLocaleString("vi-VN")}</td>
+                                            <td className="px-4 py-3"><button onClick={() => handleViewListing(item.listingId)}
+                                                className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition">{t("Xem bài đăng")}</button></td>
                                         </tr>
-                                    ) : (
-                                        pagedPayments.map((item) => (
-                                            <tr key={item.id} className="border-t border-orange-50 hover:bg-orange-50/40 transition">
-                                                <td className="px-4 py-4">
-                                                    <span className="font-mono font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg text-sm">
-                                                        {item.code ?? "-"}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-4">
-                                                    <div className="font-medium">{item.userName || "-"}</div>
-                                                    <div className="text-xs text-slate-400">{item.userEmail || ""}</div>
-                                                </td>
-                                                <td className="px-4 py-4">
-                                                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">{item.packageName}</span>
-                                                </td>
-                                                <td className="px-4 py-4 font-bold text-[#ff6a3d]">{item.amount.toLocaleString()}đ</td>
-                                                <td className="px-4 py-4">
-                                                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(item.status)}`}>
-                                                        {statusLabel(item.status)}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-4 text-sm text-slate-500">{new Date(item.created_at).toLocaleString("vi-VN")}</td>
-                                                <td className="px-4 py-4">
-                                                    <button
-                                                        onClick={() => handleViewListing(item.listingId)}
-                                                        className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
-                                                    >
-                                                        Xem bài đăng
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
-                        <Pagination currentPage={paymentsPage} totalPages={paymentsTotalPages} onPageChange={setPaymentsPage} />
+                        <div className="mt-3"><Pagination currentPage={paymentsPage} totalPages={paymentsTotalPages} onPageChange={setPaymentsPage} /></div>
                     </section>
                 </main>
             </div>

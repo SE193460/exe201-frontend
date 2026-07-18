@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Wallet, TrendingUp, Crown, Search, SlidersHorizontal, Download, Eye } from "lucide-react";
 import { fetchMyPaymentHistory, type PaymentTransaction } from "../api/services/payments";
 import UserShell from "@/layouts/UserShell";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type StatusFilter = "all" | "COMPLETED" | "PENDING" | "FAILED";
 
 export default function PaymentHistory() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -49,11 +53,11 @@ export default function PaymentHistory() {
   function statusBadge(status: string) {
     switch (status) {
       case "COMPLETED":
-        return { text: "Thành công", cls: "bg-emerald-50 text-emerald-700" };
+        return { text: t("Thành công"), cls: "bg-emerald-50 text-emerald-700" };
       case "PENDING":
-        return { text: "Đang xử lý", cls: "bg-amber-50 text-amber-700" };
+        return { text: t("Đang xử lý"), cls: "bg-amber-50 text-amber-700" };
       case "FAILED":
-        return { text: "Thất bại", cls: "bg-red-50 text-red-600" };
+        return { text: t("Thất bại"), cls: "bg-red-50 text-red-600" };
       default:
         return { text: status, cls: "bg-slate-100 text-slate-600" };
     }
@@ -69,16 +73,44 @@ export default function PaymentHistory() {
     return amount >= 0 ? "text-[var(--primary)]" : "text-[var(--primary)]";
   }
 
+  function handleExportPDF() {
+    const doc = new jsPDF();
+    const title = `Roomie - ${t("Lịch sử thanh toán")}`;
+    doc.setFontSize(16);
+    doc.text(title, 14, 20);
+    doc.setFontSize(10);
+    doc.text(new Date().toLocaleDateString("vi-VN"), 14, 28);
+    const rows = filtered.map((item) => {
+      const date = new Date(item.created_at);
+      const badge = statusBadge(item.status);
+      return [
+        date.toLocaleDateString("vi-VN"),
+        `#${item.code || item.id.slice(0, 8).toUpperCase()}`,
+        item.packageName,
+        formatAmount(item.amount),
+        badge.text,
+      ];
+    });
+    autoTable(doc, {
+      startY: 35,
+      head: [[t("Ngày giao dịch"), t("Mã giao dịch"), t("Dịch vụ"), t("Số tiền"), t("Trạng thái")]],
+      body: rows,
+      theme: "striped",
+      headStyles: { fillColor: [255, 140, 0] },
+    });
+    doc.save(`payment-history-${new Date().toISOString().slice(0, 10)}.pdf`);
+  }
+
   return (
     <UserShell>
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 md:px-6">
         {/* Header */}
         <header>
           <h1 className="text-2xl font-extrabold text-[var(--on-surface)] md:text-3xl" style={{ fontFamily: "var(--font-main)" }}>
-            Lịch sử thanh toán
+            {t("Lịch sử thanh toán")}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Quản lý và theo dõi tất cả các giao dịch tài chính của bạn tại Roomie.
+            {t("Quản lý và theo dõi tất cả các giao dịch tài chính của bạn tại Roomie.")}
           </p>
         </header>
 
@@ -89,7 +121,7 @@ export default function PaymentHistory() {
               <Wallet className="h-5 w-5 text-[var(--primary)]" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-500">Số dư hiện tại</p>
+              <p className="text-xs font-semibold text-slate-500">{t("Tổng chi tiêu trên hệ thống")}</p>
               <p className="text-lg font-extrabold text-[var(--on-surface)]">0 đ</p>
             </div>
           </div>
@@ -98,7 +130,7 @@ export default function PaymentHistory() {
               <TrendingUp className="h-5 w-5 text-[var(--primary)]" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-500">Tổng chi tiêu tháng này</p>
+              <p className="text-xs font-semibold text-slate-500">{t("Tổng chi tiêu tháng này")}</p>
               <p className="text-lg font-extrabold text-[var(--on-surface)]">{totalSpent.toLocaleString("vi-VN")} đ</p>
             </div>
           </div>
@@ -107,7 +139,7 @@ export default function PaymentHistory() {
               <Crown className="h-5 w-5 text-[var(--primary)]" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-500">Gói thành viên</p>
+              <p className="text-xs font-semibold text-slate-500">{t("Gói thành viên")}</p>
               <p className="text-lg font-extrabold text-[var(--on-surface)]">Free</p>
             </div>
           </div>
@@ -119,7 +151,7 @@ export default function PaymentHistory() {
             <Search className="h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm theo mã giao dịch..."
+              placeholder={t("Tìm kiếm theo mã giao dịch...")}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
@@ -133,15 +165,15 @@ export default function PaymentHistory() {
                 onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); setPage(1); }}
                 className="bg-transparent text-sm outline-none"
               >
-                <option value="all">Bộ lọc</option>
-                <option value="COMPLETED">Thành công</option>
-                <option value="PENDING">Đang xử lý</option>
-                <option value="FAILED">Thất bại</option>
+                <option value="all">{t("Bộ lọc")}</option>
+                <option value="COMPLETED">{t("Thành công")}</option>
+                <option value="PENDING">{t("Đang xử lý")}</option>
+                <option value="FAILED">{t("Thất bại")}</option>
               </select>
             </div>
-            <button className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+            <button onClick={handleExportPDF} className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
               <Download className="h-4 w-4" />
-              Xuất file
+              {t("Xuất file")}
             </button>
           </div>
         </div>
@@ -153,12 +185,12 @@ export default function PaymentHistory() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-[var(--surface)]">
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Ngày giao dịch</th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Mã giao dịch</th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Dịch vụ</th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Số tiền</th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Trạng thái</th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Chi tiết</th>
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">{t("Ngày giao dịch")}</th>
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">{t("Mã giao dịch")}</th>
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">{t("Dịch vụ")}</th>
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">{t("Số tiền")}</th>
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">{t("Trạng thái")}</th>
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">{t("Chi tiết")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -166,13 +198,13 @@ export default function PaymentHistory() {
                   <tr>
                     <td colSpan={6} className="px-5 py-16 text-center text-sm text-slate-400">
                       <span className="inline-block h-6 w-6 animate-spin rounded-full border-[3px] border-[var(--primary)] border-t-transparent" />
-                      <p className="mt-2">Đang tải...</p>
+                      <p className="mt-2">{t("Đang tải...")}</p>
                     </td>
                   </tr>
                 ) : paginated.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-5 py-16 text-center text-sm text-slate-400">
-                      Không có giao dịch nào.
+                      {t("Không có giao dịch nào.")}
                     </td>
                   </tr>
                 ) : (
@@ -207,7 +239,7 @@ export default function PaymentHistory() {
                           <button
                             onClick={() => navigate(`/payment-history/${item.id}`)}
                             className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-[var(--primary-container)] hover:text-[var(--primary)]"
-                            title="Xem chi tiết"
+                            title={t("Xem chi tiết")}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -224,7 +256,7 @@ export default function PaymentHistory() {
           {!loading && filtered.length > 0 && (
             <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 px-5 py-4 sm:flex-row">
               <p className="text-xs text-slate-500">
-                Hiển thị {(page - 1) * PAGE_SIZE + 1} - {Math.min(page * PAGE_SIZE, filtered.length)} của {filtered.length} giao dịch
+                {t("Hiển thị")} {(page - 1) * PAGE_SIZE + 1} - {Math.min(page * PAGE_SIZE, filtered.length)} {t("của")} {filtered.length} {t("giao dịch")}
               </p>
               <div className="flex items-center gap-1">
                 <button

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Bell, Menu, X } from "lucide-react";
 import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from "../api/services/notifications";
@@ -10,19 +11,20 @@ type SidebarProps = {
   onLogout: () => void | Promise<void>;
 };
 
-const navItems: Array<{ key: AdminSidebarKey; label: string; path: string }> = [
-  { key: "dashboard", label: "Dashboard", path: "/admin/dashboard" },
-  { key: "users", label: "Quản lý người dùng", path: "/admin/users" },
-  { key: "listings", label: "Quản lý bài đăng", path: "/admin/listings" },
-  { key: "imported-listings", label: "Quản lý nguồn bài đăng", path: "/admin/imported-listings" },
-  { key: "amenities", label: "Quản lý tiện nghi", path: "/admin/amenities" },
-  { key: "payments", label: "Quản lý thanh toán", path: "/admin/payments" },
-  { key: "reports", label: "Báo cáo hệ thống", path: "/admin/reports" },
-  { key: "feedbacks", label: "Feedback người dùng", path: "/admin/feedbacks" },
-];
-
 export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const navItems: Array<{ key: AdminSidebarKey; label: string; path: string }> = [
+    { key: "dashboard", label: "Dashboard", path: "/admin/dashboard" },
+    { key: "users", label: t("Quản lý người dùng"), path: "/admin/users" },
+    { key: "listings", label: t("Quản lý bài đăng"), path: "/admin/listings" },
+    { key: "imported-listings", label: t("Quản lý nguồn bài đăng"), path: "/admin/imported-listings" },
+    { key: "amenities", label: t("Quản lý tiện nghi"), path: "/admin/amenities" },
+    { key: "payments", label: t("Quản lý thanh toán"), path: "/admin/payments" },
+    { key: "reports", label: t("Báo cáo hệ thống"), path: "/admin/reports" },
+    { key: "feedbacks", label: t("Feedback người dùng"), path: "/admin/feedbacks" },
+  ];
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -145,7 +147,7 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
             onClick={() => handleNav("/home")}
             className="w-full rounded-full px-4 py-2.5 text-left text-slate-600 hover:bg-orange-50 transition"
           >
-            Trang chủ
+            {t("Trang chủ")}
           </button>
 
           {navItems.map((item) => {
@@ -170,7 +172,7 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
               className="relative flex w-full items-center gap-2.5 rounded-full px-4 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-orange-50 transition"
             >
               <Bell className="h-4 w-4" />
-              Thông báo
+              {t("Thông báo")}
               {unreadCount > 0 && (
                 <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
                   {unreadCount > 99 ? "99+" : unreadCount}
@@ -181,16 +183,16 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
             {notifOpen && (
               <div className="absolute left-0 top-full z-50 mt-1 w-[calc(100vw-80px)] max-w-[300px] overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-[0_20px_50px_-20px_rgba(255,115,0,0.3)]">
                 <div className="flex items-center justify-between border-b border-orange-50 px-4 py-3">
-                  <span className="text-sm font-bold text-slate-700">Thông báo</span>
+                  <span className="text-sm font-bold text-slate-700">{t("Thông báo")}</span>
                   {unreadCount > 0 && (
                     <button onClick={handleMarkAllRead} className="text-xs font-semibold text-orange-600 hover:underline">
-                      Đánh dấu đã đọc
+                      {t("Đánh dấu đã đọc")}
                     </button>
                   )}
                 </div>
                 <div className="max-h-80 overflow-y-auto">
                   {notifications.length === 0 ? (
-                    <p className="px-4 py-8 text-center text-sm text-slate-400">Chưa có thông báo</p>
+                    <p className="px-4 py-8 text-center text-sm text-slate-400">{t("Chưa có thông báo")}</p>
                   ) : (
                     notifications.slice(0, 10).map((n) => (
                       <button
@@ -214,7 +216,7 @@ export default function Sidebar({ activeKey, onLogout }: SidebarProps) {
           onClick={() => { onLogout(); setMobileOpen(false); }}
           className="mt-4 w-full rounded-full border border-orange-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-orange-50 transition"
         >
-          Đăng xuất
+          {t("Đăng xuất")}
         </button>
       </aside>
     </>

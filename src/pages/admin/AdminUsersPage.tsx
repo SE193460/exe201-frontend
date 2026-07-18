@@ -75,77 +75,49 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-800">
+    <div className="min-h-screen bg-slate-50">
       <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
         <Sidebar activeKey="users" onLogout={handleLogout} />
 
         <main className="flex-1 space-y-6">
-          <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-orange-500">Bảng điều khiển</p>
-                <h1 className="text-2xl font-bold">Quản lý người dùng</h1>
-                <p className="mt-1 text-sm text-slate-500">{filteredLabel} · {users.length} tài khoản</p>
-              </div>
-              <form onSubmit={handleSearch} className="flex w-full max-w-md gap-2">
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  className="w-full rounded-full border border-orange-100 px-4 py-2 text-sm outline-none focus:border-orange-300"
-                  placeholder="Tìm theo email hoặc họ tên"
-                />
-                <button className="rounded-full bg-[#ff6a3d] px-5 py-2 text-sm font-semibold text-white">
-                  Tìm
-                </button>
-              </form>
+          <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">Bảng điều khiển</p>
+              <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>Quản lý người dùng</h1>
+              <p className="mt-1 text-sm text-slate-500">{filteredLabel} · {users.length} tài khoản</p>
             </div>
-
-            <div className="mt-6 flex flex-wrap gap-2">
-              {["all", "active", "inactive"].map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setStatus(item)}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold ${
-                    status === item
-                      ? "bg-orange-100 text-orange-700"
-                      : "border border-orange-100 text-slate-500"
-                  }`}
-                >
-                  {statusLabels[item]}
-                </button>
-              ))}
-            </div>
+            <form onSubmit={handleSearch} className="flex w-full max-w-md gap-2">
+              <input value={query} onChange={(event) => setQuery(event.target.value)}
+                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[var(--primary)]" placeholder="Tìm theo email hoặc họ tên" />
+              <button className="rounded-full bg-[var(--primary)] px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition">Tìm</button>
+            </form>
           </section>
 
+          <div className="flex flex-wrap gap-2">
+            {["all", "active", "inactive"].map((item) => (
+              <button key={item} onClick={() => setStatus(item)}
+                className={`rounded-full px-4 py-2 text-xs font-semibold border transition ${status === item ? "bg-[var(--primary)] border-[var(--primary)] text-white" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+                {statusLabels[item]}
+              </button>
+            ))}
+          </div>
+
           <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-            <div className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
+            <div className="rounded-lg border border-slate-200 bg-white p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Danh sách người dùng</h2>
+                <h2 className="text-sm font-bold text-slate-700">Danh sách người dùng</h2>
                 {loading && <span className="text-xs text-slate-400">Đang tải...</span>}
               </div>
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 space-y-2">
                 {users.slice((userPage - 1) * USER_PAGE_SIZE, userPage * USER_PAGE_SIZE).map((user) => (
-                  <button
-                    key={user.id}
-                    onClick={() => handleSelect(user)}
-                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition ${
-                      selected?.id === user.id
-                        ? "border-orange-200 bg-orange-50"
-                        : "border-orange-100 bg-white hover:bg-orange-50/60"
-                    }`}
-                  >
+                  <button key={user.id} onClick={() => handleSelect(user)}
+                    className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition ${selected?.id === user.id ? "border-[var(--primary)] bg-orange-50/50" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 overflow-hidden rounded-full bg-orange-100">
+                      <div className="h-10 w-10 overflow-hidden rounded-full bg-[var(--primary-container)]">
                         {user.avatarUrl ? (
-                          <img
-                            src={resolveAvatarUrl(user.avatarUrl)}
-                            alt={user.fullName}
-                            className="h-full w-full object-cover"
-                          />
+                          <img src={resolveAvatarUrl(user.avatarUrl)} alt={user.fullName} className="h-full w-full object-cover" />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-orange-500">
-                            {user.fullName.slice(0, 1).toUpperCase()}
-                          </div>
+                          <div className="flex h-full w-full items-center justify-center text-xs font-bold text-[var(--primary)]">{user.fullName.slice(0, 1).toUpperCase()}</div>
                         )}
                       </div>
                       <div>
@@ -154,9 +126,7 @@ export default function AdminUsersPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        user.isActive ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-                      }`}>
+                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${user.isActive ? "bg-green-50 text-green-700 border border-green-200" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
                         {user.isActive ? "Đang hoạt động" : "Đã vô hiệu"}
                       </span>
                       <p className="mt-1 text-xs text-slate-400">{user.roleName}</p>
@@ -164,61 +134,43 @@ export default function AdminUsersPage() {
                   </button>
                 ))}
               </div>
-              <Pagination
-                currentPage={userPage}
-                totalPages={Math.ceil(users.length / USER_PAGE_SIZE)}
-                onPageChange={setUserPage}
-              />
+              <Pagination currentPage={userPage} totalPages={Math.ceil(users.length / USER_PAGE_SIZE)} onPageChange={setUserPage} />
             </div>
 
-            <div className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-              <h2 className="text-lg font-semibold">Chi tiết</h2>
+            <div className="rounded-lg border border-slate-200 bg-white p-6">
+              <h2 className="text-sm font-bold text-slate-700">Chi tiết</h2>
               {selected ? (
                 <div className="mt-4 space-y-4 text-sm">
                   <div className="flex items-center gap-3">
-                    <div className="h-16 w-16 overflow-hidden rounded-full bg-orange-100">
+                    <div className="h-16 w-16 overflow-hidden rounded-full bg-[var(--primary-container)]">
                       {selected.avatarUrl ? (
-                        <img
-                          src={resolveAvatarUrl(selected.avatarUrl)}
-                          alt={selected.fullName}
-                          className="h-full w-full object-cover"
-                        />
+                        <img src={resolveAvatarUrl(selected.avatarUrl)} alt={selected.fullName} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-orange-500">
-                          {selected.fullName.slice(0, 1).toUpperCase()}
-                        </div>
+                        <div className="flex h-full w-full items-center justify-center text-lg font-bold text-[var(--primary)]">{selected.fullName.slice(0, 1).toUpperCase()}</div>
                       )}
                     </div>
                     <div>
-                      <p className="text-base font-semibold text-slate-800">{selected.fullName}</p>
+                      <p className="text-base font-bold text-slate-800">{selected.fullName}</p>
                       <p className="text-xs text-slate-500">{selected.email}</p>
                     </div>
                   </div>
-                  <div className="rounded-2xl bg-orange-50 px-4 py-3">
-                    <p className="text-xs text-slate-500">Trạng thái</p>
-                    <p className="mt-1 font-semibold">
-                      {selected.isActive ? "Đang hoạt động" : "Đã vô hiệu"}
-                    </p>
-                    <p className="mt-3 text-xs text-slate-500">Xác thực email</p>
-                    <p className="mt-1 font-semibold">
-                      {selected.isEmailVerified ? "Đã xác thực" : "Chưa xác thực"}
-                    </p>
+                  <div className="rounded-lg bg-slate-50 px-4 py-3 border border-slate-100">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Trạng thái</p>
+                    <p className="mt-1 font-semibold">{selected.isActive ? "Đang hoạt động" : "Đã vô hiệu"}</p>
+                    <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Xác thực email</p>
+                    <p className="mt-1 font-semibold">{selected.isEmailVerified ? "Đã xác thực" : "Chưa xác thực"}</p>
                   </div>
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>Vai trò</span>
-                    <span className="font-semibold text-slate-700">{selected.roleName}</span>
+                    <span className="font-bold text-slate-700">{selected.roleName}</span>
                   </div>
-                  <button
-                    onClick={() => handleToggleActive(selected)}
-                    className={`w-full rounded-full px-4 py-2 text-sm font-semibold text-white ${
-                      selected.isActive ? "bg-amber-500" : "bg-green-500"
-                    }`}
-                  >
+                  <button onClick={() => handleToggleActive(selected)}
+                    className={`w-full rounded-full px-4 py-2.5 text-sm font-semibold text-white transition ${selected.isActive ? "bg-amber-500 hover:bg-amber-600" : "bg-green-500 hover:bg-green-600"}`}>
                     {selected.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
                   </button>
                 </div>
               ) : (
-                <p className="mt-4 text-sm text-slate-500">Chọn một tài khoản để xem chi tiết.</p>
+                <p className="mt-4 text-sm text-slate-400">Chọn một tài khoản để xem chi tiết.</p>
               )}
             </div>
           </section>

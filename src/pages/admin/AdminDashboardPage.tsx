@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { logout } from "../../api/services/auth";
 import { fetchAdminDashboard, type AdminDashboardSummary } from "../../api/services/admin";
 import { fetchAnalyticsSummary, type AnalyticsSummary } from "../../api/services/analytics";
@@ -224,6 +225,7 @@ function renderAnalyticsBarChart(values: number[], labels: string[]) {
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [dashboard, setDashboard] = useState<AdminDashboardSummary | null>(null);
@@ -267,17 +269,17 @@ export default function AdminDashboardPage() {
         if (dashboardResult.status === "fulfilled") {
           setDashboard(dashboardResult.value);
         } else {
-          setError("Không thể tải dữ liệu dashboard.");
+          setError(t("Không thể tải dữ liệu dashboard."));
         }
         if (analyticsResult.status === "fulfilled") {
           setAnalytics(analyticsResult.value);
         } else if (dashboardResult.status === "rejected") {
-          setError("Không thể tải dữ liệu dashboard hoặc analytics.");
+          setError(t("Không thể tải dữ liệu dashboard hoặc analytics."));
         }
       })
       .catch(() => {
         if (!isMounted) return;
-        setError("Không thể tải dữ liệu dashboard.");
+        setError(t("Không thể tải dữ liệu dashboard."));
       })
       .finally(() => {
         if (!isMounted) return;
@@ -292,34 +294,34 @@ export default function AdminDashboardPage() {
   const cards = useMemo(
     () => [
       {
-        label: "Người dùng đang hoạt động",
+        label: t("Người dùng đang hoạt động"),
         value: dashboard ? dashboard.userStats.active_users.toString() : loading ? "--" : "0",
-        note: "Số tài khoản đang kích hoạt",
+        note: t("Số tài khoản đang kích hoạt"),
       },
       {
-        label: "Bài đăng chờ duyệt",
+        label: t("Bài đăng chờ duyệt"),
         value: dashboard ? dashboard.listingStats.pending_listings.toString() : loading ? "--" : "0",
-        note: "Bài đăng cần xử lý ngay",
+        note: t("Bài đăng cần xử lý ngay"),
       },
       {
-        label: "Bài đăng bị từ chối",
+        label: t("Bài đăng bị từ chối"),
         value: dashboard ? dashboard.listingStats.rejected_listings.toString() : loading ? "--" : "0",
-        note: "Những bài đăng đã bị từ chối",
+        note: t("Những bài đăng đã bị từ chối"),
       },
       {
-        label: "Tổng bài đăng public từ User",
+        label: t("Tổng bài đăng public từ User"),
         value: dashboard ? dashboard.listingStats.total_listings.toString() : loading ? "--" : "0",
-        note: "Số bài đăng đã được duyệt trong hệ thống",
+        note: t("Số bài đăng đã được duyệt trong hệ thống"),
       },
       {
-        label: "Bài đăng nguồn khác",
+        label: t("Bài đăng nguồn khác"),
         value: dashboard ? dashboard.listingStats.imported_listings.toString() : loading ? "--" : "0",
-        note: "Bài đăng đến từ các nguồn khác",
+        note: t("Bài đăng đến từ các nguồn khác"),
       },
       {
-        label: "Doanh thu hoàn thành",
+        label: t("Doanh thu hoàn thành"),
         value: dashboard ? formatCurrency(dashboard.paymentStats.total_revenue) : loading ? "--" : "0 đ",
-        note: "Tổng doanh thu đã xác nhận",
+        note: t("Tổng doanh thu đã xác nhận"),
       },
     ],
     [dashboard, loading]
@@ -342,226 +344,200 @@ export default function AdminDashboardPage() {
   const areaStats = analytics ? analytics.areaStats : [];
 
   return (
-    <div className="min-h-screen bg-white text-slate-800">
+    <div className="min-h-screen bg-slate-50">
       <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
         <Sidebar activeKey="dashboard" onLogout={async () => {
-          try {
-            await logout();
-          } finally {
-            localStorage.removeItem("access_token");
-            navigate("/");
-          }
+          try { await logout(); } finally { localStorage.removeItem("access_token"); navigate("/"); }
         }} />
 
         <main className="flex-1 space-y-6">
-          <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-orange-500">Bảng điều khiển</p>
-                <h1 className="text-2xl font-bold">Tổng quan quản trị</h1>
-                <p className="mt-1 text-sm text-slate-500">Theo dõi thuận tiện hoạt động bài đăng, nguồn dữ liệu, báo cáo và doanh thu.</p>
-              </div>
-              <button
-                onClick={() => navigate("/")}
-                className="rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-orange-50"
-              >
-                Về trang chủ
-              </button>
+          {/* Header */}
+          <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Bảng điều khiển")}</p>
+              <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>{t("Tổng quan quản trị")}</h1>
+              <p className="mt-1 text-sm text-slate-500">{t("Theo dõi thuận tiện hoạt động bài đăng, nguồn dữ liệu, báo cáo và doanh thu.")}</p>
             </div>
+            <button onClick={() => navigate("/")} className="self-start rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-orange-50">
+              {t("Về trang chủ")}
+            </button>
           </section>
 
           {error && (
-            <section className="rounded-[24px] border border-red-100 bg-white p-4 text-sm text-red-600 shadow-sm">
-              {error}
-            </section>
+            <div className="rounded-lg border border-red-200 bg-white p-4 text-sm text-red-600">{error}</div>
           )}
 
-          <section className="grid gap-6 md:grid-cols-3">
+          {/* Stats Cards */}
+          <section className="grid gap-4 md:grid-cols-3">
             {cards.map((card) => (
-              <div
-                key={card.label}
-                className="rounded-[24px] border border-orange-100 bg-white p-5 shadow-[0_20px_50px_-35px_rgba(255,136,0,0.35)]"
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{card.label}</p>
-                <p className="mt-3 text-3xl font-bold text-slate-800">{card.value}</p>
-                <p className="mt-2 text-sm text-slate-400">{card.note}</p>
+              <div key={card.label} className="rounded-lg border border-slate-200 bg-white border-l-4 border-l-[var(--primary)] px-5 py-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{card.label}</p>
+                <p className="mt-2 text-2xl font-extrabold text-slate-800">{card.value}</p>
+                <p className="mt-1 text-xs text-slate-400">{card.note}</p>
               </div>
             ))}
           </section>
 
-          <section className="grid gap-6">
-            <div className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-              <h2 className="text-lg font-semibold text-slate-800">Doanh thu & Dòng tiền</h2>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Doanh thu 7 ngày</p>
-                  <p className="mt-3 text-2xl font-bold text-slate-800">{dashboard ? formatCurrency(dashboard.paymentStats.revenue_last_7d) : loading ? "--" : "0 đ"}</p>
-                  <p className="mt-2 text-sm text-slate-500">So sánh với tuần trước: {dashboard ? formatCurrency(dashboard.paymentStats.revenue_last_7d - dashboard.paymentStats.revenue_prev_7d) : "--"}</p>
+          {/* Revenue Section */}
+          <section className="space-y-4">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Doanh thu & Dòng tiền")}</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-lg border border-slate-200 bg-white border-l-4 border-l-[var(--primary)] px-5 py-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Doanh thu 7 ngày")}</p>
+                <p className="mt-2 text-xl font-extrabold text-slate-800">{dashboard ? formatCurrency(dashboard.paymentStats.revenue_last_7d) : loading ? "--" : "0 đ"}</p>
+                <p className="mt-1 text-xs text-slate-500">{t("So sánh với tuần trước:")} {dashboard ? formatCurrency(dashboard.paymentStats.revenue_last_7d - dashboard.paymentStats.revenue_prev_7d) : "--"}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-white border-l-4 border-l-[var(--primary)] px-5 py-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Doanh thu 30 ngày")}</p>
+                <p className="mt-2 text-xl font-extrabold text-slate-800">{dashboard ? formatCurrency(dashboard.paymentStats.revenue_last_30d) : loading ? "--" : "0 đ"}</p>
+                <p className="mt-1 text-xs text-slate-500">{t("Số giao dịch hoàn thành:")} {dashboard ? dashboard.paymentStats.completed_transactions : loading ? "--" : "0"}</p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-lg border border-slate-200 bg-white border-l-4 border-l-[var(--primary)] px-5 py-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Doanh thu chờ xác nhận")}</p>
+                <p className="mt-2 text-xl font-extrabold text-[var(--primary)]">{dashboard ? formatCurrency(dashboard.paymentStats.pending_revenue) : loading ? "--" : "0 đ"}</p>
+                <p className="mt-1 text-xs text-slate-500">{t("Giao dịch đang chờ admin xác nhận.")}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-white border-l-4 border-l-[var(--primary)] px-5 py-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Người dùng mới 7 ngày")}</p>
+                <p className="mt-2 text-xl font-extrabold text-slate-800">{dashboard ? dashboard.userStats.new_users_last_7d : loading ? "--" : "0"}</p>
+                <p className="mt-1 text-xs text-slate-500">{t("So sánh tuần trước:")} {dashboard ? dashboard.userStats.new_users_prev_7d : "--"}</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Dòng doanh thu theo ngày")}</p>
+                    <p className="mt-2 text-lg font-extrabold text-slate-800">{dashboard ? formatCurrency(dashboard.revenueTrendWeekly.reduce((sum, item) => sum + item.revenue, 0)) : loading ? "--" : "0 đ"}</p>
+                  </div>
+                  <span className="text-xs text-slate-400">{t("Tháng")} {currentMonth}</span>
                 </div>
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Doanh thu 30 ngày</p>
-                  <p className="mt-3 text-2xl font-bold text-slate-800">{dashboard ? formatCurrency(dashboard.paymentStats.revenue_last_30d) : loading ? "--" : "0 đ"}</p>
-                  <p className="mt-2 text-sm text-slate-500">Số giao dịch hoàn thành: {dashboard ? dashboard.paymentStats.completed_transactions : loading ? "--" : "0"}</p>
+                <div className="relative mt-3 h-40 w-full overflow-hidden rounded-lg bg-slate-50 p-3">
+                  {dashboard ? renderAreaChart(revenueTrendWeeklyValues, filterDailyLabels(dailyLabels), handleAreaHover, handleTooltipLeave) : <div className="h-full w-full bg-slate-100" />}
+                  {areaTooltip && (
+                    <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-md bg-slate-900 px-2.5 py-1.5 text-xs text-white shadow">{areaTooltip}</div>
+                  )}
                 </div>
               </div>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Doanh thu chờ xác nhận</p>
-                  <p className="mt-3 text-2xl font-bold text-slate-800">{dashboard ? formatCurrency(dashboard.paymentStats.pending_revenue) : loading ? "--" : "0 đ"}</p>
-                  <p className="mt-2 text-sm text-slate-500">Giao dịch đang chờ admin xác nhận.</p>
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Dòng doanh thu theo tháng")}</p>
+                    <p className="mt-2 text-lg font-extrabold text-slate-800">{dashboard ? formatCurrency(dashboard.revenueTrendYearly.reduce((sum, item) => sum + item.revenue, 0)) : loading ? "--" : "0 đ"}</p>
+                  </div>
+                  <span className="text-xs text-slate-400">{t("Năm")} {currentYear}</span>
                 </div>
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Người dùng mới 7 ngày</p>
-                  <p className="mt-3 text-2xl font-bold text-slate-800">{dashboard ? dashboard.userStats.new_users_last_7d : loading ? "--" : "0"}</p>
-                  <p className="mt-2 text-sm text-slate-500">So sánh tuần trước: {dashboard ? dashboard.userStats.new_users_prev_7d : "--"}</p>
-                </div>
-              </div>
-              <div className="mt-6 grid gap-4 lg:grid-cols-2">
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Dòng doanh thu theo ngày</p>
-                      <p className="mt-3 text-lg font-bold text-slate-800">{dashboard ? formatCurrency(dashboard.revenueTrendWeekly.reduce((sum, item) => sum + item.revenue, 0)) : loading ? "--" : "0 đ"}</p>
-                    </div>
-                    <span className="text-xs text-slate-500">Tháng {currentMonth}</span>
-                  </div>
-                  <div className="relative mt-4 h-[180px] w-full overflow-hidden rounded-3xl bg-slate-100 p-4">
-                    {dashboard ? renderAreaChart(revenueTrendWeeklyValues, filterDailyLabels(dailyLabels), handleAreaHover, handleTooltipLeave) : <div className="h-full w-full bg-slate-100" />}
-                    {areaTooltip ? (
-                      <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-xl bg-slate-900 px-3 py-2 text-xs text-white shadow-lg">
-                        {areaTooltip}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Dòng doanh thu theo tháng</p>
-                      <p className="mt-3 text-lg font-bold text-slate-800">{dashboard ? formatCurrency(dashboard.revenueTrendYearly.reduce((sum, item) => sum + item.revenue, 0)) : loading ? "--" : "0 đ"}</p>
-                    </div>
-                    <span className="text-xs text-slate-500">Năm {currentYear}</span>
-                  </div>
-                  <div className="relative mt-4 h-[180px] w-full overflow-hidden rounded-3xl bg-slate-100 p-4">
-                    {dashboard ? renderAreaChart(revenueTrendYearlyValues, monthlyLabels, handleAreaMonthlyHover, handleTooltipLeave) : <div className="h-full w-full bg-slate-100" />}
-                    {areaMonthlyTooltip ? (
-                      <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-xl bg-slate-900 px-3 py-2 text-xs text-white shadow-lg">
-                        {areaMonthlyTooltip}
-                      </div>
-                    ) : null}
-                  </div>
+                <div className="relative mt-3 h-40 w-full overflow-hidden rounded-lg bg-slate-50 p-3">
+                  {dashboard ? renderAreaChart(revenueTrendYearlyValues, monthlyLabels, handleAreaMonthlyHover, handleTooltipLeave) : <div className="h-full w-full bg-slate-100" />}
+                  {areaMonthlyTooltip && (
+                    <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-md bg-slate-900 px-2.5 py-1.5 text-xs text-white shadow">{areaMonthlyTooltip}</div>
+                  )}
                 </div>
               </div>
-              <div className="mt-6 grid gap-4 lg:grid-cols-2">
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Người dùng mới theo ngày</p>
-                      <p className="mt-3 text-lg font-bold text-slate-800">{dashboard ? dashboard.userGrowthWeekly.reduce((sum, item) => sum + item.new_users, 0) : loading ? "--" : "0"}</p>
-                    </div>
-                    <span className="text-xs text-slate-500">Tháng {currentMonth}</span>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Người dùng mới theo ngày")}</p>
+                    <p className="mt-2 text-lg font-extrabold text-slate-800">{dashboard ? dashboard.userGrowthWeekly.reduce((sum, item) => sum + item.new_users, 0) : loading ? "--" : "0"}</p>
                   </div>
-                  <div className="relative mt-4 h-[180px] w-full overflow-hidden rounded-3xl bg-slate-100 p-4">
-                    {dashboard ? renderAreaChart(userGrowthWeeklyValues, filterDailyLabels(dailyLabels), handleBarHover, handleTooltipLeave) : <div className="h-full w-full bg-slate-100" />}
-                    {barTooltip ? (
-                      <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-xl bg-slate-900 px-3 py-2 text-xs text-white shadow-lg">
-                        {barTooltip}
-                      </div>
-                    ) : null}
-                  </div>
+                  <span className="text-xs text-slate-400">{t("Tháng")} {currentMonth}</span>
                 </div>
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Người dùng mới theo tháng</p>
-                      <p className="mt-3 text-lg font-bold text-slate-800">{dashboard ? dashboard.userGrowthYearly.reduce((sum, item) => sum + item.new_users, 0) : loading ? "--" : "0"}</p>
-                    </div>
-                    <span className="text-xs text-slate-500">Năm {currentYear}</span>
+                <div className="relative mt-3 h-40 w-full overflow-hidden rounded-lg bg-slate-50 p-3">
+                  {dashboard ? renderAreaChart(userGrowthWeeklyValues, filterDailyLabels(dailyLabels), handleBarHover, handleTooltipLeave) : <div className="h-full w-full bg-slate-100" />}
+                  {barTooltip && (
+                    <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-md bg-slate-900 px-2.5 py-1.5 text-xs text-white shadow">{barTooltip}</div>
+                  )}
+                </div>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Người dùng mới theo tháng")}</p>
+                    <p className="mt-2 text-lg font-extrabold text-slate-800">{dashboard ? dashboard.userGrowthYearly.reduce((sum, item) => sum + item.new_users, 0) : loading ? "--" : "0"}</p>
                   </div>
-                  <div className="relative mt-4 h-[180px] w-full overflow-hidden rounded-3xl bg-slate-100 p-4">
-                    {dashboard ? renderBarChart(userGrowthYearlyValues, monthlyLabels, handleBarMonthlyHover, handleTooltipLeave) : <div className="h-full w-full bg-slate-100" />}
-                    {barMonthlyTooltip ? (
-                      <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-xl bg-slate-900 px-3 py-2 text-xs text-white shadow-lg">
-                        {barMonthlyTooltip}
-                      </div>
-                    ) : null}
-                  </div>
+                  <span className="text-xs text-slate-400">{t("Năm")} {currentYear}</span>
+                </div>
+                <div className="relative mt-3 h-40 w-full overflow-hidden rounded-lg bg-slate-50 p-3">
+                  {dashboard ? renderBarChart(userGrowthYearlyValues, monthlyLabels, handleBarMonthlyHover, handleTooltipLeave) : <div className="h-full w-full bg-slate-100" />}
+                  {barMonthlyTooltip && (
+                    <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-md bg-slate-900 px-2.5 py-1.5 text-xs text-white shadow">{barMonthlyTooltip}</div>
+                  )}
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-orange-500">Analytics Users</p>
-                <h2 className="text-lg font-semibold text-slate-800">Phân tích hành vi và hiệu suất đăng tin</h2>
-              </div>
+          {/* Analytics Section */}
+          <section className="space-y-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Analytics Users")}</p>
+              <h2 className="mt-1 text-lg font-bold text-slate-800" style={{ fontFamily: "var(--font-main)" }}>{t("Phân tích hành vi và hiệu suất đăng tin")}</h2>
             </div>
 
-            <div className="mt-6 grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
-              <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                <div className="flex items-center justify-between gap-3">
+            <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Số người hoạt động theo tháng</p>
-                    <p className="mt-2 text-2xl font-bold text-slate-800">{analytics ? analytics.activeUsersByMonth.reduce((sum, item) => sum + item.activeUsers, 0) : loading ? "--" : "0"}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Số người hoạt động theo tháng")}</p>
+                    <p className="mt-2 text-2xl font-extrabold text-slate-800">{analytics ? analytics.activeUsersByMonth.reduce((sum, item) => sum + item.activeUsers, 0) : loading ? "--" : "0"}</p>
                   </div>
-                  <span className="text-sm font-semibold text-slate-500">Năm 2026</span>
+                  <span className="text-xs text-slate-400">{t("Năm")} 2026</span>
                 </div>
                 {renderAnalyticsBarChart(analyticsActiveUsers, analyticsMonths)}
               </div>
 
               <div className="grid gap-4">
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tổng lượt xem chi tiết bài đăng</p>
-                  <p className="mt-3 text-2xl font-bold text-slate-800">{analytics ? analytics.totals.detailViewCount : loading ? "--" : "0"}</p>
+                <div className="rounded-lg border border-slate-200 bg-white border-l-4 border-l-[var(--primary)] px-5 py-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Tổng lượt xem chi tiết bài đăng")}</p>
+                  <p className="mt-2 text-xl font-extrabold text-slate-800">{analytics ? analytics.totals.detailViewCount : loading ? "--" : "0"}</p>
                 </div>
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tổng lượt click Zalo button</p>
-                  <p className="mt-3 text-2xl font-bold text-slate-800">{analytics ? analytics.totals.zaloClickCount : loading ? "--" : "0"}</p>
+                <div className="rounded-lg border border-slate-200 bg-white border-l-4 border-l-[var(--primary)] px-5 py-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Tổng lượt click Zalo button")}</p>
+                  <p className="mt-2 text-xl font-extrabold text-slate-800">{analytics ? analytics.totals.zaloClickCount : loading ? "--" : "0"}</p>
                 </div>
-                <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tổng click Phone button</p>
-                  <p className="mt-3 text-2xl font-bold text-slate-800">{analytics ? analytics.totals.phoneClickCount : loading ? "--" : "0"}</p>
+                <div className="rounded-lg border border-slate-200 bg-white border-l-4 border-l-[var(--primary)] px-5 py-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("Tổng click Phone button")}</p>
+                  <p className="mt-2 text-xl font-extrabold text-slate-800">{analytics ? analytics.totals.phoneClickCount : loading ? "--" : "0"}</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                <h3 className="text-sm font-semibold text-slate-800">Top bài đăng nổi bật</h3>
-                <div className="mt-4 overflow-x-auto">
-                  <div className="max-h-[18rem] overflow-y-auto rounded-xl border border-slate-200 bg-white">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <h3 className="text-sm font-bold text-slate-700">{t("Top bài đăng nổi bật")}</h3>
+                <div className="mt-3 overflow-x-auto">
+                  <div className="max-h-[18rem] overflow-y-auto rounded-lg border border-slate-100">
                     <table className="min-w-full text-left text-sm">
                       <thead className="sticky top-0 z-10 bg-white">
-                        <tr className="border-b border-slate-200 text-slate-500">
-                          <th className="px-3 py-2 pr-3">Bài đăng</th>
-                          <th className="px-3 py-2 pr-3">View</th>
-                          <th className="px-3 py-2 pr-3">Phone</th>
-                          <th className="px-3 py-2">Zalo</th>
+                        <tr className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                          <th className="px-3 py-2">{t("Bài đăng")}</th>
+                          <th className="px-3 py-2">{t("View")}</th>
+                          <th className="px-3 py-2">{t("Phone")}</th>
+                          <th className="px-3 py-2">{t("Zalo")}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {topListings.length > 0 ? topListings.map((listing) => (
-                          <tr key={listing.id} className="border-b border-slate-100 last:border-0">
-                            <td className="px-3 py-2 pr-3">
-                              <button
-                                type="button"
-                                onClick={() => navigate(`/listings/${listing.id}`)}
-                                className="text-left font-semibold text-slate-700 transition hover:text-orange-600"
-                              >
+                          <tr key={listing.id} className="border-b border-slate-50 last:border-0">
+                            <td className="px-3 py-2">
+                              <button type="button" onClick={() => navigate(`/listings/${listing.id}`)}
+                                className="text-left font-semibold text-slate-700 transition hover:text-[var(--primary)]">
                                 {listing.title}
                               </button>
-                              <div className="text-xs text-slate-500">{listing.district || "—"}</div>
+                              <div className="text-[11px] text-slate-400">{listing.district || "—"}</div>
                             </td>
-                            <td className="px-3 py-2 pr-3">{listing.detailViewCount}</td>
-                            <td className="px-3 py-2 pr-3">{listing.phoneClickCount}</td>
-                            <td className="px-3 py-2">{listing.zaloClickCount}</td>
+                            <td className="px-3 py-2 text-slate-600">{listing.detailViewCount}</td>
+                            <td className="px-3 py-2 text-slate-600">{listing.phoneClickCount}</td>
+                            <td className="px-3 py-2 text-slate-600">{listing.zaloClickCount}</td>
                           </tr>
                         )) : (
-                          <tr>
-                            <td colSpan={4} className="px-3 py-3 text-slate-500">Chưa có dữ liệu tracking</td>
-                          </tr>
+                          <tr><td colSpan={4} className="px-3 py-3 text-center text-slate-400 text-xs">{t("Chưa có dữ liệu tracking")}</td></tr>
                         )}
                       </tbody>
                     </table>
@@ -569,30 +545,28 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                <h3 className="text-sm font-semibold text-slate-800">Thống kê theo khu vực</h3>
-                <div className="mt-4 overflow-x-auto">
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <h3 className="text-sm font-bold text-slate-700">{t("Thống kê theo khu vực")}</h3>
+                <div className="mt-3 overflow-x-auto">
                   <table className="min-w-full text-left text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200 text-slate-500">
-                        <th className="pb-2 pr-3">Khu vực</th>
-                        <th className="pb-2 pr-3">Số lần lọc</th>
-                        <th className="pb-2 pr-3">Click bài</th>
-                        <th className="pb-2">Bài đăng</th>
+                      <tr className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <th className="pb-2 pr-3">{t("Khu vực")}</th>
+                        <th className="pb-2 pr-3">{t("Lọc")}</th>
+                        <th className="pb-2 pr-3">{t("Click")}</th>
+                        <th className="pb-2">{t("Bài")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {areaStats.length > 0 ? areaStats.map((area) => (
-                        <tr key={area.district} className="border-b border-slate-100 last:border-0">
+                        <tr key={area.district} className="border-b border-slate-50 last:border-0">
                           <td className="py-2 pr-3 font-semibold text-slate-700">{area.district}</td>
-                          <td className="py-2 pr-3">{area.filterCount}</td>
-                          <td className="py-2 pr-3">{area.detailClickCount}</td>
-                          <td className="py-2">{area.listingCount}</td>
+                          <td className="py-2 pr-3 text-slate-600">{area.filterCount}</td>
+                          <td className="py-2 pr-3 text-slate-600">{area.detailClickCount}</td>
+                          <td className="py-2 text-slate-600">{area.listingCount}</td>
                         </tr>
                       )) : (
-                        <tr>
-                          <td colSpan={4} className="py-3 text-slate-500">Chưa có dữ liệu khu vực</td>
-                        </tr>
+                        <tr><td colSpan={4} className="py-3 text-center text-slate-400 text-xs">{t("Chưa có dữ liệu khu vực")}</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -600,131 +574,111 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                <h3 className="text-sm font-semibold text-slate-800">Tỷ lệ click bài đăng được đề xuất và bài thường</h3>
-                <div className="mt-4 space-y-3 text-sm text-slate-600">
-                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
-                    <span>Đề xuất</span>
-                    <span className="font-semibold text-slate-800">{analytics ? analytics.recommendationStats.recommendedClicks : 0}</span>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <h3 className="text-sm font-bold text-slate-700">{t("Tỷ lệ click bài đăng được đề xuất và bài thường")}</h3>
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                    <span className="text-sm text-slate-600">{t("Đề xuất")}</span>
+                    <span className="text-sm font-bold text-slate-800">{analytics ? analytics.recommendationStats.recommendedClicks : 0}</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
-                    <span>Bình thường</span>
-                    <span className="font-semibold text-slate-800">{analytics ? analytics.recommendationStats.normalClicks : 0}</span>
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                    <span className="text-sm text-slate-600">{t("Bình thường")}</span>
+                    <span className="text-sm font-bold text-slate-800">{analytics ? analytics.recommendationStats.normalClicks : 0}</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
-                    <span>Tỷ lệ đề xuất</span>
-                    <span className="font-semibold text-orange-700">{analytics ? `${Math.round(analytics.recommendationStats.recommendedRate * 100)}%` : "0%"}</span>
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                    <span className="text-sm text-slate-600">{t("Tỷ lệ đề xuất")}</span>
+                    <span className="text-sm font-bold text-[var(--primary)]">{analytics ? `${Math.round(analytics.recommendationStats.recommendedRate * 100)}%` : "0%"}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-[20px] border border-slate-100 bg-slate-50 p-5">
-                <h3 className="text-sm font-semibold text-slate-800">Số lần cập nhật Hồ sơ lối sống và Bộ lọc mềm</h3>
-                <div className="mt-4 space-y-3 text-sm text-slate-600">
-                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
-                    <span>Hồ sơ lối sống</span>
-                    <span className="font-semibold text-slate-800">{analytics ? analytics.updates.lifestyleProfileUpdates : 0}</span>
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <h3 className="text-sm font-bold text-slate-700">{t("Số lần cập nhật Hồ sơ lối sống và Bộ lọc mềm")}</h3>
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                    <span className="text-sm text-slate-600">{t("Hồ sơ lối sống")}</span>
+                    <span className="text-sm font-bold text-slate-800">{analytics ? analytics.updates.lifestyleProfileUpdates : 0}</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
-                    <span>Bộ lọc mềm</span>
-                    <span className="font-semibold text-slate-800">{analytics ? analytics.updates.softFilterUpdates : 0}</span>
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                    <span className="text-sm text-slate-600">{t("Bộ lọc mềm")}</span>
+                    <span className="text-sm font-bold text-slate-800">{analytics ? analytics.updates.softFilterUpdates : 0}</span>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="grid gap-6">
-            <div className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-800">Giao dịch mới</h2>
-                <button
-                  onClick={() => navigate("/admin/payments")}
-                  className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700 hover:bg-orange-100"
-                >
-                  Xem chi tiết
-                </button>
-              </div>
-              <div className="mt-4 space-y-3">
-                {dashboard && dashboard.recentPayments.length > 0 ? (
-                  dashboard.recentPayments.map((payment) => (
-                    <div key={payment.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800">{payment.code || "Không có mã"}</p>
-                          <p className="text-xs text-slate-500">{payment.package_name} • 
-                            <span className={`inline-block ml-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                              payment.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                              payment.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                              payment.status === 'FAILED' ? 'bg-red-100 text-red-700' :
-                              'bg-slate-100 text-slate-700'
-                            }`}>
-                              {payment.status}
-                            </span>
-                          </p>
-                        </div>
-                        <span className="font-semibold text-orange-700">{formatCurrency(payment.amount)}</span>
-                      </div>
-                      <p className="mt-2 text-xs text-slate-500">{payment.listing_title || "Bài đăng không xác định"}</p>
-                    </div>
-                  ))
-                ) : dashboard ? (
-                  <p className="text-sm text-slate-500">Không có giao dịch gần đây.</p>
-                ) : (
-                  <p className="text-sm text-slate-500">Đang tải...</p>
-                )}
-              </div>
+          {/* Recent Transactions */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Giao dịch mới")}</h2>
+              <button onClick={() => navigate("/admin/payments")}
+                className="rounded-full bg-orange-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[var(--primary)] hover:bg-orange-100 transition">
+                {t("Xem chi tiết")}
+              </button>
             </div>
-
-            <div className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-800">Báo cáo mới</h2>
-                <button
-                  onClick={() => navigate("/admin/reports")}
-                  className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700 hover:bg-orange-100"
-                >
-                  Xem chi tiết
-                </button>
-              </div>
-              <div className="mt-4 space-y-3">
-                {dashboard && dashboard.recentReports.length > 0 ? (
-                  dashboard.recentReports.map((report) => (
-                    <div key={report.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-slate-800">{report.listing_title || "Bài đăng"}</p>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
-                          report.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                          report.status === 'REJECTED' ? 'bg-slate-100 text-slate-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {report.status}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-xs text-slate-500">{report.reason}</p>
-                      <p className="mt-2 text-xs text-slate-500">{report.reporter_name || report.reporter_email || "Người dùng ẩn"}</p>
+            <div className="space-y-3">
+              {dashboard && dashboard.recentPayments.length > 0 ? (
+                dashboard.recentPayments.map((payment) => (
+                  <div key={payment.id} className="rounded-lg border border-slate-200 bg-white px-5 py-3.5 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <span className="text-sm font-bold text-slate-700 whitespace-nowrap">{payment.code || "—"}</span>
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                        payment.status === 'COMPLETED' ? 'bg-green-50 text-green-700 border border-green-200' :
+                        payment.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        'bg-red-50 text-red-700 border border-red-200'
+                      }`}>{payment.status}</span>
+                      <span className="hidden sm:inline text-xs text-slate-500 truncate">{payment.listing_title || t("Bài đăng")}</span>
                     </div>
-                  ))
-                ) : dashboard ? (
-                  <p className="text-sm text-slate-500">Không có báo cáo mới.</p>
-                ) : (
-                  <p className="text-sm text-slate-500">Đang tải...</p>
-                )}
-              </div>
+                    <span className="text-sm font-bold text-[var(--primary)] whitespace-nowrap">{formatCurrency(payment.amount)}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-400">{loading ? t("Đang tải...") : t("Không có giao dịch gần đây.")}</p>
+              )}
             </div>
           </section>
 
-          <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-            <h2 className="text-lg font-semibold text-slate-800">Yêu cầu nhanh</h2>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {/* Recent Reports */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Báo cáo mới")}</h2>
+              <button onClick={() => navigate("/admin/reports")}
+                className="rounded-full bg-orange-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[var(--primary)] hover:bg-orange-100 transition">
+                {t("Xem chi tiết")}
+              </button>
+            </div>
+            <div className="space-y-3">
+              {dashboard && dashboard.recentReports.length > 0 ? (
+                dashboard.recentReports.map((report) => (
+                  <div key={report.id} className="rounded-lg border border-slate-200 bg-white px-5 py-3.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-bold text-slate-700 truncate">{report.listing_title || t("Bài đăng")}</span>
+                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                        report.status === 'RESOLVED' ? 'bg-green-50 text-green-700 border border-green-200' :
+                        report.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        'bg-slate-50 text-slate-600 border border-slate-200'
+                      }`}>{report.status}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">{report.reason}</p>
+                    <p className="mt-0.5 text-xs text-slate-400">{report.reporter_name || report.reporter_email || t("Người dùng ẩn")}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-400">{loading ? t("Đang tải...") : t("Không có báo cáo mới.")}</p>
+              )}
+            </div>
+          </section>
+
+          {/* Quick Actions */}
+          <section className="space-y-4">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Yêu cầu nhanh")}</h2>
+            <div className="grid gap-3 md:grid-cols-3">
               {quickLinks.map((link) => (
-                <button
-                  key={link.title}
-                  onClick={() => navigate(link.path)}
-                  className="rounded-[18px] border border-orange-100 bg-orange-50/40 px-4 py-4 text-left transition hover:-translate-y-0.5 hover:shadow-[0_15px_40px_-30px_rgba(255,115,0,0.4)]"
-                >
-                  <p className="text-sm font-semibold text-slate-800">{link.title}</p>
+                <button key={link.title} onClick={() => navigate(link.path)}
+                  className="rounded-lg border border-slate-200 bg-white border-t-2 border-t-[var(--primary)] px-4 py-4 text-left transition hover:-translate-y-0.5 hover:shadow-md">
+                  <p className="text-sm font-bold text-slate-800">{link.title}</p>
                   <p className="mt-1 text-xs text-slate-500">{link.description}</p>
                 </button>
               ))}

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPinned, Heart, Shield, MessageCircle, Lock, ChevronRight, Zap, DollarSign, User, Sparkles, MapPin } from "lucide-react";
@@ -8,22 +9,6 @@ import { PRICE_OPTIONS } from "./listingRangeOptions";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-const GENDER_OPTIONS = [
-  { id: "all", label: "Tất cả" },
-  { id: "FEMALE", label: "Nữ" },
-  { id: "MALE", label: "Nam" },
-  { id: "ANY", label: "Nam/Nữ" },
-];
-
-const INTEREST_OPTIONS = [
-  { id: "all", label: "Tất cả" },
-  { id: "clean", label: "Sạch sẽ" },
-  { id: "quiet", label: "Yên tĩnh" },
-  { id: "pet", label: "Thú cưng OK" },
-  { id: "cooking", label: "Nấu ăn" },
-  { id: "social", label: "Thân thiện" },
-];
-
 function formatPrice(price: number) {
   if (price >= 1000000) {
     const tr = price / 1000000;
@@ -33,6 +18,21 @@ function formatPrice(price: number) {
 }
 
 export default function HomePage() {
+  const { t } = useTranslation();
+  const GENDER_OPTIONS = [
+    { id: "all", label: t("Tất cả") },
+    { id: "FEMALE", label: t("Nữ") },
+    { id: "MALE", label: t("Nam") },
+    { id: "ANY", label: t("Nam/Nữ") },
+  ];
+  const INTEREST_OPTIONS = [
+    { id: "all", label: t("Tất cả") },
+    { id: "clean", label: t("Sạch sẽ") },
+    { id: "quiet", label: t("Yên tĩnh") },
+    { id: "pet", label: t("Thú cưng OK") },
+    { id: "cooking", label: t("Nấu ăn") },
+    { id: "social", label: t("Thân thiện") },
+  ];
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [listings, setListings] = useState<Listing[]>([]);
@@ -67,7 +67,7 @@ export default function HomePage() {
     }
 
     if (errorParam) {
-      setError(errorParam === "inactive" ? "Tài khoản đã bị vô hiệu hóa." : "Đăng nhập Google thất bại.");
+      setError(errorParam === "inactive" ? t("Tài khoản đã bị vô hiệu hóa.") : t("Đăng nhập Google thất bại."));
       navigate("/", { replace: true });
     }
   }, [navigate]);
@@ -120,8 +120,8 @@ export default function HomePage() {
 
     // Area detection
     const areaMap: Record<string, string> = {
-      "quận 1": "quan1", "q1": "quan1", "quận 2": "quan2", "q2": "quan2",
-      "quận 3": "quan3", "q3": "quan3", "quận 7": "quan7", "q7": "quan7",
+      "quận 2": "quan2", "q2": "quan2",
+      "quận 9": "quan9", "q9": "quan9",
       "thủ đức": "thuduc", "thu duc": "thuduc",
     };
     for (const [kw, val] of Object.entries(areaMap)) {
@@ -215,7 +215,7 @@ export default function HomePage() {
     if (finalArea !== "all") params.set("area", finalArea);
 
     if (params.toString() === "") {
-      setError("Vui lòng chọn bộ lọc hoặc nhập thông tin tìm kiếm.");
+      setError(t("Vui lòng chọn bộ lọc hoặc nhập thông tin tìm kiếm."));
       return;
     }
 
@@ -237,20 +237,18 @@ export default function HomePage() {
   };
 
   const getLabel = (options: Array<{ id: string; label: string }>, value: string) => {
-    return options.find((o) => o.id === value)?.label || "Tất cả";
+    return options.find((o) => o.id === value)?.label || t("Tất cả");
   };
 
   const chips = [
-    { key: "price", icon: <DollarSign className="h-3.5 w-3.5" />, label: "Khoảng giá", value: selectedPrice, options: PRICE_OPTIONS, set: setSelectedPrice },
-    { key: "gender", icon: <User className="h-3.5 w-3.5" />, label: "Giới tính", value: selectedGender, options: GENDER_OPTIONS, set: setSelectedGender },
-    { key: "interest", icon: <Sparkles className="h-3.5 w-3.5" />, label: "Sở thích", value: selectedInterest, options: INTEREST_OPTIONS, set: setSelectedInterest },
-    { key: "area", icon: <MapPin className="h-3.5 w-3.5" />, label: "Khu vực", value: selectedArea, options: [
-      { id: "all", label: "Tất cả" },
-      { id: "quan1", label: "Quận 1" },
-      { id: "quan2", label: "Quận 2" },
-      { id: "quan3", label: "Quận 3" },
-      { id: "quan7", label: "Quận 7" },
-      { id: "thuduc", label: "Thủ Đức" },
+    { key: "price", icon: <DollarSign className="h-3.5 w-3.5" />, label: t("Khoảng giá"), value: selectedPrice, options: PRICE_OPTIONS, set: setSelectedPrice },
+    { key: "gender", icon: <User className="h-3.5 w-3.5" />, label: t("Giới tính"), value: selectedGender, options: GENDER_OPTIONS, set: setSelectedGender },
+    { key: "interest", icon: <Sparkles className="h-3.5 w-3.5" />, label: t("Sở thích"), value: selectedInterest, options: INTEREST_OPTIONS, set: setSelectedInterest },
+    { key: "area", icon: <MapPin className="h-3.5 w-3.5" />, label: t("Khu vực"), value: selectedArea, options: [
+      { id: "all", label: t("Tất cả") },
+      { id: "quan2", label: t("Quận 2") },
+      { id: "quan9", label: t("Quận 9") },
+      { id: "thuduc", label: t("Thủ Đức") },
     ], set: setSelectedArea },
   ];
 
@@ -271,11 +269,11 @@ export default function HomePage() {
         <section className="bg-gradient-to-b from-[#FFF8F0] to-white px-6 pb-10 pt-12 text-center md:pt-16">
           <div className="mx-auto max-w-[720px]">
             <h1 className="text-2xl font-extrabold leading-tight text-[var(--on-surface)] md:text-4xl" style={{ fontFamily: "var(--font-main)" }}>
-              Tìm bạn cùng phòng <span className="text-[var(--primary)]">lý tưởng</span><br />
-              cho không gian sống của bạn
+              {t("Tìm bạn cùng phòng")} <span className="text-[var(--primary)]">{t("lý tưởng")}</span><br />
+              {t("cho không gian sống của bạn")}
             </h1>
             <p className="mx-auto mt-4 max-w-lg text-sm text-slate-500 md:text-base">
-              Kết nối với những người có cùng phong cách sống, sở thích và ngân sách. An toàn, tin cậy và hoàn toàn miễn phí.
+              {t("Kết nối với những người có cùng phong cách sống, sở thích và ngân sách. An toàn, tin cậy và hoàn toàn miễn phí.")}
             </p>
           </div>
 
@@ -289,7 +287,7 @@ export default function HomePage() {
                   value={searchQuery}
                   onChange={(e) => { setSearchQuery(e.target.value); setError(""); }}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  placeholder="Bạn muốn sống ở khu vực nào?"
+                  placeholder={t("Bạn muốn sống ở khu vực nào?")}
                   className="w-full bg-transparent py-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
                 />
               </div>
@@ -297,7 +295,7 @@ export default function HomePage() {
                 onClick={handleSearch}
                 className="bg-[var(--primary)] px-8 text-sm font-bold text-white transition hover:opacity-90"
               >
-                Tìm kiếm
+                {t("Tìm kiếm")}
               </button>
             </div>
           </div>
@@ -349,15 +347,15 @@ export default function HomePage() {
           <div className="flex items-end justify-between">
             <div>
               <h2 className="text-xl font-extrabold text-[var(--on-surface)] md:text-2xl" style={{ fontFamily: "var(--font-main)" }}>
-                Phòng ở ghép nổi bật
+                {t("Phòng ở ghép nổi bật")}
               </h2>
-              <p className="mt-1 text-sm text-slate-500">Khám phá những không gian sống tuyệt vời nhất tuần này</p>
+              <p className="mt-1 text-sm text-slate-500">{t("Khám phá những không gian sống tuyệt vời nhất tuần này")}</p>
             </div>
             <button
               onClick={() => navigate("/listings")}
               className="hidden items-center gap-1 text-sm font-semibold text-[var(--primary)] transition hover:underline sm:flex"
             >
-              Xem tất cả <ChevronRight className="h-4 w-4" />
+              {t("Xem tất cả")} <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
@@ -377,10 +375,10 @@ export default function HomePage() {
                   <div className="relative h-48 overflow-hidden bg-slate-100">
                     <img src={thumbnail} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-emerald-600 backdrop-blur-sm">
-                      <Shield className="h-3 w-3" /> Đã xác thực
+                      <Shield className="h-3 w-3" /> {t("Đã xác thực")}
                     </span>
                     <span className="absolute bottom-3 right-3 rounded-full bg-[var(--primary)] px-2.5 py-1 text-xs font-bold text-white">
-                      {formatPrice(listing.rentPrice)}<span className="text-[10px] font-medium">/tháng</span>
+                      {formatPrice(listing.rentPrice)}<span className="text-[10px] font-medium">{t("/tháng")}</span>
                     </span>
                   </div>
 
@@ -390,7 +388,7 @@ export default function HomePage() {
                     </h3>
                     <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
                       <MapPinned className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
-                      {location || "Chưa cập nhật"}
+                      {location || t("Chưa cập nhật")}
                     </p>
 
                     {listing.amenities && listing.amenities.length > 0 && (
@@ -413,7 +411,7 @@ export default function HomePage() {
                           </div>
                         )}
                         <div>
-                          <p className="text-xs font-bold text-slate-700">{listing.ownerName || "Chủ phòng"}</p>
+                          <p className="text-xs font-bold text-slate-700">{listing.ownerName || t("Chủ phòng")}</p>
                         </div>
                       </div>
                       <button
@@ -435,7 +433,7 @@ export default function HomePage() {
             onClick={() => navigate("/listings")}
             className="mt-6 flex w-full items-center justify-center gap-1 rounded-full border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 sm:hidden"
           >
-            Xem tất cả <ChevronRight className="h-4 w-4" />
+            {t("Xem tất cả")} <ChevronRight className="h-4 w-4" />
           </button>
         </section>
 
@@ -443,7 +441,7 @@ export default function HomePage() {
         <section className="bg-[var(--surface)] px-6 py-12 md:py-16">
           <div className="mx-auto max-w-[1200px]">
             <h2 className="text-center text-xl font-extrabold text-[var(--on-surface)] md:text-2xl" style={{ fontFamily: "var(--font-main)" }}>
-              Tại sao chọn Roomie?
+              {t("Tại sao chọn Roomie?")}
             </h2>
 
             <div className="mt-8 grid gap-5 md:grid-cols-2">
@@ -452,9 +450,9 @@ export default function HomePage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20">
                   <Shield className="h-6 w-6" />
                 </div>
-                <h3 className="mt-5 text-xl font-bold" style={{ fontFamily: "var(--font-main)" }}>Hồ sơ đã xác minh</h3>
+                <h3 className="mt-5 text-xl font-bold" style={{ fontFamily: "var(--font-main)" }}>{t("Hồ sơ đã xác minh")}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-white/80">
-                  Chúng tôi kiểm duyệt mọi người dùng và bài đăng để đảm bảo an toàn tuyệt đối cho cộng đồng.
+                  {t("Chúng tôi kiểm duyệt mọi người dùng và bài đăng để đảm bảo an toàn tuyệt đối cho cộng đồng.")}
                 </p>
               </div>
 
@@ -466,8 +464,8 @@ export default function HomePage() {
                       <Zap className="h-5 w-5 text-[var(--primary)]" />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>Ghép đôi thông minh</h3>
-                      <p className="mt-1 text-sm text-slate-500">Thuật toán dựa trên thói quen sinh hoạt và sở thích cá nhân.</p>
+                      <h3 className="text-base font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>{t("Ghép đôi thông minh")}</h3>
+                      <p className="mt-1 text-sm text-slate-500">{t("Thuật toán dựa trên thói quen sinh hoạt và sở thích cá nhân.")}</p>
                     </div>
                   </div>
                 </div>
@@ -478,8 +476,8 @@ export default function HomePage() {
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--primary-container)]">
                       <MessageCircle className="h-5 w-5 text-[var(--primary)]" />
                     </div>
-                    <h3 className="mt-3 text-sm font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>Trò chuyện trực tiếp</h3>
-                    <p className="mt-1 text-xs text-slate-500">Kết nối ngay không cần trung gian.</p>
+                    <h3 className="mt-3 text-sm font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>{t("Trò chuyện trực tiếp")}</h3>
+                    <p className="mt-1 text-xs text-slate-500">{t("Kết nối ngay không cần trung gian.")}</p>
                   </div>
 
                   {/* Bảo mật dữ liệu */}
@@ -487,8 +485,8 @@ export default function HomePage() {
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--primary-container)]">
                       <Lock className="h-5 w-5 text-[var(--primary)]" />
                     </div>
-                    <h3 className="mt-3 text-sm font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>Bảo mật dữ liệu</h3>
-                    <p className="mt-1 text-xs text-slate-500">Thông tin của bạn luôn được ẩn cho đến khi bạn đồng ý.</p>
+                    <h3 className="mt-3 text-sm font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>{t("Bảo mật dữ liệu")}</h3>
+                    <p className="mt-1 text-xs text-slate-500">{t("Thông tin của bạn luôn được ẩn cho đến khi bạn đồng ý.")}</p>
                   </div>
                 </div>
               </div>

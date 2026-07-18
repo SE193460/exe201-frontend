@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Lightbulb, Home, Users } from "lucide-react";
 import UserShell from "../layouts/UserShell";
@@ -8,6 +9,7 @@ import { PROFILE_OPTIONS } from "./lifestyleOptions";
 import { trackEvent } from "../api/services/analytics";
 
 export default function LifestyleProfilePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [form, setForm] = useState<LifestyleProfile>({});
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,7 @@ export default function LifestyleProfilePage() {
   useEffect(() => {
     fetchLifestyleProfile()
       .then((profile) => setForm(profile || {}))
-      .catch(() => setError("Không thể tải hồ sơ lối sống."))
+      .catch(() => setError(t("Không thể tải hồ sơ lối sống.")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -56,10 +58,10 @@ export default function LifestyleProfilePage() {
       const saved = await updateLifestyleProfile(form);
       setForm(saved);
       trackEvent({ eventName: "lifestyle_profile_updated" });
-      setStatus("Đã lưu hồ sơ lối sống.");
+      setStatus(t("Đã lưu hồ sơ lối sống."));
       navigate("/soft-filter");
     } catch {
-      setError("Lưu hồ sơ thất bại. Vui lòng thử lại.");
+      setError(t("Lưu hồ sơ thất bại. Vui lòng thử lại."));
     } finally {
       setSaving(false);
     }
@@ -83,13 +85,13 @@ export default function LifestyleProfilePage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h1 className="text-2xl font-extrabold text-[var(--on-surface)] md:text-3xl" style={{ fontFamily: "var(--font-main)" }}>
-                Hồ sơ lối sống
+                {t("Hồ sơ lối sống")}
               </h1>
               <p className="mt-1 text-sm text-slate-500">
-                Điền thông tin để hệ thống đề xuất bạn cùng phòng phù hợp hơn.
+                {t("Điền thông tin để hệ thống đề xuất bạn cùng phòng phù hợp hơn.")}
               </p>
             </div>
-            <span className="text-sm font-bold text-[var(--primary)]">{progress}% Hoàn tất</span>
+            <span className="text-sm font-bold text-[var(--primary)]">{progress}% {t("Hoàn tất")}</span>
           </div>
           <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
             <div className="h-full rounded-full bg-[var(--primary)] transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -109,56 +111,56 @@ export default function LifestyleProfilePage() {
                   <Sparkles className="h-5 w-5 text-[var(--primary)]" />
                 </div>
                 <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>
-                  Sinh hoạt cơ bản
+                  {t("Sinh hoạt cơ bản")}
                 </h2>
               </div>
 
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-slate-700">
-                  1. Mức độ sạch sẽ của bạn
+                  {t("1. Mức độ sạch sẽ của bạn")}
                   <select
                     className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                     value={form.cleanliness ?? ""}
                     onChange={(e) => setNumberField("cleanliness", e.target.value)}
                   >
-                    <option value="">Bỏ trống</option>
-                    {PROFILE_OPTIONS.cleanliness.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">{t("Bỏ trống")}</option>
+                    {PROFILE_OPTIONS.cleanliness.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  2. Tần suất dùng điều hòa của bạn
+                  {t("2. Tần suất dùng điều hòa của bạn")}
                   <select
                     className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                     value={form.ac_usage ?? ""}
                     onChange={(e) => setNumberField("ac_usage", e.target.value)}
                   >
-                    <option value="">Bỏ trống</option>
-                    {PROFILE_OPTIONS.ac_usage.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">{t("Bỏ trống")}</option>
+                    {PROFILE_OPTIONS.ac_usage.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block text-sm font-medium text-slate-700">
-                    3. Bạn có nuôi thú cưng không?
+                    {t("3. Bạn có nuôi thú cưng không?")}
                     <select
                       className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                       value={form.pet_status ?? ""}
                       onChange={(e) => setNumberField("pet_status", e.target.value)}
                     >
-                      <option value="">Bỏ trống</option>
-                      {PROFILE_OPTIONS.binary.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      <option value="">{t("Bỏ trống")}</option>
+                      {PROFILE_OPTIONS.binary.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                     </select>
                   </label>
                   <label className="block text-sm font-medium text-slate-700">
-                    4. Bạn có hút thuốc không?
+                    {t("4. Bạn có hút thuốc không?")}
                     <select
                       className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                       value={form.smoking_status ?? ""}
                       onChange={(e) => setNumberField("smoking_status", e.target.value)}
                     >
-                      <option value="">Bỏ trống</option>
-                      {PROFILE_OPTIONS.binary.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      <option value="">{t("Bỏ trống")}</option>
+                      {PROFILE_OPTIONS.binary.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                     </select>
                   </label>
                 </div>
@@ -172,56 +174,56 @@ export default function LifestyleProfilePage() {
                   <Home className="h-5 w-5 text-[var(--primary)]" />
                 </div>
                 <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>
-                  Thói quen ở phòng
+                  {t("Thói quen ở phòng")}
                 </h2>
               </div>
 
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-slate-700">
-                  5. Bạn có thường xuyên nấu ăn không?
+                  {t("5. Bạn có thường xuyên nấu ăn không?")}
                   <select
                     className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                     value={form.cooking ?? ""}
                     onChange={(e) => setNumberField("cooking", e.target.value)}
                   >
-                    <option value="">Bỏ trống</option>
-                    {PROFILE_OPTIONS.cooking.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">{t("Bỏ trống")}</option>
+                    {PROFILE_OPTIONS.cooking.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  6. Tần suất dẫn bạn bè về phòng của bạn
+                  {t("6. Tần suất dẫn bạn bè về phòng của bạn")}
                   <select
                     className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                     value={form.guest ?? ""}
                     onChange={(e) => setNumberField("guest", e.target.value)}
                   >
-                    <option value="">Bỏ trống</option>
-                    {PROFILE_OPTIONS.guest.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">{t("Bỏ trống")}</option>
+                    {PROFILE_OPTIONS.guest.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  7. Tần suất ở trong phòng của bạn
+                  {t("7. Tần suất ở trong phòng của bạn")}
                   <select
                     className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                     value={form.home_frequency ?? ""}
                     onChange={(e) => setNumberField("home_frequency", e.target.value)}
                   >
-                    <option value="">Bỏ trống</option>
-                    {PROFILE_OPTIONS.home_frequency.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">{t("Bỏ trống")}</option>
+                    {PROFILE_OPTIONS.home_frequency.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  8. Thời gian làm việc của bạn
+                  {t("8. Thời gian làm việc của bạn")}
                   <select
                     className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                     value={form.work_schedule ?? ""}
                     onChange={(e) => setTextField("work_schedule", e.target.value)}
                   >
-                    <option value="">Bỏ trống</option>
-                    {PROFILE_OPTIONS.work_schedule.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">{t("Bỏ trống")}</option>
+                    {PROFILE_OPTIONS.work_schedule.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
               </div>
@@ -234,56 +236,56 @@ export default function LifestyleProfilePage() {
                   <Users className="h-5 w-5 text-[var(--primary)]" />
                 </div>
                 <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>
-                  Môi trường sống chung
+                  {t("Môi trường sống chung")}
                 </h2>
               </div>
 
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-slate-700">
-                  9. Mức độ chia sẻ đồ dùng của bạn
+                  {t("9. Mức độ chia sẻ đồ dùng của bạn")}
                   <select
                     className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                     value={form.sharing ?? ""}
                     onChange={(e) => setNumberField("sharing", e.target.value)}
                   >
-                    <option value="">Bỏ trống</option>
-                    {PROFILE_OPTIONS.sharing.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">{t("Bỏ trống")}</option>
+                    {PROFILE_OPTIONS.sharing.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  10. Mức độ yên tĩnh trong không gian chung của bạn
+                  {t("10. Mức độ yên tĩnh trong không gian chung của bạn")}
                   <select
                     className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                     value={form.noise ?? ""}
                     onChange={(e) => setNumberField("noise", e.target.value)}
                   >
-                    <option value="">Bỏ trống</option>
-                    {PROFILE_OPTIONS.noise.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">{t("Bỏ trống")}</option>
+                    {PROFILE_OPTIONS.noise.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  11. Tần suất gọi điện/video call trong phòng của bạn
+                  {t("11. Tần suất gọi điện/video call trong phòng của bạn")}
                   <select
                     className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                     value={form.call_frequency ?? ""}
                     onChange={(e) => setNumberField("call_frequency", e.target.value)}
                   >
-                    <option value="">Bỏ trống</option>
-                    {PROFILE_OPTIONS.call_frequency.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">{t("Bỏ trống")}</option>
+                    {PROFILE_OPTIONS.call_frequency.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  12. Mức độ chơi game dùng mic hoặc voice chat trong phòng của bạn
+                  {t("12. Mức độ chơi game dùng mic hoặc voice chat trong phòng của bạn")}
                   <select
                     className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                     value={form.game_mic ?? ""}
                     onChange={(e) => setNumberField("game_mic", e.target.value)}
                   >
-                    <option value="">Bỏ trống</option>
-                    {PROFILE_OPTIONS.game_mic.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <option value="">{t("Bỏ trống")}</option>
+                    {PROFILE_OPTIONS.game_mic.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
               </div>
@@ -294,9 +296,9 @@ export default function LifestyleProfilePage() {
           <div className="space-y-5">
             {/* Gợi ý dành cho bạn */}
             <div className="rounded-[var(--radius-md)] bg-gradient-to-br from-[#8B5E34] to-[#6B3F1D] p-6 text-white">
-              <h3 className="text-xl font-bold" style={{ fontFamily: "var(--font-main)" }}>Gợi ý dành cho bạn</h3>
+              <h3 className="text-xl font-bold" style={{ fontFamily: "var(--font-main)" }}>{t("Gợi ý dành cho bạn")}</h3>
               <p className="mt-2 text-sm leading-relaxed text-white/80">
-                Hoàn thành 100% hồ sơ để chúng tôi hiện thị những người bạn cùng phòng có độ tương thích cao nhất trên 90%.
+                {t("Hoàn thành 100% hồ sơ để chúng tôi hiện thị những người bạn cùng phòng có độ tương thích cao nhất trên 90%.")}
               </p>
               <div className="mt-4 flex items-center gap-2">
                 <div className="flex -space-x-2">
@@ -305,20 +307,20 @@ export default function LifestyleProfilePage() {
                   ))}
                 </div>
                 <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">+12</span>
-                <span className="ml-1 text-xs text-white/70">Đang chờ bạn kết nối</span>
+                <span className="ml-1 text-xs text-white/70">{t("Đang chờ bạn kết nối")}</span>
               </div>
             </div>
 
             {/* Mẹo nhỏ */}
             <div className="rounded-[var(--radius-md)] border border-slate-200 bg-white p-5">
-              <h4 className="text-sm font-bold text-[var(--on-surface)]">Mẹo nhỏ</h4>
+              <h4 className="text-sm font-bold text-[var(--on-surface)]">{t("Mẹo nhỏ")}</h4>
               <div className="mt-3 space-y-3">
                 <div className="flex gap-3">
                   <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[var(--primary-container)]">
                     <Lightbulb className="h-3.5 w-3.5 text-[var(--primary)]" />
                   </div>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    Trung thực về thói quen giúp tránh các xung đột không đáng có sau này.
+                    {t("Trung thực về thói quen giúp tránh các xung đột không đáng có sau này.")}
                   </p>
                 </div>
                 <div className="flex gap-3">
@@ -326,7 +328,7 @@ export default function LifestyleProfilePage() {
                     <Lightbulb className="h-3.5 w-3.5 text-[var(--primary)]" />
                   </div>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    Bạn có thể thay đổi các tiêu chí này bất cứ lúc nào trong cài đặt.
+                    {t("Bạn có thể thay đổi các tiêu chí này bất cứ lúc nào trong cài đặt.")}
                   </p>
                 </div>
               </div>
@@ -336,11 +338,11 @@ export default function LifestyleProfilePage() {
             <div className="relative overflow-hidden rounded-[var(--radius-md)]">
               <img
                 src="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=400&h=250&fit=crop"
-                alt="Không gian sống"
+                alt={t("Không gian sống")}
                 className="h-44 w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <p className="absolute bottom-3 left-4 text-sm font-bold text-white">Tìm không gian sống mơ ước</p>
+              <p className="absolute bottom-3 left-4 text-sm font-bold text-white">{t("Tìm không gian sống mơ ước")}</p>
             </div>
           </div>
         </form>
@@ -352,7 +354,7 @@ export default function LifestyleProfilePage() {
             onClick={() => navigate("/")}
             className="text-sm font-semibold text-slate-500 transition hover:text-slate-700"
           >
-            Bỏ qua lúc này
+            {t("Bỏ qua lúc này")}
           </button>
           <button
             type="submit"
@@ -360,7 +362,7 @@ export default function LifestyleProfilePage() {
             disabled={saving}
             className="w-full rounded-full bg-[var(--primary)] px-10 py-3.5 text-base font-bold text-white shadow-lg shadow-orange-200/50 transition hover:opacity-90 active:scale-[0.98] sm:w-auto disabled:opacity-60"
           >
-            {saving ? "Đang lưu..." : "Lưu & Tiếp tục"}
+            {saving ? t("Đang lưu...") : t("Lưu & Tiếp tục")}
           </button>
         </div>
       </div>

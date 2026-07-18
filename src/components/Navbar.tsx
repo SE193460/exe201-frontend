@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Bell, Bookmark, CreditCard, LayoutDashboard, LogOut, Search, SlidersHorizontal, UserRound, UsersRound, Menu, X } from "lucide-react";
 import { logout } from "../api/services/auth";
 import { fetchProfile } from "../api/services/user";
 import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from "../api/services/notifications";
+import LanguageToggle from "./LanguageToggle";
 
 export default function Navbar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [isAuthed, setIsAuthed] = useState(false);
@@ -160,22 +163,8 @@ export default function Navbar() {
           </nav>
         </div>
 
-        {/* Right: Search + Actions */}
+        {/* Right: Actions */}
         <div className="flex items-center gap-2 md:gap-3">
-          {/* Search bar — desktop only */}
-          <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 md:flex">
-            <Search className="h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-36 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                  navigate(`/?q=${encodeURIComponent(e.currentTarget.value.trim())}`);
-                }
-              }}
-            />
-          </div>
 
           {isAuthed ? (
             <>
@@ -218,19 +207,19 @@ export default function Navbar() {
                     {notifOpen && (
                       <div className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-32px)] max-w-80 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.15)]">
                         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                          <span className="text-sm font-bold text-slate-800">Thông báo</span>
+                          <span className="text-sm font-bold text-slate-800">{t("Thông báo")}</span>
                           {unreadCount > 0 && (
                             <button
                               onClick={handleMarkAllRead}
                               className="text-xs font-semibold text-[#ff8c00] hover:underline"
                             >
-                              Đánh dấu đã đọc
+                              {t("Đánh dấu đã đọc")}
                             </button>
                           )}
                         </div>
                         <div className="max-h-80 overflow-y-auto">
                           {notifications.length === 0 ? (
-                            <p className="px-4 py-8 text-center text-sm text-slate-400">Chưa có thông báo</p>
+                            <p className="px-4 py-8 text-center text-sm text-slate-400">{t("Chưa có thông báo")}</p>
                           ) : (
                             notifications.slice(0, 10).map((n) => (
                               <button
@@ -255,6 +244,9 @@ export default function Navbar() {
                 </>
               )}
 
+              {/* Language toggle */}
+              <LanguageToggle />
+
               {/* User avatar + dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -269,7 +261,7 @@ export default function Navbar() {
                 {dropdownOpen && (
                   <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.15)]">
                     <div className="border-b border-slate-100 px-4 py-3">
-                      <p className="text-sm font-bold text-slate-800">{fullName || "Tài khoản"}</p>
+                      <p className="text-sm font-bold text-slate-800">{fullName || t("Tài khoản")}</p>
                     </div>
                     {isAdmin && (
                       <button
@@ -283,39 +275,39 @@ export default function Navbar() {
                       onClick={() => { setDropdownOpen(false); navigate("/profile"); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition"
                     >
-                      <UserRound className="h-4 w-4 text-slate-500" /> Cập nhật hồ sơ
+                      <UserRound className="h-4 w-4 text-slate-500" /> {t("Cập nhật hồ sơ")}
                     </button>
                     <button
                       onClick={() => { setDropdownOpen(false); navigate("/profile/lifestyle"); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition"
                     >
-                      <UsersRound className="h-4 w-4 text-slate-500" /> Hồ sơ lối sống
+                      <UsersRound className="h-4 w-4 text-slate-500" /> {t("Hồ sơ lối sống")}
                     </button>
                     <button
                       onClick={() => { setDropdownOpen(false); navigate("/soft-filter"); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition"
                     >
-                      <SlidersHorizontal className="h-4 w-4 text-slate-500" /> Bộ lọc mềm
+                      <SlidersHorizontal className="h-4 w-4 text-slate-500" /> {t("Bộ lọc mềm")}
                     </button>
                     <button
                       onClick={() => { setDropdownOpen(false); navigate("/saved-listings"); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition"
                     >
-                      <Bookmark className="h-4 w-4 text-slate-500" /> Tin đã lưu
+                      <Bookmark className="h-4 w-4 text-slate-500" /> {t("Tin đã lưu")}
                     </button>
                     <div className="border-t border-slate-100" />
                     <button
                       onClick={() => { setDropdownOpen(false); navigate("/payment-history"); }}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition"
                     >
-                      <CreditCard className="h-4 w-4 text-slate-500" /> Lịch sử thanh toán
+                      <CreditCard className="h-4 w-4 text-slate-500" /> {t("Lịch sử thanh toán")}
                     </button>
                     <div className="border-t border-slate-100" />
                     <button
                       onClick={handleLogout}
                       className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 transition"
                     >
-                      <LogOut className="h-4 w-4" /> Đăng xuất
+                      <LogOut className="h-4 w-4" /> {t("Đăng xuất")}
                     </button>
                   </div>
                 )}
@@ -333,7 +325,7 @@ export default function Navbar() {
                 onClick={() => navigate("/auth")}
                 className="rounded-full bg-[#ff8c00] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#a5681f] md:px-5"
               >
-                Đăng nhập
+                {t("Đăng nhập")}
               </button>
             </>
           )}
