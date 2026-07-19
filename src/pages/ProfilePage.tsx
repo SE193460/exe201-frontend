@@ -195,89 +195,128 @@ export default function ProfilePage() {
 
   return (
     <UserShell>
-      <div className="mx-auto w-full max-w-[720px] rounded-[28px] border border-orange-100 bg-white p-8 shadow-[0_25px_80px_-40px_rgba(255,115,0,0.6)]">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Cập nhật hồ sơ</h1>
-          <button
-            className="rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
-            onClick={() => navigate("/home")}
-          >
-            Quay lại trang chủ
-          </button>
-        </div>
+      <div className="mx-auto w-full max-w-[720px] space-y-6">
+        {/* Breadcrumb */}
+        <nav className="text-xs text-slate-400">
+          <span className="hover:underline cursor-pointer" onClick={() => navigate("/")}>HOME</span>
+          <span className="mx-1.5">/</span>
+          <span className="hover:underline cursor-pointer" onClick={() => navigate("/settings")}>SETTINGS</span>
+          <span className="mx-1.5">/</span>
+          <span className="font-semibold text-slate-600">UPDATE PROFILE</span>
+        </nav>
 
-        {status && <p className="mt-4 rounded-lg bg-green-50 px-4 py-2 text-sm text-green-700">{status}</p>}
-        {error && <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>}
-
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          <label className="block text-sm font-medium text-slate-700">
-            Họ và tên
-            <input
-              type="text"
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-              placeholder="Nguyễn Văn A"
-              {...form.register("fullName")}
-            />
-          </label>
-          <label className="block text-sm font-medium text-slate-700">
-            Tên đăng nhập
-            <input
-              type="text"
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-              placeholder="vd: minh_hanoi"
-              {...form.register("username")}
-            />
-          </label>
-          <label className="block text-sm font-medium text-slate-700">
-            Số điện thoại
-            <input
-              type="tel"
-              className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-              placeholder="VD: 0901234567"
-              {...form.register("phoneNumber")}
-            />
-          </label>
-          <div className="flex items-center gap-4">
-            <div className="h-20 w-20 overflow-hidden rounded-full border border-orange-100 bg-orange-50">
-              {avatarPreview ? (
-                <img src={resolveAvatarUrl(avatarPreview)} alt="Avatar" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs text-orange-400">
-                  Chưa có
-                </div>
-              )}
+        {/* Profile Card */}
+        <div className="rounded-lg border border-slate-200 bg-white p-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-container)]">
+                <svg className="h-5 w-5 text-[var(--primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <h1 className="text-xl font-bold text-slate-900">Cập nhật hồ sơ</h1>
             </div>
-            <label className="flex flex-1 flex-col text-sm font-medium text-slate-700">
-              Ảnh đại diện
+            <button
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+              onClick={() => navigate("/")}
+            >
+              Quay lại trang chủ
+            </button>
+          </div>
+
+          {status && <p className="mt-4 rounded-lg bg-green-50 px-4 py-2 text-sm text-green-700 border border-green-200">{status}</p>}
+          {error && <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 border border-red-200">{error}</p>}
+
+          <form onSubmit={onSubmit} className="mt-6 space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Họ và tên
+                <input
+                  type="text"
+                  className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
+                  placeholder="Quản trị viên"
+                  {...form.register("fullName")}
+                />
+              </label>
+              <label className="block text-sm font-medium text-slate-700">
+                Tên đăng nhập
+                <input
+                  type="text"
+                  className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
+                  placeholder="vd: minh_hanoi"
+                  {...form.register("username")}
+                />
+              </label>
+            </div>
+            <label className="block text-sm font-medium text-slate-700">
+              Số điện thoại
               <input
-                type="file"
-                accept="image/*"
-                className="mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
-                onChange={(event) => {
-                  const file = event.target.files?.[0] || null;
-                  setAvatarFile(file);
-                  if (file) {
-                    const previewUrl = URL.createObjectURL(file);
-                    setAvatarPreview(previewUrl);
-                  }
-                }}
+                type="tel"
+                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
+                placeholder="0842494586"
+                {...form.register("phoneNumber")}
               />
             </label>
+            <div>
+              <p className="text-sm font-medium text-slate-700 mb-2">Ảnh đại diện</p>
+              <div className="flex items-center gap-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-4">
+                <div className="h-16 w-16 overflow-hidden rounded-full border border-slate-200 bg-white">
+                  {avatarPreview ? (
+                    <img src={resolveAvatarUrl(avatarPreview)} alt="Avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
+                      Chưa có
+                    </div>
+                  )}
+                </div>
+                <label className="flex flex-1 items-center gap-3 cursor-pointer">
+                  <span className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition">
+                    Choose File
+                  </span>
+                  <span className="text-sm text-slate-400">
+                    {avatarFile ? avatarFile.name : "No file chosen"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] || null;
+                      setAvatarFile(file);
+                      if (file) {
+                        const previewUrl = URL.createObjectURL(file);
+                        setAvatarPreview(previewUrl);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="mt-2 w-full rounded-lg bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
+            >
+              Lưu thay đổi
+            </button>
+          </form>
+        </div>
+
+        {/* Change Password Card */}
+        <div className="rounded-lg border border-slate-200 bg-white p-8">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-container)]">
+              <svg className="h-5 w-5 text-[var(--primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Đổi mật khẩu</h2>
           </div>
-          <button
-            type="submit"
-            className="mt-2 w-full rounded-2xl bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200"
-          >
-            Lưu thay đổi
-          </button>
-        </form>
+          <p className="text-sm text-slate-500 ml-[52px]">Mật khẩu mới cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p>
 
-        <div className="mt-10 border-t border-orange-100 pt-8">
-          <h2 className="text-xl font-bold">Đổi mật khẩu</h2>
-          <p className="mt-1 text-sm text-slate-500">Mật khẩu mới cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p>
-
-          {passwordStatus && <p className="mt-4 rounded-lg bg-green-50 px-4 py-2 text-sm text-green-700">{passwordStatus}</p>}
-          {passwordError && <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{passwordError}</p>}
+          {passwordStatus && <p className="mt-4 rounded-lg bg-green-50 px-4 py-2 text-sm text-green-700 border border-green-200">{passwordStatus}</p>}
+          {passwordError && <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 border border-red-200">{passwordError}</p>}
 
           <form onSubmit={onChangePassword} className="mt-6 space-y-4">
             <label className="block text-sm font-medium text-slate-700">
@@ -285,13 +324,13 @@ export default function ProfilePage() {
               <div className="relative mt-2">
                 <input
                   type={showCurrentPassword ? "text" : "password"}
-                  className="w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 pr-20 text-sm outline-none transition focus:border-orange-300"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 pr-12 text-sm outline-none transition focus:border-[var(--primary)]"
                   placeholder="Nhập mật khẩu hiện tại"
                   {...passwordForm.register("currentPassword")}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-slate-600 hover:bg-slate-100"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
                   onClick={() => setShowCurrentPassword((prev) => !prev)}
                   aria-label={showCurrentPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   title={showCurrentPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
@@ -309,13 +348,13 @@ export default function ProfilePage() {
               <div className="relative mt-2">
                 <input
                   type={showNewPassword ? "text" : "password"}
-                  className="w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 pr-20 text-sm outline-none transition focus:border-orange-300"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 pr-12 text-sm outline-none transition focus:border-[var(--primary)]"
                   placeholder="Nhập mật khẩu mới"
                   {...passwordForm.register("newPassword")}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-slate-600 hover:bg-slate-100"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
                   onClick={() => setShowNewPassword((prev) => !prev)}
                   aria-label={showNewPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   title={showNewPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
@@ -333,13 +372,13 @@ export default function ProfilePage() {
               <div className="relative mt-2">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
-                  className="w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 pr-20 text-sm outline-none transition focus:border-orange-300"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 pr-12 text-sm outline-none transition focus:border-[var(--primary)]"
                   placeholder="Nhập lại mật khẩu mới"
                   {...passwordForm.register("confirmPassword")}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-slate-600 hover:bg-slate-100"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
                   onClick={() => setShowConfirmPassword((prev) => !prev)}
                   aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   title={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
@@ -354,19 +393,25 @@ export default function ProfilePage() {
 
             <button
               type="submit"
-              className="mt-2 w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-200"
+              className="mt-2 w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition"
             >
               Cập nhật mật khẩu
             </button>
           </form>
         </div>
 
-        <div className="mt-10 border-t border-orange-100 pt-8">
-          <h2 className="text-xl font-bold">Lại làm onboarding</h2>
-          <p className="mt-1 text-sm text-slate-500">Bạn có thể làm lại quy trình setup hồ sơ để thay đổi tùy chọn lifestyle và soft-filter preferences.</p>
+        {/* Reset Onboarding Card */}
+        <div className="rounded-lg border border-slate-200 bg-white p-8">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-container)]">
+              <RotateCcw className="h-5 w-5 text-[var(--primary)]" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Lại làm onboarding</h2>
+          </div>
+          <p className="text-sm text-slate-500 ml-[52px]">Bạn có thể làm lại quy trình setup hồ sơ để thay đổi tùy chọn lifestyle và soft-filter preferences.</p>
 
           {resetStatus && (
-            <p className={`mt-4 rounded-lg px-4 py-2 text-sm ${resetStatus.includes("Lỗi") ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"}`}>
+            <p className={`mt-4 rounded-lg px-4 py-2 text-sm border ${resetStatus.includes("Lỗi") ? "bg-red-50 text-red-600 border-red-200" : "bg-green-50 text-green-700 border-green-200"}`}>
               {resetStatus}
             </p>
           )}
@@ -374,7 +419,7 @@ export default function ProfilePage() {
           <button
             onClick={handleResetOnboarding}
             disabled={resettingOnboarding}
-            className="mt-4 inline-flex items-center gap-2 rounded-2xl border-2 border-orange-200 px-4 py-3 text-sm font-semibold text-orange-600 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg border-2 border-orange-200 bg-white px-4 py-2.5 text-sm font-semibold text-orange-600 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <RotateCcw className="h-4 w-4" />
             {resettingOnboarding ? "Đang reset..." : "Reset Onboarding"}

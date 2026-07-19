@@ -104,107 +104,70 @@ export default function AdminAmenitiesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fff7f2] text-slate-800">
+    <div className="min-h-screen bg-slate-50">
       <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
         <Sidebar activeKey="amenities" onLogout={handleLogout} />
 
         <main className="flex-1 space-y-6">
-          <section className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-orange-500">Bảng điều khiển</p>
-                <h1 className="text-2xl font-bold">Quản lý tiện nghi</h1>
-                <p className="mt-1 text-sm text-slate-500">Tạo, cập nhật và kiểm soát tiện nghi cho bài đăng.</p>
-              </div>
+          <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">Bảng điều khiển</p>
+              <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>Quản lý tiện nghi</h1>
+              <p className="mt-1 text-sm text-slate-500">Tạo, cập nhật và kiểm soát tiện nghi cho bài đăng.</p>
             </div>
           </section>
 
           {error && (
-            <section className="rounded-[24px] border border-red-100 bg-white p-4 text-sm text-red-600 shadow-sm">
-              {error}
-            </section>
+            <div className="rounded-lg border border-red-200 bg-white p-4 text-sm text-red-600">{error}</div>
           )}
 
           <section className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-            <div className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
-              <h2 className="text-lg font-semibold text-slate-800">Thêm tiện nghi</h2>
+            <div className="rounded-lg border border-slate-200 bg-white p-6">
+              <h2 className="text-sm font-bold text-slate-700">Thêm tiện nghi</h2>
               <form onSubmit={handleCreate} className="mt-4 space-y-3">
-                <input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  className="w-full rounded-2xl border border-orange-100 px-4 py-3 text-sm outline-none focus:border-orange-300"
-                  placeholder="Ví dụ: Máy lạnh, Wifi"
-                />
-                <button
-                  disabled={actionLoading}
-                  className="w-full rounded-2xl bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200"
-                >
+                <input value={name} onChange={(event) => setName(event.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[var(--primary)] transition" placeholder="Ví dụ: Máy lạnh, Wifi" />
+                <button disabled={actionLoading}
+                  className="w-full rounded-lg bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition disabled:opacity-50">
                   {actionLoading ? "Đang lưu..." : "Thêm tiện nghi"}
                 </button>
               </form>
             </div>
 
-            <div className="rounded-[24px] bg-white p-6 shadow-[0_20px_60px_-40px_rgba(255,115,0,0.5)]">
+            <div className="rounded-lg border border-slate-200 bg-white p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-800">Danh sách tiện nghi</h2>
+                <h2 className="text-sm font-bold text-slate-700">Danh sách tiện nghi</h2>
                 {loading && <span className="text-xs text-slate-400">Đang tải...</span>}
               </div>
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 space-y-2">
                 {amenities.length === 0 ? (
-                  <p className="text-sm text-slate-500">Chưa có tiện nghi nào.</p>
-                ) : (
-                  amenities.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((amenity) => (
-                    <div key={amenity.id} className="flex items-center justify-between rounded-2xl border border-orange-100 px-4 py-3">
-                      {editingId === amenity.id ? (
-                        <form onSubmit={handleSaveEdit} className="flex w-full items-center gap-2">
-                          <input
-                            value={editingName}
-                            onChange={(event) => setEditingName(event.target.value)}
-                            className="w-full rounded-2xl border border-orange-100 px-3 py-2 text-sm"
-                          />
-                          <button
-                            type="submit"
-                            disabled={actionLoading}
-                            className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700"
-                          >
-                            Lưu
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                            className="rounded-full border border-orange-100 px-3 py-1 text-xs text-slate-500"
-                          >
-                            Hủy
-                          </button>
-                        </form>
-                      ) : (
-                        <>
-                          <span className="text-sm font-semibold text-slate-800">{amenity.name}</span>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleStartEdit(amenity)}
-                              className="rounded-full border border-orange-100 px-3 py-1 text-xs text-slate-600 hover:bg-orange-50"
-                            >
-                              Sửa
-                            </button>
-                            <button
-                              onClick={() => handleDelete(amenity.id)}
-                              className="rounded-full border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50"
-                            >
-                              Xóa
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))
-                )}
+                  <p className="text-sm text-slate-400">Chưa có tiện nghi nào.</p>
+                ) : amenities.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((amenity) => (
+                  <div key={amenity.id} className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3 bg-white">
+                    {editingId === amenity.id ? (
+                      <form onSubmit={handleSaveEdit} className="flex w-full items-center gap-2">
+                        <input value={editingName} onChange={(event) => setEditingName(event.target.value)}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)]" />
+                        <button type="submit" disabled={actionLoading}
+                          className="rounded-full bg-[var(--primary)] px-3 py-1 text-xs font-bold text-white hover:opacity-90 transition disabled:opacity-50">Lưu</button>
+                        <button type="button" onClick={() => setEditingId(null)}
+                          className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-50 transition">Hủy</button>
+                      </form>
+                    ) : (
+                      <>
+                        <span className="text-sm font-semibold text-slate-800">{amenity.name}</span>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleStartEdit(amenity)}
+                            className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">Sửa</button>
+                          <button onClick={() => handleDelete(amenity.id)}
+                            className="rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 transition">Xóa</button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
               </div>
-              <Pagination
-                currentPage={page}
-                totalPages={Math.ceil(amenities.length / PAGE_SIZE)}
-                onPageChange={setPage}
-              />
+              <Pagination currentPage={page} totalPages={Math.ceil(amenities.length / PAGE_SIZE)} onPageChange={setPage} />
             </div>
           </section>
         </main>

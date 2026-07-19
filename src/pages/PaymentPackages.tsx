@@ -75,7 +75,7 @@ export default function PaymentPackages() {
 
     return (
         <UserShell>
-            <div className="min-h-screen bg-[#fff7f2] p-8">
+            <div className="min-h-screen bg-white p-8">
                 <div className="mx-auto max-w-[1200px]">
                     <h1 className="text-3xl font-black mb-2">Thanh toán đẩy bài đăng</h1>
                     <p className="text-slate-500 mb-8">Chọn gói và chuyển khoản theo hướng dẫn</p>
