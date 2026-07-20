@@ -9,7 +9,7 @@ import type { Listing } from "../api/services/listings";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { trackEvent } from "../api/services/analytics";
-import { fetchMyContactCredits } from "../api/services/contactViews";
+import { fetchMyContactCredits, viewContact } from "../api/services/contactViews";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "";
@@ -92,6 +92,9 @@ export default function PublicListingDetailPage() {
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [similarListings, setSimilarListings] = useState<Listing[]>([]);
   const [contactCredits, setContactCredits] = useState<number | null>(null);
+  const [contactRevealed, setContactRevealed] = useState(false);
+  const [revealingContact, setRevealingContact] = useState(false);
+  const [contactError, setContactError] = useState("");
   const [mapExpanded, setMapExpanded] = useState(false);
 
   const handleCopyPhone = async (phone: string) => {
@@ -203,6 +206,31 @@ export default function PublicListingDetailPage() {
       alert(t("Không thể sao chép đường link"));
     }
   }, []);
+
+  const handleViewContact = async () => {
+    if (!listing?.id || revealingContact || contactRevealed) return;
+    setRevealingContact(true);
+    setContactError("");
+    try {
+      const res = await viewContact(listing.id);
+      if (res.success) {
+        setContactRevealed(true);
+        setContactCredits((prev) => (prev !== null ? prev - 1 : prev));
+        // Track phone click after reveal
+        handleCopyPhone(listing.ownerPhone || "");
+      } else {
+        setContactError(res.error || t("Không thể xem liên hệ"));
+      }
+    } catch (err: any) {
+      if (err?.response?.status === 403) {
+        setContactCredits(0);
+      } else {
+        setContactError(err?.response?.data?.error || t("Không thể xem liên hệ"));
+      }
+    } finally {
+      setRevealingContact(false);
+    }
+  };
 
   const handleSubmitReport = useCallback(async () => {
     if (!listing?.id || !reportReason) return;
@@ -633,7 +661,20 @@ export default function PublicListingDetailPage() {
                       <div>{t("Phản hồi:")} {activeLabel}</div>
                     </div>
 
-                    {contactCredits !== null && contactCredits > 0 ? (
+                    {contactCredits !== null && contactCredits > 0 && !contactRevealed ? (
+                      <div className="mt-4 space-y-3">
+                        <button
+                          onClick={handleViewContact}
+                          disabled={revealingContact}
+                          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#8f4f00] disabled:opacity-60"
+                        >
+                          <Phone className="h-4 w-4" />
+                          {revealingContact ? t("Đang xử lý...") : t("Xem liên hệ (tốn 1 lượt)")}
+                        </button>
+                        {contactError && <p className="text-center text-xs text-red-500">{contactError}</p>}
+                        <p className="text-center text-xs text-slate-400">{t("Còn")} <span className="font-bold text-[#a55b00]">{contactCredits}</span> {t("lượt xem liên hệ")}</p>
+                      </div>
+                    ) : contactCredits !== null && contactRevealed ? (
                       <div className="mt-4 space-y-3">
                         <button onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#8f4f00]">
                           <Phone className="h-4 w-4" /> {listing?.ownerPhone || t("Chưa có SĐT")}
@@ -649,7 +690,7 @@ export default function PublicListingDetailPage() {
                             <Send className="h-4 w-4" /> {t("Gửi Email")}
                           </a>
                         )}
-                        <p className="text-center text-xs text-slate-400">{t("Còn")} <span className="font-bold text-[#a55b00]">{contactCredits}</span> {t("lượt xem liên hệ")}</p>
+                        <p className="text-center text-xs text-slate-400">{t("Đã sử dụng 1 lượt xem.")} {t("Còn")} <span className="font-bold text-[#a55b00]">{contactCredits}</span> {t("lượt")}</p>
                       </div>
                     ) : (
                       <div className="mt-4 space-y-3">
