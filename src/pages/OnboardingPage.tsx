@@ -238,9 +238,9 @@ export default function OnboardingPage() {
   const progress = questions.length > 0 ? ((questionIndex + 1) / questions.length) * 100 : 0;
   const selectedValue = currentQuestion ? answers[currentQuestion.key] ?? null : null;
   const estimatedMinutes = Math.max(1, Math.ceil(questions.length / 8));
-  const cardBaseClass = "group rounded-[24px] border p-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-25px_rgba(255,115,0,0.5)]";
-  const selectedCardClass = "border-orange-400 bg-orange-50/80 shadow-[0_20px_45px_-25px_rgba(255,115,0,0.45)]";
-  const unselectedCardClass = "border-slate-200 bg-white hover:border-orange-300";
+  const cardBaseClass = "group rounded-[var(--radius-md)] border p-5 text-left transition-all duration-200 hover:-translate-y-0.5";
+  const selectedCardClass = "border-[var(--primary)] bg-[var(--primary-container)]/80 shadow-[0_4px_20px_-8px_rgba(255,140,0,0.3)]";
+  const unselectedCardClass = "border-slate-200 bg-white hover:border-[var(--primary)]/50";
 
   const nextQuestion = () => {
     if (!currentQuestion) return;
@@ -302,31 +302,31 @@ export default function OnboardingPage() {
   const renderStepContent = () => {
     if (step === 0) {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(255,230,210,0.7),_transparent_45%),linear-gradient(135deg,_#fff7f2_0%,_#ffffff_100%)] px-4 py-6 text-slate-800 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-[36px] border border-orange-100 bg-white shadow-[0_35px_90px_-40px_rgba(255,115,0,0.7)]">
+        <div className="flex min-h-screen items-center justify-center bg-[var(--surface)] px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-white shadow-lg">
             <div className="flex flex-col lg:flex-row">
-              <div className="flex w-full flex-col justify-between bg-gradient-to-br from-[#ff6a3d] via-[#ff7b44] to-[#ffa75b] p-8 text-white lg:w-[40%] lg:p-10">
+              <div className="flex w-full flex-col justify-between bg-[var(--primary)] p-8 text-white lg:w-[40%] lg:p-10">
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-semibold backdrop-blur">
                     <Sparkles className="h-4 w-4" />
                     Roomie onboarding
                   </div>
                   <h1 className="mt-6 text-3xl font-black leading-tight sm:text-4xl">Chào mừng bạn đến với Roomie</h1>
-                  <p className="mt-4 max-w-xl text-sm leading-7 text-orange-50 sm:text-base">
+                  <p className="mt-4 max-w-xl text-sm leading-7 text-white/80 sm:text-base">
                     Chúng tôi sẽ giúp bạn thiết lập hồ sơ nhanh chóng để tìm roommate phù hợp hơn, giảm xung đột và cá nhân hóa kết quả matching.
                   </p>
                 </div>
 
                 <div className="mt-8 space-y-3 text-sm">
-                  <div className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-4 py-3"><Sparkles className="h-4 w-4" /> Đề xuất roommate phù hợp hơn</div>
-                  <div className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-4 py-3"><Home className="h-4 w-4" /> Giảm các xung đột khi sống chung</div>
-                  <div className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-4 py-3"><Compass className="h-4 w-4" /> Cá nhân hóa kết quả matching</div>
+                  <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-white/20 bg-white/10 px-4 py-3"><Sparkles className="h-4 w-4" /> Đề xuất roommate phù hợp hơn</div>
+                  <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-white/20 bg-white/10 px-4 py-3"><Home className="h-4 w-4" /> Giảm các xung đột khi sống chung</div>
+                  <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-white/20 bg-white/10 px-4 py-3"><Compass className="h-4 w-4" /> Cá nhân hóa kết quả matching</div>
                 </div>
               </div>
 
               <div className="flex w-full flex-col justify-center p-8 lg:w-[60%] lg:p-10">
                 <div className="max-w-[620px]">
-                  <div className="inline-flex items-center rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600">
+                  <div className="inline-flex items-center rounded-full border border-[var(--primary)]/20 bg-[var(--primary-container)] px-3 py-1 text-sm font-semibold text-[var(--primary)]">
                     <Sparkles className="mr-2 h-4 w-4" /> Thiết lập hồ sơ trong vài phút
                   </div>
                   <h2 className="mt-5 text-2xl font-bold text-slate-900 sm:text-3xl">Một quy trình nhanh, rõ ràng và dễ hoàn thành</h2>
@@ -334,15 +334,15 @@ export default function OnboardingPage() {
                     Chỉ cần chọn loại hồ sơ phù hợp, trả lời các câu hỏi ngắn và hệ thống sẽ dùng thông tin đó để đề xuất roommate phù hợp hơn.
                   </p>
 
-                  <div className="mt-8 rounded-[24px] border border-orange-100 bg-white p-5">
+                  <div className="mt-8 rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-white p-5">
                     <p className="text-sm font-semibold text-slate-700">Thời gian hoàn thành</p>
                     <div className="mt-2 flex items-end gap-2">
-                      <span className="text-3xl font-black text-orange-600">≈ {estimatedMinutes} phút</span>
+                      <span className="text-3xl font-black text-[var(--primary)]">≈ {estimatedMinutes} phút</span>
                       <span className="pb-1 text-sm text-slate-500">• 12 câu hỏi</span>
                     </div>
                   </div>
 
-                  <button onClick={() => setStep(1)} className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] px-6 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_-15px_rgba(255,115,0,0.8)] transition hover:opacity-90">
+                  <button onClick={() => setStep(1)} className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[var(--primary)]/30 transition hover:opacity-90">
                     Bắt đầu <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -355,32 +355,32 @@ export default function OnboardingPage() {
 
     if (step === 1) {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,_#fff7f2_0%,_#ffffff_100%)] px-4 py-8">
-          <div className="w-full max-w-5xl rounded-[32px] border border-orange-100 bg-white p-6 shadow-[0_35px_90px_-45px_rgba(255,115,0,0.7)] sm:p-8 lg:p-10">
+        <div className="flex min-h-screen items-center justify-center bg-[var(--surface)] px-4 py-8">
+          <div className="w-full max-w-5xl rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-white p-6 shadow-lg sm:p-8 lg:p-10">
             <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-orange-500">Bước 2</p>
+              <p className="text-sm font-semibold uppercase tracking-wider text-[var(--primary)]">Bước 2</p>
               <h2 className="mt-3 text-3xl font-black text-slate-900">Bạn đang ở trường hợp nào?</h2>
               <p className="mt-3 text-sm leading-7 text-slate-600">Lựa chọn này giúp hệ thống hiển thị đúng bộ câu hỏi dành cho bạn.</p>
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
               <button onClick={() => setUserType("HAS_ROOM")} className={`${cardBaseClass} ${userType === "HAS_ROOM" ? selectedCardClass : unselectedCardClass}`}>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 text-orange-600"><Home className="h-6 w-6" /></div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-container)] text-[var(--primary)]"><Home className="h-6 w-6" /></div>
                 <h3 className="mt-4 text-xl font-bold text-slate-900">Tôi đã có phòng</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">Tôi đang có phòng và muốn tìm roommate ở cùng. Sau khi hoàn thành, bạn sẽ được chuyển tới bước đăng bài.</p>
-                <div className="mt-5 text-sm font-semibold text-orange-600">Chọn tùy chọn này →</div>
+                <div className="mt-5 text-sm font-semibold text-[var(--primary)]">Chọn tùy chọn này →</div>
               </button>
               <button onClick={() => setUserType("NO_ROOM")} className={`${cardBaseClass} ${userType === "NO_ROOM" ? selectedCardClass : unselectedCardClass}`}>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 text-orange-600"><Compass className="h-6 w-6" /></div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-container)] text-[var(--primary)]"><Compass className="h-6 w-6" /></div>
                 <h3 className="mt-4 text-xl font-bold text-slate-900">Tôi đang tìm phòng</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">Tôi muốn tìm phòng và roommate phù hợp. Sau khi hoàn thành, hệ thống sẽ ưu tiên hiển thị các bài đăng phù hợp.</p>
-                <div className="mt-5 text-sm font-semibold text-orange-600">Chọn tùy chọn này →</div>
+                <div className="mt-5 text-sm font-semibold text-[var(--primary)]">Chọn tùy chọn này →</div>
               </button>
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <button onClick={() => navigate("/auth")} className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Đăng nhập lại</button>
-              <button disabled={!userType} onClick={() => { setStep(2); setQuestionIndex(0); }} className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] px-6 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_-15px_rgba(255,115,0,0.8)] transition disabled:cursor-not-allowed disabled:opacity-60">
+              <button disabled={!userType} onClick={() => { setStep(2); setQuestionIndex(0); }} className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--primary)] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[var(--primary)]/30 transition disabled:cursor-not-allowed disabled:opacity-60">
                 Tiếp tục <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -391,36 +391,36 @@ export default function OnboardingPage() {
 
     if (step === 2 && currentQuestion) {
       return (
-        <div className="min-h-screen bg-[linear-gradient(135deg,_#fff7f2_0%,_#ffffff_100%)] px-4 py-6 text-slate-800 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[var(--surface)] px-4 py-6 text-slate-800 sm:px-6 lg:px-8">
           <div className="mx-auto flex min-h-screen max-w-7xl flex-col lg:flex-row lg:gap-8">
-            <aside className="w-full rounded-[28px] border border-orange-100 bg-white p-6 shadow-[0_25px_70px_-35px_rgba(255,115,0,0.45)] lg:sticky lg:top-4 lg:h-fit lg:w-[32%]">
+            <aside className="w-full rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-white p-6 shadow-lg lg:sticky lg:top-4 lg:h-fit lg:w-[32%]">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-orange-500">Thiết lập hồ sơ</p>
+                  <p className="text-sm font-semibold text-[var(--primary)]">Thiết lập hồ sơ</p>
                   <h3 className="mt-1 text-xl font-black text-slate-900">{currentQuestion.section}</h3>
                   <p className="mt-2 text-sm text-slate-500">Câu hỏi được thiết kế để hệ thống hiểu rõ hơn về nhu cầu sống chung của bạn.</p>
                 </div>
-                <div className="rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600">Câu {questionIndex + 1}/{questions.length}</div>
+                <div className="rounded-full bg-[var(--primary-container)] px-3 py-1 text-sm font-semibold text-[var(--primary)]">Câu {questionIndex + 1}/{questions.length}</div>
               </div>
 
-              <div className="mt-6 h-2 overflow-hidden rounded-full bg-orange-100">
-                <div className="h-full rounded-full bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] transition-all duration-300" style={{ width: `${progress}%` }} />
+              <div className="mt-6 h-2 overflow-hidden rounded-full bg-[var(--primary-container)]">
+                <div className="h-full rounded-full bg-[var(--primary)] transition-all duration-300" style={{ width: `${progress}%` }} />
               </div>
 
-              <div className="mt-6 rounded-[22px] border border-orange-100 bg-white p-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-orange-600"><Sparkles className="h-4 w-4" /> Vì sao chúng tôi hỏi điều này?</div>
+              <div className="mt-6 rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-white p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[var(--primary)]"><Sparkles className="h-4 w-4" /> Vì sao chúng tôi hỏi điều này?</div>
                 <p className="mt-3 text-sm leading-7 text-slate-600">{currentQuestion.explanation}</p>
               </div>
 
-              <div className="mt-6 rounded-[22px] border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-500">
+              <div className="mt-6 rounded-[var(--radius-md)] border border-slate-200 bg-[var(--surface)] p-4 text-sm text-slate-500">
                 <div className="flex items-center gap-2 font-semibold text-slate-700"><Sparkles className="h-4 w-4" /> Ước tính</div>
                 <p className="mt-2">Chỉ còn khoảng {estimatedMinutes} phút để hoàn tất và bắt đầu trải nghiệm tốt hơn.</p>
               </div>
             </aside>
 
-            <section className="mt-6 flex-1 rounded-[28px] border border-orange-100 bg-white p-6 shadow-[0_25px_70px_-35px_rgba(255,115,0,0.45)] lg:mt-0 lg:p-8">
+            <section className="mt-6 flex-1 rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-white p-6 shadow-lg lg:mt-0 lg:p-8">
               <div className="mx-auto max-w-[760px]">
-                <div className="rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600 w-fit">{currentQuestion.section}</div>
+                <div className="rounded-full border border-[var(--primary)]/20 bg-[var(--primary-container)] px-3 py-1 text-sm font-semibold text-[var(--primary)] w-fit">{currentQuestion.section}</div>
                 <h2 className="mt-4 text-3xl font-black text-slate-900">{currentQuestion.title}</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-600">{currentQuestion.helper}</p>
 
@@ -428,8 +428,8 @@ export default function OnboardingPage() {
                   {currentQuestion.options.map((option) => {
                     const isSelected = selectedValue === option.value;
                     return (
-                      <button key={`${currentQuestion.key}-${String(option.value)}`} onClick={() => handleSelect(option.value)} className={`flex w-full items-start gap-3 rounded-[20px] border p-4 text-left transition-all duration-200 ${isSelected ? selectedCardClass : unselectedCardClass}`}>
-                        <div className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${isSelected ? "border-orange-500 bg-orange-500" : "border-slate-300"}`}>
+                      <button key={`${currentQuestion.key}-${String(option.value)}`} onClick={() => handleSelect(option.value)} className={`flex w-full items-start gap-3 rounded-[var(--radius-md)] border p-4 text-left transition-all duration-200 ${isSelected ? selectedCardClass : unselectedCardClass}`}>
+                        <div className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${isSelected ? "border-[var(--primary)] bg-[var(--primary)]" : "border-slate-300"}`}>
                           {isSelected ? <CheckCircle2 className="h-4 w-4 text-white" /> : null}
                         </div>
                         <div>
@@ -445,7 +445,7 @@ export default function OnboardingPage() {
                   <button onClick={prevQuestion} className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
                     <ArrowLeft className="h-4 w-4" /> Quay lại
                   </button>
-                  <button disabled={selectedValue === null} onClick={nextQuestion} className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] px-6 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_-15px_rgba(255,115,0,0.8)] transition disabled:cursor-not-allowed disabled:opacity-60">
+                  <button disabled={selectedValue === null} onClick={nextQuestion} className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--primary)] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[var(--primary)]/30 transition disabled:cursor-not-allowed disabled:opacity-60">
                     {questionIndex === questions.length - 1 ? "Hoàn thành" : "Tiếp tục"} <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -457,14 +457,14 @@ export default function OnboardingPage() {
     }
 
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,_#fff7f2_0%,_#ffffff_100%)] px-4 py-8">
-        <div className="w-full max-w-3xl rounded-[32px] border border-orange-100 bg-white p-8 text-center shadow-[0_35px_90px_-45px_rgba(255,115,0,0.7)]">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-orange-600"><CheckCircle2 className="h-8 w-8" /></div>
+      <div className="flex min-h-screen items-center justify-center bg-[var(--surface)] px-4 py-8">
+        <div className="w-full max-w-3xl rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-white p-8 text-center shadow-lg">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--primary-container)] text-[var(--primary)]"><CheckCircle2 className="h-8 w-8" /></div>
           <h2 className="mt-6 text-3xl font-black text-slate-900">Hoàn tất!</h2>
           <p className="mt-3 text-sm leading-7 text-slate-600">Hồ sơ của bạn đã được thiết lập thành công. Chúng tôi sẽ sử dụng thông tin này để đề xuất roommate phù hợp hơn.</p>
-          {error ? <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="mt-4 rounded-[var(--radius-md)] bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p> : null}
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <button onClick={() => navigate(userType === "HAS_ROOM" ? "/my-listings/new" : "/listings")} disabled={submitting} className="rounded-full bg-gradient-to-r from-[#ff6a3d] to-[#ff9854] px-6 py-3 text-sm font-semibold text-white shadow-[0_15px_35px_-15px_rgba(255,115,0,0.8)] transition disabled:opacity-60">
+            <button onClick={() => navigate(userType === "HAS_ROOM" ? "/my-listings/new" : "/listings")} disabled={submitting} className="rounded-full bg-[var(--primary)] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[var(--primary)]/30 transition disabled:opacity-60">
               {submitting ? "Đang lưu..." : userType === "HAS_ROOM" ? "Tạo bài đăng" : "Khám phá bài đăng"}
             </button>
             <button onClick={() => navigate("/listings")} className="rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Đến trang chủ</button>

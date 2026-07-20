@@ -46,8 +46,17 @@ export default function PaymentHistory() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const totalAllTime = payments
+    .filter((p) => p.status === "COMPLETED")
+    .reduce((sum, p) => sum + Math.abs(p.amount), 0);
+
+  const now = new Date();
   const totalSpent = payments
-    .filter((p) => p.status === "COMPLETED" && p.amount < 0)
+    .filter((p) => {
+      if (p.status !== "COMPLETED") return false;
+      const d = new Date(p.created_at);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    })
     .reduce((sum, p) => sum + Math.abs(p.amount), 0);
 
   function statusBadge(status: string) {
@@ -122,7 +131,7 @@ export default function PaymentHistory() {
             </div>
             <div>
               <p className="text-xs font-semibold text-slate-500">{t("Tổng chi tiêu trên hệ thống")}</p>
-              <p className="text-lg font-extrabold text-[var(--on-surface)]">0 đ</p>
+              <p className="text-lg font-extrabold text-[var(--on-surface)]">{totalAllTime.toLocaleString("vi-VN")} đ</p>
             </div>
           </div>
           <div className="flex items-center gap-4 rounded-[var(--radius-md)] border border-slate-200 bg-white p-5">

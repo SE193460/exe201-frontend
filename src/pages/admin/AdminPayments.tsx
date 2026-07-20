@@ -167,7 +167,7 @@ export default function AdminPayments() {
                                                 <td className="px-4 py-3"><span className="font-mono font-bold text-[var(--primary)] text-sm">{item.code ?? "-"}</span></td>
                                                 <td className="px-4 py-3"><div className="font-medium text-sm">{item.userName || "-"}</div><div className="text-xs text-slate-400">{item.userEmail || ""}</div></td>
                                                 <td className="px-4 py-3"><span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200">{item.packageName}</span></td>
-                                                <td className="px-4 py-3 font-bold text-[var(--primary)] text-sm">{item.amount.toLocaleString()}đ</td>
+                                                <td className="px-4 py-3 font-bold text-[var(--primary)] text-sm">{Math.abs(item.amount).toLocaleString()}đ</td>
                                                 <td className="px-4 py-3 text-sm text-slate-500">{new Date(item.created_at).toLocaleString("vi-VN")}</td>
                                                 <td className="px-4 py-3 space-x-2">
                                                     <button onClick={() => handleViewListing(item.listingId || item.listing_id)}
@@ -207,7 +207,7 @@ export default function AdminPayments() {
                                             <td className="px-4 py-3"><span className="font-mono font-bold text-[var(--primary)] text-sm">{item.code ?? "-"}</span></td>
                                             <td className="px-4 py-3"><div className="font-medium text-sm">{item.userName || "-"}</div><div className="text-xs text-slate-400">{item.userEmail || ""}</div></td>
                                             <td className="px-4 py-3"><span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200">{item.packageName}</span></td>
-                                            <td className="px-4 py-3 font-bold text-[var(--primary)] text-sm">{item.amount.toLocaleString()}đ</td>
+                                            <td className="px-4 py-3 font-bold text-[var(--primary)] text-sm">{Math.abs(item.amount).toLocaleString()}đ</td>
                                             <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${statusBadge(item.status)}`}>{statusLabel(item.status)}</span></td>
                                             <td className="px-4 py-3 text-sm text-slate-500">{new Date(item.created_at).toLocaleString("vi-VN")}</td>
                                             <td className="px-4 py-3"><button onClick={() => handleViewListing(item.listingId)}
