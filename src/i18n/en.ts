@@ -87,6 +87,9 @@ const en: Record<string, string> = {
   "Không tìm thấy phòng phù hợp": "No matching rooms found",
   "Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác.": "Try changing the filter or searching with different keywords.",
   "Chi tiết": "Details",
+  "Độ phù hợp": "Compatibility",
+  "Phù hợp": "Match",
+  "Phòng phù hợp nhất với bạn": "Best matching rooms for you",
   "đ/tháng": "đ/month",
   "Chưa có ảnh": "No images",
   "Nữ ở ghép": "Female roommate",
@@ -595,6 +598,22 @@ const en: Record<string, string> = {
   "tháng trước": "month ago",
   "năm trước": "year ago",
   "Đã hoạt động": "Active",
+
+  // Contact views
+  "Còn": "Remaining",
+  "lượt xem liên hệ": "contact views",
+  "lượt xem": "views",
+  "Bạn đã hết lượt xem liên hệ": "You've used all contact views",
+  "Mua thêm để xem số điện thoại và liên hệ chủ phòng": "Purchase more to see phone number and contact the owner",
+  "Mua lượt xem": "Buy views",
+  "Mua lượt xem liên hệ": "Buy contact views",
+  "Gói 5 lượt xem": "5-view package",
+  "Gói 10 lượt xem": "10-view package",
+  "Chọn gói phù hợp để xem số điện thoại và liên hệ chủ phòng": "Choose a package to view phone number and contact the owner",
+  "Xem bản đồ lớn": "View large map",
+  "Google Maps": "Google Maps",
+  "Đóng": "Close",
+  "Không thể tạo mã QR. Vui lòng thử lại.": "Cannot generate QR code. Please try again.",
 };
 
 export default en;

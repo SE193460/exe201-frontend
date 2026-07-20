@@ -303,7 +303,7 @@ export default function LifestyleProfilePage() {
               <div className="mt-4 flex items-center gap-2">
                 <div className="flex -space-x-2">
                   {[0, 1, 2].map((i) => (
-                    <div key={i} className="h-8 w-8 rounded-full border-2 border-[#8B5E34] bg-white/20" />
+                    <div key={i} className="h-8 w-8 rounded-full border-2 border-[var(--primary)]/30 bg-white/20" />
                   ))}
                 </div>
                 <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">+12</span>
@@ -360,7 +360,7 @@ export default function LifestyleProfilePage() {
             type="submit"
             onClick={handleSubmit}
             disabled={saving}
-            className="w-full rounded-full bg-[var(--primary)] px-10 py-3.5 text-base font-bold text-white shadow-lg shadow-orange-200/50 transition hover:opacity-90 active:scale-[0.98] sm:w-auto disabled:opacity-60"
+            className="w-full rounded-full bg-[var(--primary)] px-10 py-3.5 text-base font-bold text-white shadow-lg shadow-[var(--primary)]/30 transition hover:opacity-90 active:scale-[0.98] sm:w-auto disabled:opacity-60"
           >
             {saving ? t("Đang lưu...") : t("Lưu & Tiếp tục")}
           </button>

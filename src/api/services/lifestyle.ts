@@ -42,6 +42,7 @@ export type SoftFilterPayload = {
     min_area?: number | null;
     max_area?: number | null;
   };
+  use_lifestyle_profile?: boolean;
 };
 
 export type SoftFilterFieldScore = {
@@ -96,5 +97,10 @@ export async function updateRoommatePreferences(payload: RoommatePreferences) {
 
 export async function runSoftFilter(payload: SoftFilterPayload) {
   const response = await axiosInstance.post("/api/soft-filter", payload);
-  return response.data as { results: SoftFilterResult[] };
+  return response.data as { results: SoftFilterResult[]; source?: 'roommate_preferences' | 'lifestyle_profile' };
+}
+
+export async function deleteRoommatePreferences() {
+  const response = await axiosInstance.delete("/api/roommate-preferences");
+  return response.data as { success: boolean; message: string };
 }

@@ -6,7 +6,7 @@ import { fetchPublicListings, resolveListingImageUrl } from "../api/services/lis
 import type { Listing } from "../api/services/listings";
 import type { SoftFilterResult, RoommatePreferences } from "../api/services/lifestyle";
 import { fetchProfile } from "../api/services/user";
-import { fetchRoommatePreferences, updateRoommatePreferences, runSoftFilter } from "../api/services/lifestyle";
+import { fetchRoommatePreferences, updateRoommatePreferences, runSoftFilter, deleteRoommatePreferences } from "../api/services/lifestyle";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Pagination from "../components/Pagination";
@@ -32,6 +32,7 @@ export default function PublicListingsPage() {
   
   const [page, setPage] = useState(1);
   const [softFilterResults, setSoftFilterResults] = useState<Record<string, SoftFilterResult>>({});
+  const [softFilterSource, setSoftFilterSource] = useState<'roommate_preferences' | 'lifestyle_profile' | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [softFilterPrefs, setSoftFilterPrefs] = useState<RoommatePreferences>({});
   const [softFilterLoading, setSoftFilterLoading] = useState(false);
@@ -264,13 +265,53 @@ export default function PublicListingsPage() {
         {} as Record<string, SoftFilterResult>
       );
       setSoftFilterResults(resultsMap);
+      setSoftFilterSource(response.source ?? null);
       localStorage.setItem("softFilterResults", JSON.stringify(resultsData));
+      if (response.source) localStorage.setItem("softFilterSource", response.source);
       window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: resultsData }));
       setIsDropdownOpen(false);
     } catch (e) {
       console.error("Lỗi khi áp dụng bộ lọc mềm:", e);
     } finally {
       setSoftFilterLoading(false);
+    }
+  };
+
+  const handleClearSoftFilter = async () => {
+    // Delete roommate preferences from DB (best-effort)
+    try {
+      await deleteRoommatePreferences();
+    } catch (e) {
+      console.error("Xóa bộ lọc thất bại:", e);
+    }
+
+    // Force re-score using lifestyle profile (regardless of delete success)
+    try {
+      const response = await runSoftFilter({
+        user_type: "NO_ROOM",
+        use_lifestyle_profile: true,
+      });
+      const resultsData = response.results || [];
+      const resultsMap = resultsData.reduce(
+        (acc, result) => {
+          acc[result.id] = result;
+          return acc;
+        },
+        {} as Record<string, SoftFilterResult>
+      );
+      setSoftFilterResults(resultsMap);
+      setSoftFilterSource(response.source ?? 'lifestyle_profile');
+      localStorage.setItem("softFilterResults", JSON.stringify(resultsData));
+      if (response.source) localStorage.setItem("softFilterSource", response.source);
+      window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: resultsData }));
+    } catch (e) {
+      console.error("Lỗi khi chạy lại soft filter:", e);
+      // Fallback: clear everything
+      setSoftFilterResults({});
+      setSoftFilterSource(null);
+      localStorage.removeItem("softFilterResults");
+      localStorage.removeItem("softFilterSource");
+      window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: [] }));
     }
   };
 
@@ -332,10 +373,55 @@ export default function PublicListingsPage() {
         );
         setSoftFilterResults(resultsMap);
       }
+      const savedSource = localStorage.getItem("softFilterSource") as 'roommate_preferences' | 'lifestyle_profile' | null;
+      if (savedSource) setSoftFilterSource(savedSource);
     } catch (e) {
       console.error("Lỗi khi tải soft filter results:", e);
     }
+
+    // Auto-run soft filter on mount to show scores for all listings
+    autoRunSoftFilter();
   }, []);
+
+  const autoRunSoftFilter = async () => {
+    try {
+      const profile = await fetchProfile();
+      if (!profile?.id) return;
+      // Check if user has a lifestyle profile (has at least some fields filled)
+      const { fetchLifestyleProfile } = await import("../api/services/lifestyle");
+      const lifestyle = await fetchLifestyleProfile();
+      if (!lifestyle) return;
+      const filledFields = Object.entries(lifestyle).filter(([k, v]) => k !== "user_id" && k !== "preferred_district" && v !== null && v !== undefined);
+      if (filledFields.length < 3) return; // Not enough profile data
+
+      const { runSoftFilter } = await import("../api/services/lifestyle");
+      const response = await runSoftFilter({
+        user_type: "NO_ROOM",
+        hard_filters: {
+          district: null,
+          min_price: null,
+          max_price: null,
+          min_area: null,
+          max_area: null,
+        },
+      });
+      const resultsData = response.results || [];
+      const resultsMap = resultsData.reduce(
+        (acc, result) => {
+          acc[result.id] = result;
+          return acc;
+        },
+        {} as Record<string, SoftFilterResult>
+      );
+      setSoftFilterResults(resultsMap);
+      setSoftFilterSource(response.source ?? null);
+      localStorage.setItem("softFilterResults", JSON.stringify(resultsData));
+      if (response.source) localStorage.setItem("softFilterSource", response.source);
+      window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: resultsData }));
+    } catch (e) {
+      // Silent fail — user may not be logged in or have no profile
+    }
+  };
 
   const filteredListings = (() => {
     const normalizeStr = (s: string) =>
@@ -486,6 +572,15 @@ export default function PublicListingsPage() {
             <Sparkles className="h-4 w-4 text-[var(--primary)]" />
             {t("Bộ lọc mềm")}
           </button>
+          {Object.keys(softFilterResults).length > 0 && (
+            <button
+              onClick={handleClearSoftFilter}
+              className="flex items-center gap-2 rounded-full border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+            >
+              <X className="h-4 w-4" />
+              {t("Xóa bộ lọc")}
+            </button>
+          )}
         </header>
 
         {/* Filters */}
@@ -784,6 +879,61 @@ export default function PublicListingsPage() {
 
         {!loading && !error && filteredListings.length > 0 && (
           <>
+            {/* Gợi ý phòng phù hợp */}
+            {Object.keys(softFilterResults).length > 0 && (
+              <section className="rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-gradient-to-br from-[var(--primary-container)]/50 to-white p-5">
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-[var(--primary)]" />
+                    <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>
+                      {t("Phòng phù hợp nhất với bạn")}
+                    </h2>
+                  </div>
+                  {softFilterSource === "lifestyle_profile" && (
+                    <span className="rounded-full bg-white/80 border border-[var(--primary)]/20 px-3 py-1 text-[11px] font-semibold text-[var(--primary)]">
+                      {t("Theo hồ sơ lối sống")}
+                    </span>
+                  )}
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredListings
+                    .filter((l) => softFilterResults[l.id])
+                    .sort((a, b) => (softFilterResults[b.id]?.total_score || 0) - (softFilterResults[a.id]?.total_score || 0))
+                    .slice(0, 3)
+                    .map((listing) => {
+                      const score = softFilterResults[listing.id]?.total_score || 0;
+                      const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
+                      const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
+                      return (
+                        <div
+                          key={listing.id}
+                          onClick={() => navigate(`/listings/${listing.id}`)}
+                          className="group cursor-pointer overflow-hidden rounded-[var(--radius-md)] border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
+                        >
+                          <div className="relative h-52 overflow-hidden bg-slate-100">
+                            {thumbnail ? (
+                              <img src={thumbnail} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-sm text-slate-300">{t("Chưa có ảnh")}</div>
+                            )}
+                            <span className="absolute top-3 right-3 rounded-full bg-[var(--primary)] px-2.5 py-1 text-xs font-bold text-white flex items-center gap-1 shadow-md">
+                              <Sparkles className="h-3 w-3" /> {Math.round(score)}%
+                            </span>
+                          </div>
+                          <div className="p-4">
+                            <h3 className="text-base font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>{listing.title}</h3>
+                            <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                              <MapPin className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
+                              {location || t("Chưa cập nhật")}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </section>
+            )}
+
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {pagedListings.map((listing) => {
                 const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
@@ -838,24 +988,25 @@ export default function PublicListingsPage() {
                         </div>
                       )}
 
-                      <div className="mt-4 flex items-end justify-between border-t border-slate-100 pt-3">
-                        <p className="text-base font-extrabold text-[var(--primary)]">
-                          {listing.rentPrice >= 1000000
-                            ? `${(listing.rentPrice / 1000000).toFixed(listing.rentPrice % 1000000 === 0 ? 0 : 1)}Tr`
-                            : listing.rentPrice.toLocaleString("vi-VN")}
-                          <span className="text-xs font-medium text-slate-400">{t("đ/tháng")}</span>
-                        </p>
-                        <div className="flex items-center gap-2">
-                          {softFilterResults[listing.id] && (
-                            <span className="text-[11px] font-bold text-[var(--primary)] bg-[var(--primary-container)] rounded-full px-2 py-0.5">
-                              {Math.round(softFilterResults[listing.id].total_score)}%
+                        <div className="mt-4 flex items-end justify-between border-t border-slate-100 pt-3">
+                          <p className="text-base font-extrabold text-[var(--primary)]">
+                            {listing.rentPrice >= 1000000
+                              ? `${(listing.rentPrice / 1000000).toFixed(listing.rentPrice % 1000000 === 0 ? 0 : 1)}Tr`
+                              : listing.rentPrice.toLocaleString("vi-VN")}
+                            <span className="text-xs font-medium text-slate-400">{t("đ/tháng")}</span>
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-white bg-[var(--primary)] rounded-full px-3 py-1.5 shadow-sm">
+                              <Sparkles className="h-3 w-3" />
+                              {softFilterResults[listing.id]
+                                ? `${Math.round(softFilterResults[listing.id].total_score)}% ${t("Phù hợp")}`
+                                : t("Độ phù hợp")}
                             </span>
-                          )}
-                          <span className="text-xs font-semibold text-[var(--primary)] transition group-hover:underline">
-                            {t("Chi tiết")}
-                          </span>
+                            {softFilterSource === "lifestyle_profile" && softFilterResults[listing.id] && (
+                              <span className="text-[10px] text-slate-400 italic">{t("Theo hồ sơ")}</span>
+                            )}
+                          </div>
                         </div>
-                      </div>
                     </div>
                   </article>
                 );

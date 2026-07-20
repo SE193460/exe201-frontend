@@ -3,12 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import type { SoftFilterResult } from "../api/services/lifestyle";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { useNavigate, useParams } from "react-router-dom";
-import { Bookmark, BookmarkCheck, Camera, CheckCircle2, CircleCheck, CircleX, Copy, ExternalLink, Home, ChevronRight, Info, MapPinned, MessageCircle, Phone, Send, ShieldCheck, Sparkles, Share2, Flag } from "lucide-react";
+import { Bookmark, BookmarkCheck, Camera, CheckCircle2, ChevronDown, CircleCheck, CircleX, Copy, ExternalLink, Home, ChevronRight, Info, MapPinned, MessageCircle, Phone, Send, ShieldCheck, ShoppingCart, Sparkles, Share2, Flag } from "lucide-react";
 import { fetchPublicListingDetail, fetchPublicListings, resolveListingImageUrl, toggleSaveListing, reportListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { trackEvent } from "../api/services/analytics";
+import { fetchMyContactCredits } from "../api/services/contactViews";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "";
@@ -90,6 +91,8 @@ export default function PublicListingDetailPage() {
   const [softFilterResult, setSoftFilterResult] = useState<SoftFilterResult | null>(null);
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [similarListings, setSimilarListings] = useState<Listing[]>([]);
+  const [contactCredits, setContactCredits] = useState<number | null>(null);
+  const [mapExpanded, setMapExpanded] = useState(false);
 
   const handleCopyPhone = async (phone: string) => {
     try {
@@ -170,6 +173,14 @@ export default function PublicListingDetailPage() {
     };
   }, [listing?.id, listing?.district, listing?.city]);
 
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    fetchMyContactCredits()
+      .then((data) => setContactCredits(data.remaining_views))
+      .catch(() => {});
+  }, []);
+
   const handleToggleSave = useCallback(async () => {
     if (!listing?.id) return;
     setSaving(true);
@@ -229,11 +240,6 @@ export default function PublicListingDetailPage() {
   const openImageModal = (imageIndex: number) => {
     setSelectedImgIdx(imageIndex);
     setMediaModalTab("images");
-    setIsMediaModalOpen(true);
-  };
-
-  const openMapModal = () => {
-    setMediaModalTab("map");
     setIsMediaModalOpen(true);
   };
 
@@ -527,23 +533,30 @@ export default function PublicListingDetailPage() {
                   )}
 
                   <div className="mt-6 border-t border-slate-100 pt-5">
-                    <div className="flex items-center justify-between gap-3 mb-3">
+                    <button onClick={() => setMapExpanded(!mapExpanded)} className="flex w-full items-center justify-between gap-3 mb-3">
                       <h3 className="text-base font-bold text-slate-900">{t("Vị trí")}</h3>
-                      <button onClick={openMapModal} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
-                        <ExternalLink className="h-3.5 w-3.5 text-[#a55b00]" /> {t("Chỉ đường Google Maps")}
-                      </button>
-                    </div>
-                    <div className="relative overflow-hidden rounded-[18px] border border-slate-200 bg-slate-100 shadow-[0_18px_40px_-30px_rgba(0,0,0,0.35)]">
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.78),rgba(255,255,255,0.18)_28%,rgba(17,24,39,0.62)_100%)] pointer-events-none" />
+                      <div className="flex items-center gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); window.open(`https://maps.google.com/maps?q=${encodeURIComponent(listingAddress)}&z=15`, "_blank"); }} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                          <ExternalLink className="h-3.5 w-3.5 text-[#a55b00]" /> {t("Google Maps")}
+                        </button>
+                        <ChevronDown className={`h-4 w-4 text-slate-400 transition ${mapExpanded ? "rotate-180" : ""}`} />
+                      </div>
+                    </button>
+                    <div className={`relative overflow-hidden rounded-[18px] border border-slate-200 bg-slate-100 transition-all ${mapExpanded ? "shadow-[0_18px_40px_-30px_rgba(0,0,0,0.35)]" : ""}`}>
                       <iframe
                         title="Google Maps"
                         width="100%"
-                        height="330"
+                        height={mapExpanded ? "330" : "120"}
                         style={{ border: 0 }}
                         src={`https://maps.google.com/maps?q=${encodeURIComponent(listingAddress)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                         allowFullScreen
                         className="relative"
                       />
+                      {!mapExpanded && (
+                        <button onClick={() => setMapExpanded(true)} className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition">
+                          <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg">{t("Xem bản đồ lớn")}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -558,69 +571,6 @@ export default function PublicListingDetailPage() {
               </div>
 
               <aside className="space-y-4 lg:sticky lg:top-6">
-                {listing.source ? (
-                  <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.14)] text-center space-y-4">
-                    <div className="space-y-1">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t("Thông tin liên hệ")}</span>
-                      <p className="text-sm text-slate-600">{t("Thông tin liên hệ được quản lý tại bài đăng gốc.")}</p>
-                    </div>
-                    <a href={listing.source} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b63ff] hover:bg-[#0058eb] text-white py-3 text-sm font-bold transition">
-                      <ExternalLink className="h-4 w-4" /> {t("Xem bài đăng gốc")}
-                    </a>
-                  </div>
-                ) : (
-                  <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.16)]">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#d38f5d] bg-[#f6efe9] text-lg font-semibold text-[#a55b00]">
-                        {listing.ownerName?.slice(0, 1).toUpperCase() || "C"}
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="truncate text-lg font-semibold text-slate-900">{listing.ownerName || t("Chủ phòng trọ")}</h4>
-                        <p className="text-xs text-emerald-600">{t("Đã xác thực danh tính")}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 rounded-[18px] border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600 space-y-2">
-                      <div>{t("Thành viên từ:")} {formatDate(listing.ownerCreatedAt)}</div>
-                      <div>{t("Phản hồi:")} {activeLabel}</div>
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                      <button onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#8f4f00]">
-                        <Phone className="h-4 w-4" /> {listing?.ownerPhone || t("Chưa có SĐT")}
-                        <span className="ml-1">{copiedPhone === listing?.ownerPhone ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</span>
-                      </button>
-                      {listing?.ownerPhone && (
-                        <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b63ff] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0058eb]">
-                          <MessageCircle className="h-4 w-4" /> {t("Liên hệ qua Zalo")}
-                        </a>
-                      )}
-                      {listing?.ownerPhone && (
-                        <a href={`mailto:?subject=${t("Thông tin phòng:")} ${listing.title}&body=${t("Xem chi tiết tại:")} ${window.location.href}`} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
-                          <Send className="h-4 w-4" /> {t("Gửi Email")}
-                        </a>
-                      )}
-                    </div>
-
-                    <div className="mt-4 flex gap-2">
-                      <button onClick={handleToggleSave} disabled={saving} className={`flex-1 rounded-2xl border px-3 py-2.5 text-xs font-semibold transition ${isSaved ? "border-[#a55b00] bg-[#a55b00]/5 text-[#a55b00]" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
-                        <span className="inline-flex items-center justify-center gap-1.5">
-                          {isSaved ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />} {isSaved ? t("Đã lưu") : t("Lưu tin")}
-                        </span>
-                      </button>
-                      <button onClick={() => setShowShareModal(true)} className="flex-1 rounded-2xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
-                        <span className="inline-flex items-center justify-center gap-1.5">
-                          <Share2 className="h-3.5 w-3.5" /> {shareCopied ? t("Đã copy") : t("Chia sẻ")}
-                        </span>
-                      </button>
-                    </div>
-
-                    <button onClick={() => { setReportReason(""); setReportDescription(""); setReportName(""); setReportPhone(""); setReportSuccess(false); setShowReportModal(true); }} className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                      <Flag className="h-4 w-4" /> {t("Báo cáo")}
-                    </button>
-                  </div>
-                )}
-
                 {softFilterResult && (
                   <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.14)] space-y-4">
                     <div className="text-center">
@@ -653,6 +603,82 @@ export default function PublicListingDetailPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {listing.source ? (
+                  <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.14)] text-center space-y-4">
+                    <div className="space-y-1">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t("Thông tin liên hệ")}</span>
+                      <p className="text-sm text-slate-600">{t("Thông tin liên hệ được quản lý tại bài đăng gốc.")}</p>
+                    </div>
+                    <a href={listing.source} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b63ff] hover:bg-[#0058eb] text-white py-3 text-sm font-bold transition">
+                      <ExternalLink className="h-4 w-4" /> {t("Xem bài đăng gốc")}
+                    </a>
+                  </div>
+                ) : (
+                  <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.16)]">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#d38f5d] bg-[#f6efe9] text-lg font-semibold text-[#a55b00]">
+                        {listing.ownerName?.slice(0, 1).toUpperCase() || "C"}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="truncate text-lg font-semibold text-slate-900">{listing.ownerName || t("Chủ phòng trọ")}</h4>
+                        <p className="text-xs text-emerald-600">{t("Đã xác thực danh tính")}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-[18px] border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600 space-y-2">
+                      <div>{t("Thành viên từ:")} {formatDate(listing.ownerCreatedAt)}</div>
+                      <div>{t("Phản hồi:")} {activeLabel}</div>
+                    </div>
+
+                    {contactCredits !== null && contactCredits > 0 ? (
+                      <div className="mt-4 space-y-3">
+                        <button onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#8f4f00]">
+                          <Phone className="h-4 w-4" /> {listing?.ownerPhone || t("Chưa có SĐT")}
+                          <span className="ml-1">{copiedPhone === listing?.ownerPhone ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</span>
+                        </button>
+                        {listing?.ownerPhone && (
+                          <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b63ff] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0058eb]">
+                            <MessageCircle className="h-4 w-4" /> {t("Liên hệ qua Zalo")}
+                          </a>
+                        )}
+                        {listing?.ownerPhone && (
+                          <a href={`mailto:?subject=${t("Thông tin phòng:")} ${listing.title}&body=${t("Xem chi tiết tại:")} ${window.location.href}`} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
+                            <Send className="h-4 w-4" /> {t("Gửi Email")}
+                          </a>
+                        )}
+                        <p className="text-center text-xs text-slate-400">{t("Còn")} <span className="font-bold text-[#a55b00]">{contactCredits}</span> {t("lượt xem liên hệ")}</p>
+                      </div>
+                    ) : (
+                      <div className="mt-4 space-y-3">
+                        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center">
+                          <p className="text-sm font-semibold text-slate-600">{t("Bạn đã hết lượt xem liên hệ")}</p>
+                          <p className="mt-1 text-xs text-slate-400">{t("Mua thêm để xem số điện thoại và liên hệ chủ phòng")}</p>
+                          <button onClick={() => navigate("/buy-views")} className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-[#a55b00] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#8f4f00]">
+                            <ShoppingCart className="h-4 w-4" /> {t("Mua lượt xem")}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-4 flex gap-2">
+                      <button onClick={handleToggleSave} disabled={saving} className={`flex-1 rounded-2xl border px-3 py-2.5 text-xs font-semibold transition ${isSaved ? "border-[#a55b00] bg-[#a55b00]/5 text-[#a55b00]" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+                        <span className="inline-flex items-center justify-center gap-1.5">
+                          {isSaved ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />} {isSaved ? t("Đã lưu") : t("Lưu tin")}
+                        </span>
+                      </button>
+                      <button onClick={() => setShowShareModal(true)} className="flex-1 rounded-2xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
+                        <span className="inline-flex items-center justify-center gap-1.5">
+                          <Share2 className="h-3.5 w-3.5" /> {shareCopied ? t("Đã copy") : t("Chia sẻ")}
+                        </span>
+                      </button>
+                    </div>
+
+                    <button onClick={() => { setReportReason(""); setReportDescription(""); setReportName(""); setReportPhone(""); setReportSuccess(false); setShowReportModal(true); }} className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                      <Flag className="h-4 w-4" /> {t("Báo cáo")}
+                    </button>
                   </div>
                 )}
 
