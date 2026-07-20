@@ -564,9 +564,9 @@ export default function PublicListingDetailPage() {
                     <button onClick={() => setMapExpanded(!mapExpanded)} className="flex w-full items-center justify-between gap-3 mb-3">
                       <h3 className="text-base font-bold text-slate-900">{t("Vị trí")}</h3>
                       <div className="flex items-center gap-2">
-                        <button onClick={(e) => { e.stopPropagation(); window.open(`https://maps.google.com/maps?q=${encodeURIComponent(listingAddress)}&z=15`, "_blank"); }} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                        <span onClick={(e) => { e.stopPropagation(); window.open(`https://maps.google.com/maps?q=${encodeURIComponent(listingAddress)}&z=15`, "_blank"); }} className="cursor-pointer inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
                           <ExternalLink className="h-3.5 w-3.5 text-[#a55b00]" /> {t("Google Maps")}
-                        </button>
+                        </span>
                         <ChevronDown className={`h-4 w-4 text-slate-400 transition ${mapExpanded ? "rotate-180" : ""}`} />
                       </div>
                     </button>
