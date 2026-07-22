@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SoftFilterResult } from "../api/services/lifestyle";
-import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
+import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS, PROFILE_OPTIONS } from "./lifestyleOptions";
 import { useNavigate, useParams } from "react-router-dom";
 import { Bookmark, BookmarkCheck, Camera, CheckCircle2, ChevronDown, CircleCheck, CircleX, Copy, ExternalLink, Home, ChevronRight, Info, MapPinned, MessageCircle, Phone, Send, ShieldCheck, ShoppingCart, Sparkles, Share2, Flag } from "lucide-react";
 import { fetchPublicListingDetail, fetchPublicListings, resolveListingImageUrl, toggleSaveListing, reportListing } from "../api/services/listings";
@@ -9,7 +9,7 @@ import type { Listing } from "../api/services/listings";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { trackEvent } from "../api/services/analytics";
-import { fetchMyContactCredits, viewContact } from "../api/services/contactViews";
+import { fetchLifestyleProfileAccess, fetchMyContactCredits, viewLifestyleProfile } from "../api/services/contactViews";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "";
@@ -90,25 +90,37 @@ export default function PublicListingDetailPage() {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [softFilterResult, setSoftFilterResult] = useState<SoftFilterResult | null>(null);
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+  const [phoneRevealed, setPhoneRevealed] = useState(false);
   const [similarListings, setSimilarListings] = useState<Listing[]>([]);
   const [contactCredits, setContactCredits] = useState<number | null>(null);
-  const [contactRevealed, setContactRevealed] = useState(false);
-  const [revealingContact, setRevealingContact] = useState(false);
-  const [contactError, setContactError] = useState("");
+  const [ownerLifestyleProfile, setOwnerLifestyleProfile] = useState<Record<string, unknown> | null>(null);
+  const [lifestyleProfileRevealed, setLifestyleProfileRevealed] = useState(false);
+  const [revealingLifestyleProfile, setRevealingLifestyleProfile] = useState(false);
+  const [lifestyleProfileError, setLifestyleProfileError] = useState("");
   const [mapExpanded, setMapExpanded] = useState(false);
   const matchingSectionRef = useRef<HTMLElement | null>(null);
+
+  const trackPhoneClick = useCallback(() => {
+    if (listing?.id) {
+      trackEvent({
+        eventName: "listing_phone_click",
+        listingId: listing.id,
+        district: listing.district || null,
+      });
+    }
+  }, [listing?.id, listing?.district]);
+
+  const handleRevealPhone = useCallback(() => {
+    if (!listing?.ownerPhone) return;
+    setPhoneRevealed(true);
+    trackPhoneClick();
+  }, [listing?.ownerPhone, trackPhoneClick]);
 
   const handleCopyPhone = async (phone: string) => {
     try {
       await navigator.clipboard.writeText(phone);
       setCopiedPhone(phone);
-      if (listing?.id) {
-        trackEvent({
-          eventName: "listing_phone_click",
-          listingId: listing.id,
-          district: listing.district || null,
-        });
-      }
+      trackPhoneClick();
       setTimeout(() => setCopiedPhone(null), 2000);
     } catch {
       console.error("Failed to copy phone number");
@@ -185,6 +197,17 @@ export default function PublicListingDetailPage() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token || !listing?.id) return;
+    fetchLifestyleProfileAccess(listing.id)
+      .then((data) => {
+        setLifestyleProfileRevealed(Boolean(data.revealed));
+        setOwnerLifestyleProfile(data.profile || null);
+      })
+      .catch(() => {});
+  }, [listing?.id]);
+
   const handleToggleSave = useCallback(async () => {
     if (!listing?.id) return;
     setSaving(true);
@@ -208,28 +231,28 @@ export default function PublicListingDetailPage() {
     }
   }, []);
 
-  const handleViewContact = async () => {
-    if (!listing?.id || revealingContact || contactRevealed) return;
-    setRevealingContact(true);
-    setContactError("");
+  const handleViewLifestyleProfile = async () => {
+    if (!listing?.id || revealingLifestyleProfile) return;
+    if (!localStorage.getItem("access_token")) {
+      navigate("/auth");
+      return;
+    }
+
+    setRevealingLifestyleProfile(true);
+    setLifestyleProfileError("");
     try {
-      const res = await viewContact(listing.id);
-      if (res.success) {
-        setContactRevealed(true);
-        setContactCredits((prev) => (prev !== null ? prev - 1 : prev));
-        // Track phone click after reveal
-        handleCopyPhone(listing.ownerPhone || "");
-      } else {
-        setContactError(res.error || t("Không thể xem liên hệ"));
+      const result = await viewLifestyleProfile(listing.id);
+      setLifestyleProfileRevealed(true);
+      setOwnerLifestyleProfile(result.profile || null);
+      if (typeof result.remainingViews === "number") setContactCredits(result.remainingViews);
+    } catch (error: any) {
+      if (error?.response?.status === 403) {
+        navigate("/buy-views");
+        return;
       }
-    } catch (err: any) {
-      if (err?.response?.status === 403) {
-        setContactCredits(0);
-      } else {
-        setContactError(err?.response?.data?.error || t("Không thể xem liên hệ"));
-      }
+      setLifestyleProfileError(t("Không thể mở hồ sơ lối sống lúc này."));
     } finally {
-      setRevealingContact(false);
+      setRevealingLifestyleProfile(false);
     }
   };
 
@@ -325,23 +348,35 @@ export default function PublicListingDetailPage() {
 
   const mapOptionLabel = (field: string, value: string | number | null | undefined): string | null => {
     if (value === null || value === undefined || value === "") return null;
+
+    const normalizedValue = typeof value === "string" ? value.trim() : value;
+    const fieldName = String(field);
+
+    const resolveLabel = (options: unknown) => {
+      if (!Array.isArray(options)) return null;
+      const match = options.find((option: any) => String(option.value) === String(normalizedValue));
+      return match?.label ?? null;
+    };
+
     try {
-      // numeric linear options
-      const linear = (FILTER_LINEAR_OPTIONS as any)[field];
-      if (Array.isArray(linear)) {
-        const vNum = typeof value === "string" && !isNaN(Number(value)) ? Number(value) : value;
-        const opt = linear.find((o: any) => String(o.value) === String(vNum));
-        if (opt) return opt.label;
+      const candidates = [
+        (FILTER_LINEAR_OPTIONS as any)[fieldName],
+        (PROFILE_OPTIONS as any)[fieldName],
+        (PREF_OPTIONS as any)[fieldName],
+        fieldName === "pet" ? (PREF_OPTIONS as any).pet : null,
+        fieldName === "smoking" ? (PREF_OPTIONS as any).smoking : null,
+      ];
+
+      for (const options of candidates) {
+        const label = resolveLabel(options);
+        if (label) return label;
       }
 
-      // pref options
-      const pref = (PREF_OPTIONS as any)[field];
-      if (Array.isArray(pref)) {
-        const opt = pref.find((o: any) => String(o.value) === String(value));
-        if (opt) return opt.label;
+      if ((fieldName === "pet" || fieldName === "pet_status" || fieldName === "smoking" || fieldName === "smoking_status")) {
+        const binaryLabel = resolveLabel((PROFILE_OPTIONS as any).binary);
+        if (binaryLabel) return binaryLabel;
       }
 
-      // fallback
       return typeof value === "string" ? value : String(value);
     } catch (e) {
       return typeof value === "string" ? value : String(value);
@@ -380,6 +415,18 @@ export default function PublicListingDetailPage() {
   };
 
   const matchingSummary = getPrefsFromResult(softFilterResult);
+  const getOwnerProfileValue = (field: string) => {
+    if (!ownerLifestyleProfile) return null;
+    const profileKey: Record<string, string> = {
+      pet: "pet_status",
+      smoking: "smoking_status",
+    };
+    return ownerLifestyleProfile[profileKey[field] || field];
+  };
+  const getOwnerProfileLabel = (field: string) => {
+    const value = getOwnerProfileValue(field);
+    return value === null || value === undefined || value === "" ? t("Chưa điền") : mapOptionLabel(field, value as string | number) || String(value);
+  };
   const hasMatchingData = Boolean(
     softFilterResult &&
     Object.keys(softFilterResult.field_scores || {}).length > 0 &&
@@ -617,6 +664,45 @@ export default function PublicListingDetailPage() {
                       </div>
 
                       <div className="mt-6 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+                        <div className="xl:col-span-2 rounded-[24px] border border-[#e9c99e] bg-[#fff8ed] p-4 md:p-5">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <h3 className="text-lg font-bold text-slate-900">{t("Lựa chọn của chủ bài đăng")}</h3>
+                              <p className="mt-1 text-sm text-slate-600">{t("Thông tin này được mở bằng 1 lượt xem và chỉ dùng để xem hồ sơ lối sống của chủ bài đăng.")}</p>
+                            </div>
+                            {!lifestyleProfileRevealed && contactCredits !== 0 && (
+                              <button
+                                onClick={handleViewLifestyleProfile}
+                                disabled={revealingLifestyleProfile}
+                                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#8f4f00] disabled:opacity-60"
+                              >
+                                <ShoppingCart className="h-4 w-4" />
+                                {revealingLifestyleProfile ? t("Đang mở...") : t("Dùng 1 lượt xem để mở hồ sơ lối sống")}
+                              </button>
+                            )}
+                          </div>
+                          {!lifestyleProfileRevealed && (
+                            contactCredits === 0 ? (
+                              <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-3 text-sm text-amber-800">
+                                <p className="font-semibold">{t("Bạn đã hết lượt xem.")}</p>
+                                <p className="mt-1">{t("Mua gói để tiếp tục mở hồ sơ lối sống của chủ bài đăng.")}</p>
+                                <button
+                                  onClick={() => navigate("/buy-views")}
+                                  className="mt-3 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#8f4f00]"
+                                >
+                                  <ShoppingCart className="h-4 w-4" />
+                                  {t("Mua gói lượt xem")}
+                                </button>
+                              </div>
+                            ) : (
+                              <p className="mt-3 text-xs text-slate-500">
+                                {contactCredits === null ? t("Đăng nhập để xem lựa chọn của chủ bài đăng.") : `${t("Bạn còn")} ${contactCredits} ${t("lượt xem để mở hồ sơ lối sống")}.`}
+                              </p>
+                            )
+                          )}
+                          {lifestyleProfileError && <p className="mt-2 text-xs text-red-600">{lifestyleProfileError}</p>}
+                        </div>
+
                         <div className="rounded-[24px] border border-emerald-100 bg-white/85 p-4 md:p-5">
                           <div className="flex items-center justify-between">
                             <h3 className="text-lg font-bold text-slate-900">{t("Điểm nổi bật")}</h3>
@@ -629,6 +715,7 @@ export default function PublicListingDetailPage() {
                                   <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[item.field] || item.field}</div>
                                 </div>
                                 <div className="mt-1 text-sm text-slate-600">{t("Bạn: ")}<span className="font-semibold text-slate-800">{item.prefLabel}</span></div>
+                                {lifestyleProfileRevealed && <div className="mt-1 text-sm text-slate-600">{t("Chủ bài đăng: ")}<span className="font-semibold text-[#a55b00]">{getOwnerProfileLabel(item.field)}</span></div>}
                               </div>
                             ))}
                           </div>
@@ -644,6 +731,7 @@ export default function PublicListingDetailPage() {
                               <div key={item.field} className="rounded-2xl border border-amber-100 bg-white/70 p-3 transition hover:border-amber-200 hover:bg-amber-100/70">
                                 <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[item.field] || item.field}</div>
                                 <div className="mt-1 text-sm text-slate-600">{t("Bạn: ")}<span className="font-semibold text-slate-800">{item.prefLabel}</span></div>
+                                {lifestyleProfileRevealed && <div className="mt-1 text-sm text-slate-600">{t("Chủ bài đăng: ")}<span className="font-semibold text-[#a55b00]">{getOwnerProfileLabel(item.field)}</span></div>}
                               </div>
                             ))}
                           </div>
@@ -802,48 +890,25 @@ export default function PublicListingDetailPage() {
                       <div>{t("Phản hồi:")} {activeLabel}</div>
                     </div>
 
-                    {contactCredits !== null && contactCredits > 0 && !contactRevealed ? (
-                      <div className="mt-4 space-y-3">
-                        <button
-                          onClick={handleViewContact}
-                          disabled={revealingContact}
-                          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#8f4f00] disabled:opacity-60"
-                        >
-                          <Phone className="h-4 w-4" />
-                          {revealingContact ? t("Đang xử lý...") : t("Xem liên hệ (tốn 1 lượt)")}
-                        </button>
-                        {contactError && <p className="text-center text-xs text-red-500">{contactError}</p>}
-                        <p className="text-center text-xs text-slate-400">{t("Còn")} <span className="font-bold text-[#a55b00]">{contactCredits}</span> {t("lượt xem liên hệ")}</p>
-                      </div>
-                    ) : contactCredits !== null && contactRevealed ? (
-                      <div className="mt-4 space-y-3">
-                        <button onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#8f4f00]">
-                          <Phone className="h-4 w-4" /> {listing?.ownerPhone || t("Chưa có SĐT")}
-                          <span className="ml-1">{copiedPhone === listing?.ownerPhone ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</span>
-                        </button>
-                        {listing?.ownerPhone && (
-                          <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b63ff] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0058eb]">
-                            <MessageCircle className="h-4 w-4" /> {t("Liên hệ qua Zalo")}
-                          </a>
-                        )}
-                        {listing?.ownerPhone && (
-                          <a href={`mailto:?subject=${t("Thông tin phòng:")} ${listing.title}&body=${t("Xem chi tiết tại:")} ${window.location.href}`} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
-                            <Send className="h-4 w-4" /> {t("Gửi Email")}
-                          </a>
-                        )}
-                        <p className="text-center text-xs text-slate-400">{t("Đã sử dụng 1 lượt xem.")} {t("Còn")} <span className="font-bold text-[#a55b00]">{contactCredits}</span> {t("lượt")}</p>
-                      </div>
-                    ) : (
-                      <div className="mt-4 space-y-3">
-                        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center">
-                          <p className="text-sm font-semibold text-slate-600">{t("Bạn đã hết lượt xem liên hệ")}</p>
-                          <p className="mt-1 text-xs text-slate-400">{t("Mua thêm để xem số điện thoại và liên hệ chủ phòng")}</p>
-                          <button onClick={() => navigate("/buy-views")} className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-[#a55b00] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#8f4f00]">
-                            <ShoppingCart className="h-4 w-4" /> {t("Mua lượt xem")}
+                    <div className="mt-4 space-y-3">
+                      {phoneRevealed ? (
+                        <>
+                          <button onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#8f4f00]">
+                            <Phone className="h-4 w-4" /> {listing?.ownerPhone || t("Chưa có SĐT")}
+                            <span className="ml-1">{copiedPhone === listing?.ownerPhone ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</span>
                           </button>
-                        </div>
-                      </div>
-                    )}
+                          {listing?.ownerPhone && (
+                            <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b63ff] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0058eb]">
+                              <MessageCircle className="h-4 w-4" /> {t("Liên hệ qua Zalo")}
+                            </a>
+                          )}
+                        </>
+                      ) : (
+                        <button onClick={handleRevealPhone} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                          <Phone className="h-4 w-4" /> {t("Hiện số điện thoại")}
+                        </button>
+                      )}
+                    </div>
 
                     <div className="mt-4 flex gap-2">
                       <button onClick={handleToggleSave} disabled={saving} className={`flex-1 rounded-2xl border px-3 py-2.5 text-xs font-semibold transition ${isSaved ? "border-[#a55b00] bg-[#a55b00]/5 text-[#a55b00]" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>

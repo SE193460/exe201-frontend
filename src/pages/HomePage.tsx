@@ -81,7 +81,7 @@ export default function HomePage() {
         const filtered = data
           .filter((l) => l.status === "APPROVED" && l.images && l.images.length > 0)
           .sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime());
-        setListings(filtered.slice(0, 3));
+        setListings(filtered);
         const saved = new Set<string>();
         data.forEach((l) => { if (l.isSaved) saved.add(l.id); });
         setSavedIds(saved);
@@ -151,6 +151,21 @@ export default function HomePage() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+
+  const featuredListings = [...listings]
+    .sort((a, b) => {
+      const matchA = softFilterResults[a.id];
+      const matchB = softFilterResults[b.id];
+
+      if (matchA && !matchB) return -1;
+      if (!matchA && matchB) return 1;
+      if (matchA && matchB) {
+        return (matchB.total_score || 0) - (matchA.total_score || 0);
+      }
+
+      return new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime();
+    })
+    .slice(0, 3);
 
   const FIELD_FULL_LABELS: Record<string, string> = {
     cleanliness: t("Mức độ sạch sẽ"),
@@ -450,7 +465,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {listings.slice(0, 3).map((listing) => {
+            {featuredListings.map((listing) => {
               const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
               const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
               const avatarUrl = resolveAvatarUrl(listing.ownerAvatar || "");

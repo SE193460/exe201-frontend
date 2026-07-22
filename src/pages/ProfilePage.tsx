@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { changePassword, fetchProfile, resolveAvatarUrl, updateProfile, uploadAvatar } from "../api/services/user";
+import { changePassword, fetchProfile, getOnboardingStorageKey, resolveAvatarUrl, updateProfile, uploadAvatar } from "../api/services/user";
 import { updateLifestyleProfile, updateRoommatePreferences } from "../api/services/lifestyle";
 import { useNavigate } from "react-router-dom";
 import { RotateCcw } from "lucide-react";
@@ -146,7 +146,8 @@ export default function ProfilePage() {
     setResetStatus("");
     try {
       // Clear onboarding flag
-      const onboardingKey = `roomie_onboarding_completed_${window.location.hostname}`;
+      const profile = await fetchProfile();
+      const onboardingKey = getOnboardingStorageKey(profile.id);
       localStorage.removeItem(onboardingKey);
 
       // Reset lifestyle profile data

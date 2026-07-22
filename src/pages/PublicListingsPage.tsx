@@ -40,7 +40,7 @@ export default function PublicListingsPage() {
   const [softFilterLoading, setSoftFilterLoading] = useState(false);
   const [softFilterSection, setSoftFilterSection] = useState(1);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
-  const RECOMMENDED_PAGE_SIZE = 6;
+  const RECOMMENDED_PAGE_SIZE = 3;
   const UNSCORED_PAGE_SIZE = 6;
 
   const highlightListingId = useMemo(() => {
@@ -484,6 +484,7 @@ export default function PublicListingsPage() {
   const allUnscoredListings = filteredListings.filter((listing) => !softFilterResults[listing.id]);
   const recommendedTotalPages = Math.ceil(allScoredListings.length / RECOMMENDED_PAGE_SIZE);
   const unscoredTotalPages = Math.ceil(allUnscoredListings.length / UNSCORED_PAGE_SIZE);
+  const recommendedListingId = allScoredListings[0]?.id;
   const scoredListings = allScoredListings.slice((recommendedPage - 1) * RECOMMENDED_PAGE_SIZE, recommendedPage * RECOMMENDED_PAGE_SIZE);
   const unscoredListings = allUnscoredListings.slice((unscoredPage - 1) * UNSCORED_PAGE_SIZE, unscoredPage * UNSCORED_PAGE_SIZE);
 
@@ -933,9 +934,11 @@ export default function PublicListingsPage() {
                           }}
                           className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-[32px] border bg-white/85 shadow-[0_22px_55px_-24px_rgba(0,0,0,0.32)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_38px_90px_-28px_rgba(0,0,0,0.35)] sm:flex-row ${highlightListingId === listing.id ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/30" : "border-[var(--primary)]/20"}`}
                         >
-                          <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-[var(--primary)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-white shadow-lg">
-                            <Sparkles className="h-3 w-3" /> Recommended
-                          </span>
+                          {listing.id === recommendedListingId && (
+                            <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-[var(--primary)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-white shadow-lg">
+                              <Sparkles className="h-3 w-3" /> Recommended
+                            </span>
+                          )}
                           <div className="relative h-56 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:w-[260px]">
                             {thumbnail ? (
                               <img src={thumbnail} alt={listing.title} referrerPolicy="no-referrer" className="h-full w-full object-cover transition duration-700 group-hover:scale-110 group-hover:rotate-1" />

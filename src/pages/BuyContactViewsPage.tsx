@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchProfile } from "../api/services/user";
 import axiosInstance from "../api/axiosConfig";
+import { purchaseContactViews } from "../api/services/contactViews";
 import UserShell from "@/layouts/UserShell";
 import { CheckCircle, Copy, Phone, MessageCircle, AlertTriangle, ShoppingCart, Crown } from "lucide-react";
 
@@ -9,8 +9,8 @@ const MOMO_PHONE = "0704542270";
 const MOMO_NAME = "Luong Anh Mai";
 
 const packages = [
-  { views: 5, amount: 10000, label: "Gói 5 lượt xem", pkgName: "Xem_lien_he_5", icon: ShoppingCart },
-  { views: 10, amount: 18500, label: "Gói 10 lượt xem", pkgName: "Xem_lien_he_10", icon: Crown },
+  { views: 5, amount: 5000, label: "Gói 5 lượt xem hồ sơ lối sống - 5.000đ", pkgName: "Xem_lien_he_5", icon: ShoppingCart },
+  { views: 20, amount: 15000, label: "Gói 20 lượt xem hồ sơ lối sống - 15.000đ", pkgName: "Xem_lien_he_20", icon: Crown },
 ];
 
 export default function BuyContactViewsPage() {
@@ -20,21 +20,33 @@ export default function BuyContactViewsPage() {
   const [qrData, setQrData] = useState<any>(null);
   const [submitted, setSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
-    if (!token) { navigate("/login"); return; }
-    fetchProfile()
-      .then((profile) => setUserEmail(profile.email || ""))
-      .catch(() => {});
+    if (!token) {
+      navigate("/login");
+      return;
+    }
   }, [navigate]);
 
-  const handleSelectPackage = (pkg: any) => {
+  const handleSelectPackage = async (pkg: any) => {
     setSelected(pkg);
-    const content = `ROOMIE_${pkg.pkgName}_${userEmail || "user"}`;
-    const qrUrl = `https://img.vietqr.io/image/MOMO-${MOMO_PHONE}-compact2.png?amount=${pkg.amount}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(MOMO_NAME)}`;
-    setQrData({ qrUrl, content, amount: pkg.amount });
+    setQrData(null);
+    setSubmitted(false);
+
+    try {
+      const data = await purchaseContactViews(pkg.amount, pkg.label);
+      setQrData({
+        qrUrl: data.qrUrl,
+        content: data.content,
+        amount: data.amount,
+        recipientInfo: data.recipientInfo,
+        example: data.example || data.content,
+      });
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || err?.message || "Không thể tạo mã QR";
+      alert(msg);
+    }
   };
 
   const handleCopyContent = () => {
@@ -66,8 +78,8 @@ export default function BuyContactViewsPage() {
     <UserShell>
       <div className="min-h-screen bg-[var(--surface)] p-8">
         <div className="mx-auto max-w-[1200px]">
-          <h1 className="text-3xl font-extrabold text-[var(--on-surface)] mb-2" style={{ fontFamily: "var(--font-main)" }}>Mua lượt xem liên hệ</h1>
-          <p className="text-slate-500 mb-8">Chọn gói và chuyển khoản theo hướng dẫn</p>
+          <h1 className="text-3xl font-extrabold text-[var(--on-surface)] mb-2" style={{ fontFamily: "var(--font-main)" }}>Mua lượt xem hồ sơ lối sống</h1>
+          <p className="text-slate-500 mb-8">Chọn gói và chuyển khoản theo hướng dẫn để mở hồ sơ lối sống của chủ bài đăng</p>
 
           {submitted ? (
             <div className="rounded-[var(--radius-md)] border border-emerald-200 bg-white p-10 text-center">
@@ -102,8 +114,8 @@ export default function BuyContactViewsPage() {
                       <p className="text-3xl font-extrabold text-[var(--primary)]">{pkg.amount.toLocaleString()}đ</p>
                       <p className="text-sm text-slate-500 mt-2">{pkg.views} lượt xem</p>
                       <div className="mt-5 space-y-1">
-                        <p className="text-sm text-slate-600">✓ Xem số điện thoại chủ phòng</p>
-                        <p className="text-sm text-slate-600">✓ Liên hệ qua Zalo trực tiếp</p>
+                        <p className="text-sm text-slate-600">✓ Mở hồ sơ lối sống của chủ phòng</p>
+                        <p className="text-sm text-slate-600">✓ Dùng cho từng bài đăng cần xem thêm</p>
                       </div>
                     </div>
                   );
@@ -123,11 +135,11 @@ export default function BuyContactViewsPage() {
                       <div className="space-y-3 text-sm">
                         <div>
                           <p className="font-semibold text-slate-500">Người nhận</p>
-                          <p className="font-bold text-[var(--on-surface)]">{MOMO_NAME}</p>
+                          <p className="font-bold text-[var(--on-surface)]">{qrData.recipientInfo?.name || MOMO_NAME}</p>
                         </div>
                         <div>
                           <p className="font-semibold text-slate-500">Số điện thoại</p>
-                          <p className="font-bold text-[var(--on-surface)]">{MOMO_PHONE}</p>
+                          <p className="font-bold text-[var(--on-surface)]">{qrData.recipientInfo?.phone || MOMO_PHONE}</p>
                         </div>
                         <div>
                           <p className="font-semibold text-slate-500">Số tiền</p>
@@ -135,9 +147,9 @@ export default function BuyContactViewsPage() {
                         </div>
                         <div>
                           <p className="font-semibold text-slate-500">Nội dung chuyển khoản</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="font-mono font-bold bg-[var(--primary-container)] px-3 py-1 rounded-[var(--radius-md)] border border-[var(--primary)]/30 text-sm text-[var(--on-surface)]">{qrData.content}</span>
-                            <button onClick={handleCopyContent} className="p-1.5 rounded-[var(--radius-md)] hover:bg-[var(--primary-container)] transition">
+                          <div className="mt-1 flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--primary)]/30 bg-[var(--primary-container)]/70 px-3 py-2">
+                            <span className="font-mono text-sm font-bold text-[var(--on-surface)]">{qrData.content}</span>
+                            <button onClick={handleCopyContent} className="ml-auto rounded-[var(--radius-md)] p-1.5 transition hover:bg-[var(--primary-container)]">
                               <Copy className={`h-4 w-4 ${copied ? "text-emerald-500" : "text-slate-400"}`} />
                             </button>
                           </div>
@@ -145,15 +157,15 @@ export default function BuyContactViewsPage() {
                       </div>
                     </div>
 
-                    <div className="mt-6 rounded-[var(--radius-md)] bg-[var(--primary-container)]/40 border border-[var(--primary)]/20 p-4 text-sm">
-                      <div className="flex items-center gap-2 font-semibold mb-3 text-[var(--primary)]">
+                    <div className="mt-6 rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-[var(--primary-container)]/40 p-4 text-sm text-amber-800">
+                      <div className="mb-3 flex items-center gap-2 font-semibold text-[var(--primary)]">
                         <AlertTriangle className="h-4 w-4" />
                         <span>Hướng dẫn:</span>
                       </div>
-                      <ul className="mt-1 space-y-1 list-disc pl-4 text-slate-700">
+                      <ul className="mt-1 list-disc space-y-1 pl-4 text-slate-700">
                         <li>Mở ứng dụng <strong>ngân hàng</strong> hoặc <strong>Momo</strong> trên điện thoại</li>
-                        <li>Quét mã QR hoặc chuyển khoản đến số <strong>{MOMO_PHONE}</strong></li>
-                        <li>Nhập nội dung chuyển khoản: <strong className="font-mono">{qrData.content}</strong></li>
+                        <li>Quét mã QR hoặc chuyển khoản đến số <strong>{qrData.recipientInfo?.phone || MOMO_PHONE}</strong></li>
+                        <li>Nhập nội dung chuyển khoản: <strong className="font-mono">{qrData.example || qrData.content}</strong></li>
                         <li>Sau khi chuyển, nhấn nút bên dưới để xác nhận</li>
                       </ul>
                     </div>

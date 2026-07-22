@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchProfile, getOnboardingStorageKey } from "../api/services/user";
 import { ArrowLeft, ArrowRight, CheckCircle2, Compass, Home, Sparkles } from "lucide-react";
 import { updateLifestyleProfile, updateRoommatePreferences, type LifestyleProfile, type RoommatePreferences } from "../api/services/lifestyle";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS, PROFILE_OPTIONS } from "./lifestyleOptions";
@@ -285,7 +286,8 @@ export default function OnboardingPage() {
         eventName: userType === "HAS_ROOM" ? "lifestyle_profile_updated" : "soft_filter_updated",
       });
 
-      const key = `roomie_onboarding_completed_${window.location.hostname}`;
+      const profile = await fetchProfile();
+      const key = getOnboardingStorageKey(profile.id);
       localStorage.setItem(key, "true");
       if (userType === "HAS_ROOM") {
         navigate("/my-listings/new");

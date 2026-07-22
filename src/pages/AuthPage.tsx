@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { login, register } from "../api/services/auth";
-import { fetchProfile } from "../api/services/user";
+import { fetchProfile, getOnboardingStorageKey } from "../api/services/user";
 import { fetchLifestyleProfile, fetchRoommatePreferences } from "../api/services/lifestyle";
 
 const loginSchema = z.object({
@@ -84,8 +84,10 @@ export default function AuthPage() {
       const result = await login(values);
       localStorage.setItem("access_token", result.accessToken);
       setStatus("Đăng nhập thành công.");
+      let loggedInUserId = "";
       try {
         const profile = await fetchProfile();
+        loggedInUserId = profile.id;
         if (profile.roleName === "admin") {
           navigate("/admin/dashboard");
           return;
@@ -94,7 +96,11 @@ export default function AuthPage() {
         // ignore profile error
       }
 
-      const onboardingKey = `roomie_onboarding_completed_${window.location.hostname}`;
+      if (!loggedInUserId) {
+        navigate("/onboarding");
+        return;
+      }
+      const onboardingKey = getOnboardingStorageKey(loggedInUserId);
       const alreadyCompleted = localStorage.getItem(onboardingKey) === "true";
       if (!alreadyCompleted) {
         try {

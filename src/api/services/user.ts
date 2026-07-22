@@ -16,6 +16,10 @@ export async function fetchProfile() {
   return response.data as UserProfile;
 }
 
+export function getOnboardingStorageKey(userId: string) {
+  return `roomie_onboarding_completed_${userId}`;
+}
+
 export async function updateProfile(payload: {
   fullName: string;
   username?: string | null;

@@ -10,6 +10,16 @@ export async function viewContact(listingId: string) {
   return res.data;
 }
 
+export async function viewLifestyleProfile(listingId: string) {
+  const res = await axiosInstance.post(`/api/contact-views/lifestyle/${listingId}`);
+  return res.data;
+}
+
+export async function fetchLifestyleProfileAccess(listingId: string) {
+  const res = await axiosInstance.get(`/api/contact-views/lifestyle/${listingId}`);
+  return res.data;
+}
+
 export async function purchaseContactViews(amount: number, packageName: string) {
   const res = await axiosInstance.post("/api/contact-views/purchase", {
     amount,

@@ -13,8 +13,10 @@ import Pagination from "../../components/Pagination";
 
 const PACKAGE_OPTIONS = [
     { value: "", label: "Tất cả gói" },
-    { value: "Gói 5.000đ", label: "Gói 5.000đ" },
-    { value: "Gói 15.000đ", label: "Gói 15.000đ" },
+    { value: "Gói 5 lượt xem", label: "Gói 5 lượt xem - 5.000đ" },
+    { value: "Gói 20 lượt xem", label: "Gói 20 lượt xem - 15.000đ" },
+    { value: "Gói 5.000đ", label: "Gói đẩy bài 5.000đ" },
+    { value: "Gói 15.000đ", label: "Gói đẩy bài 15.000đ" },
 ];
 
 export default function AdminPayments() {

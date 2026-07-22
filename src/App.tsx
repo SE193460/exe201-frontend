@@ -26,7 +26,7 @@ import AdminReportsPage from "./pages/admin/AdminReportsPage";
 import SupportContactPage from "./pages/SupportContactPage";
 import AdminFeedbacksPage from "./pages/admin/AdminFeedbacksPage";
 import OnboardingPage from "./pages/OnboardingPage";
-import { fetchProfile } from "./api/services/user";
+import { fetchProfile, getOnboardingStorageKey } from "./api/services/user";
 import { fetchLifestyleProfile, fetchRoommatePreferences } from "./api/services/lifestyle";
 
 function GoogleCallbackHandler() {
@@ -53,8 +53,10 @@ function GoogleCallbackHandler() {
         localStorage.setItem("access_token", token);
         console.log("App: Token saved to localStorage");
 
+        let loggedInUserId = "";
         try {
           const profile = await fetchProfile();
+          loggedInUserId = profile.id;
           console.log("App: Profile fetched:", profile);
 
           if (profile.roleName === "admin") {
@@ -67,7 +69,11 @@ function GoogleCallbackHandler() {
         }
 
         // Check onboarding status
-        const onboardingKey = `roomie_onboarding_completed_${window.location.hostname}`;
+        if (!loggedInUserId) {
+          navigate("/onboarding");
+          return;
+        }
+        const onboardingKey = getOnboardingStorageKey(loggedInUserId);
         const alreadyCompleted = localStorage.getItem(onboardingKey) === "true";
         console.log("App: Onboarding already completed:", alreadyCompleted);
 
