@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { SoftFilterResult } from "../api/services/lifestyle";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { useNavigate, useParams } from "react-router-dom";
@@ -96,6 +96,7 @@ export default function PublicListingDetailPage() {
   const [revealingContact, setRevealingContact] = useState(false);
   const [contactError, setContactError] = useState("");
   const [mapExpanded, setMapExpanded] = useState(false);
+  const matchingSectionRef = useRef<HTMLElement | null>(null);
 
   const handleCopyPhone = async (phone: string) => {
     try {
@@ -292,6 +293,17 @@ export default function PublicListingDetailPage() {
     };
   }, [isMediaModalOpen, mediaModalTab, listing]);
 
+  useEffect(() => {
+    if (!listing || loading) return;
+    const timer = window.setTimeout(() => {
+      if (!matchingSectionRef.current) return;
+      const headerOffset = 96;
+      const elementTop = matchingSectionRef.current.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({ top: elementTop, behavior: "smooth" });
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [listing, loading]);
+
   const activeLabel = listing?.ownerLastActive
     ? t("Đã hoạt động") + " " + timeAgo(listing.ownerLastActive)
     : t("Đang hoạt động");
@@ -366,6 +378,8 @@ export default function PublicListingDetailPage() {
     }
     return { good, caution };
   };
+
+  const matchingSummary = getPrefsFromResult(softFilterResult);
 
   useEffect(() => {
     const load = () => {
@@ -443,51 +457,51 @@ export default function PublicListingDetailPage() {
               {t("TP. Hồ Chí Minh")} <span className="mx-1 text-slate-300">›</span> {t("Quận 7")} <span className="mx-1 text-slate-300">›</span> <span className="text-slate-700">{listingAddress || t("Căn hộ Sunrise City")}</span>
             </div>
 
-            <section className="space-y-3 mb-8">
-              <div className="group relative aspect-[16/9] w-full overflow-hidden rounded-[20px] bg-slate-100 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.35)] cursor-pointer" onClick={() => openImageModal(selectedImgIdx)}>
-                {listing.images && listing.images.length > 0 ? (
-                  <>
-                    <img
-                      src={resolveListingImageUrl(listing.images[selectedImgIdx].imageUrl)}
-                      alt={listing.title}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-                    />
-                    {listing.images.length > 1 && (
-                      <>
-                        <button onClick={(e) => { e.stopPropagation(); handlePrevImg(); }} className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">‹</button>
-                        <button onClick={(e) => { e.stopPropagation(); handleNextImg(); }} className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">›</button>
-                        <div className="absolute bottom-4 right-4 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur flex items-center gap-1.5">
-                          <Camera className="h-3.5 w-3.5" /> {selectedImgIdx + 1}/{listing.images.length}
-                        </div>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex h-full min-h-[330px] items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-500">
-                    {t("Bài đăng không đính kèm hình ảnh")}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {(listing.images || []).slice(1, 6).map((image, idx) => (
-                  <button key={image.id} className="relative h-20 w-28 flex-shrink-0 overflow-hidden rounded-[16px] bg-slate-100 shadow-[0_12px_24px_-18px_rgba(0,0,0,0.35)]" onClick={() => openImageModal(idx + 1)}>
-                    <img src={resolveListingImageUrl(image.imageUrl)} alt="" className="h-full w-full object-cover" />
-                    {idx === 3 && listing.images.length > 5 && (
-                      <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-semibold text-white">{t("Xem tất cả")} ({listing.images.length})</span>
-                    )}
-                  </button>
-                ))}
-                {(!listing.images || listing.images.length <= 1) && (
-                  <div className="flex h-20 min-w-[11rem] items-center justify-center rounded-[16px] border border-dashed border-slate-200 bg-white p-5 text-sm text-slate-400">
-                    {t("Chưa có thêm ảnh")}
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px] items-start">
+            <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_360px] items-start">
               <div className="space-y-6">
+                <section className="mb-6 space-y-2">
+                  <div className="group relative aspect-[16/9] w-full overflow-hidden rounded-[18px] bg-slate-100 shadow-[0_16px_36px_-24px_rgba(0,0,0,0.35)] cursor-pointer" onClick={() => openImageModal(selectedImgIdx)}>
+                    {listing.images && listing.images.length > 0 ? (
+                      <>
+                        <img
+                          src={resolveListingImageUrl(listing.images[selectedImgIdx].imageUrl)}
+                          alt={listing.title}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                        />
+                        {listing.images.length > 1 && (
+                          <>
+                            <button onClick={(e) => { e.stopPropagation(); handlePrevImg(); }} className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">‹</button>
+                            <button onClick={(e) => { e.stopPropagation(); handleNextImg(); }} className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">›</button>
+                            <div className="absolute bottom-4 right-4 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur flex items-center gap-1.5">
+                              <Camera className="h-3.5 w-3.5" /> {selectedImgIdx + 1}/{listing.images.length}
+                            </div>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex h-full min-h-[330px] items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-500">
+                        {t("Bài đăng không đính kèm hình ảnh")}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex w-full gap-2 overflow-x-auto pb-1">
+                    {(listing.images || []).slice(1, 6).map((image, idx) => (
+                      <button key={image.id} className="relative h-16 w-24 flex-shrink-0 overflow-hidden rounded-[14px] bg-slate-100 shadow-[0_10px_20px_-16px_rgba(0,0,0,0.35)]" onClick={() => openImageModal(idx + 1)}>
+                        <img src={resolveListingImageUrl(image.imageUrl)} alt="" className="h-full w-full object-cover" />
+                        {idx === 3 && listing.images.length > 5 && (
+                          <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-semibold text-white">{t("Xem tất cả")} ({listing.images.length})</span>
+                        )}
+                      </button>
+                    ))}
+                    {(!listing.images || listing.images.length <= 1) && (
+                      <div className="flex h-16 min-w-[9rem] items-center justify-center rounded-[14px] border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-400">
+                        {t("Chưa có thêm ảnh")}
+                      </div>
+                    )}
+                  </div>
+                </section>
+
                 <section className="flex flex-wrap gap-2">
                   {listing.promoExpiresAt && new Date(listing.promoExpiresAt) > new Date() && (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-red-600">
@@ -495,27 +509,179 @@ export default function PublicListingDetailPage() {
                       {listing.promoType === "premium" ? t("TIN VIP CAO CẤP") : t("TIN VIP NỔI BẬT")}
                     </span>
                   )}
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-[11px] font-semibold text-amber-700">{t("Phòng riêng")}</span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-700">{t("Sẵn sàng ngay")}</span>
                 </section>
 
-                <section className="rounded-[24px] bg-white px-5 py-6 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.18)] border border-slate-200">
-                  <h1 className="text-3xl md:text-[34px] font-extrabold leading-[1.1] text-slate-900 max-w-[850px]">{listing.title}</h1>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                    <MapPinned className="h-4 w-4 text-[#a55b00]" />
-                    <span>{listingAddress || t("Chưa cập nhật")}</span>
-                  </div>
-                  <div className="mt-4 text-2xl md:text-[30px] font-extrabold text-[#a55b00]">
-                    {listing.rentPrice.toLocaleString("vi-VN")} <span className="text-base font-semibold text-slate-500">{t("/ tháng")}</span>
+                <section ref={matchingSectionRef} className="group -mt-2 overflow-hidden rounded-[28px] border border-[#f2dfc6] bg-gradient-to-br from-[#fffaf4] via-white to-[#fff6eb] p-5 md:p-6 shadow-[0_20px_55px_-35px_rgba(0,0,0,0.25)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(0,0,0,0.32)]">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="max-w-2xl">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-[#a55b00]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#a55b00]">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        {t("Phân tích ghép phòng")}
+                      </div>
+                      <h2 className="mt-3 text-2xl font-extrabold text-slate-900">{t("Tương thích của bạn với phòng này")}</h2>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">{t("Phần này giúp bạn nắm nhanh các điểm phù hợp, điểm cần trao đổi và mức độ phù hợp với lối sống của bạn.")}</p>
+                    </div>
+                    <div className={`rounded-[24px] border px-4 py-3 text-center shadow-sm backdrop-blur ${
+                      (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 75
+                        ? "border-emerald-200 bg-emerald-50/90"
+                        : (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 60
+                          ? "border-amber-200 bg-amber-50/90"
+                          : "border-rose-200 bg-rose-50/90"
+                    }`}>
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">{t("Điểm khớp")}</div>
+                      <div
+                        className={`mt-1 text-4xl font-black transition-all duration-700 ease-out ${
+                          (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 75
+                            ? "text-emerald-700"
+                            : (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 60
+                              ? "text-amber-700"
+                              : "text-rose-700"
+                        }`}
+                        style={{
+                          transform: `scale(${1 + Math.min(0.08, ((softFilterResult ? Math.round(softFilterResult.total_score) : 0) / 100) * 0.08)})`,
+                          filter: `drop-shadow(0 0 10px rgba(165, 91, 0, 0.12))`,
+                        }}
+                      >
+                        {softFilterResult ? Math.round(softFilterResult.total_score) : 0}
+                      </div>
+                      <div className="text-sm font-semibold text-slate-600">/100</div>
+                    </div>
                   </div>
 
-                  <div className="mt-6 border-t border-slate-100 pt-5">
-                    <h3 className="text-base font-bold text-slate-900">{t("Mô tả chi tiết")}</h3>
-                    <div className="mt-3 text-[15px] leading-7 text-slate-600 whitespace-pre-wrap">{renderDescription(listing.description)}</div>
+                  <div className="mt-5 rounded-[24px] border border-[#f0d5b0] bg-white/80 p-4 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm font-semibold text-slate-700">
+                      <span>{t("Mức độ phù hợp tổng thể")}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                          (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 75
+                            ? "bg-emerald-100 text-emerald-700"
+                            : (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 60
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-rose-100 text-rose-700"
+                        }`}>
+                          {(softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 75
+                            ? t("Rất phù hợp")
+                            : (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 60
+                              ? t("Khá phù hợp")
+                              : t("Cần trao đổi")}
+                        </span>
+                        <span className={`font-bold ${
+                          (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 75
+                            ? "text-emerald-700"
+                            : (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 60
+                              ? "text-amber-700"
+                              : "text-rose-700"
+                        }`}>
+                          {softFilterResult ? Math.round(softFilterResult.total_score) : 0}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 75
+                            ? "bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600"
+                            : (softFilterResult ? Math.round(softFilterResult.total_score) : 0) >= 60
+                              ? "bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500"
+                              : "bg-gradient-to-r from-rose-400 via-rose-500 to-red-500"
+                        }`}
+                        style={{ width: `${Math.min(100, Math.max(0, softFilterResult ? Math.round(softFilterResult.total_score) : 0))}%` }}
+                      />
+                    </div>
                   </div>
 
-                  <div className="mt-6 border-t border-slate-100 pt-5">
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {softFilterResult ? (
+                    <>
+                      <div className="mt-6 grid gap-3 md:grid-cols-3">
+                        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/90 p-4">
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-700">{t("Điểm tốt")}</div>
+                          <div className="mt-1 text-2xl font-bold text-emerald-700">{matchingSummary.good.length}</div>
+                          <p className="mt-1 text-sm text-emerald-700/80">{t("Tiêu chí phù hợp rõ ràng")}</p>
+                        </div>
+                        <div className="rounded-2xl border border-amber-100 bg-amber-50/90 p-4">
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-700">{t("Cần lưu ý")}</div>
+                          <div className="mt-1 text-2xl font-bold text-amber-700">{matchingSummary.caution.length}</div>
+                          <p className="mt-1 text-sm text-amber-700/80">{t("Nên trao đổi trước khi quyết định")}</p>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">{t("Mức độ phù hợp")}</div>
+                          <div className="mt-1 text-2xl font-bold text-slate-900">{Math.round(softFilterResult.total_score) >= 75 ? t("Rất tốt") : Math.round(softFilterResult.total_score) >= 60 ? t("Khá tốt") : t("Cần trao đổi")}</div>
+                          <p className="mt-1 text-sm text-slate-600">{t("Dựa trên hồ sơ lối sống của bạn")}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+                        <div className="rounded-[24px] border border-emerald-100 bg-white/85 p-4 md:p-5">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-slate-900">{t("Điểm nổi bật")}</h3>
+                            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">{t("điểm mạnh")}</span>
+                          </div>
+                          <div className="mt-4 space-y-3">
+                            {matchingSummary.good.slice(0, 4).map((item: any) => (
+                              <div key={item.field} className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3 transition hover:border-emerald-200 hover:bg-emerald-50/70">
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[item.field] || item.field}</div>
+                                  <div className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">{Math.round((item.score || 0) * 100)}%</div>
+                                </div>
+                                <div className="mt-1 text-sm text-slate-600">{t("Bạn: ")}<span className="font-semibold text-slate-800">{item.prefLabel}</span></div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="rounded-[24px] border border-amber-100 bg-amber-50/90 p-4 md:p-5">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-slate-900">{t("Cần lưu ý")}</h3>
+                            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-700">{t("trao đổi")}</span>
+                          </div>
+                          <div className="mt-4 space-y-3">
+                            {matchingSummary.caution.slice(0, 4).map((item: any) => (
+                              <div key={item.field} className="rounded-2xl border border-amber-100 bg-white/70 p-3 transition hover:border-amber-200 hover:bg-amber-100/70">
+                                <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[item.field] || item.field}</div>
+                                <div className="mt-1 text-sm text-slate-600">{t("Bạn: ")}<span className="font-semibold text-slate-800">{item.prefLabel}</span></div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 rounded-[24px] border border-slate-200 bg-white/80 p-4 md:p-5">
+                        <h3 className="text-lg font-bold text-slate-900">{t("Gợi ý cho lần đầu gặp gỡ")}</h3>
+                        <div className="mt-3 grid gap-3 md:grid-cols-2">
+                          <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
+                            <div className="font-semibold text-slate-800">{t("Nên trao đổi")}</div>
+                            <p className="mt-1">{matchingSummary.caution[0] ? `${FIELD_FULL_LABELS[matchingSummary.caution[0].field] || matchingSummary.caution[0].field} là điểm bạn nên nói rõ trước khi quyết định.` : t("Hãy trao đổi trực tiếp về thói quen sinh hoạt để quá trình ở ghép trở nên thoải mái hơn.")}</p>
+                          </div>
+                          <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
+                            <div className="font-semibold text-slate-800">{t("Điểm cộng lớn")}</div>
+                            <p className="mt-1">{matchingSummary.good[0] ? `${FIELD_FULL_LABELS[matchingSummary.good[0].field] || matchingSummary.good[0].field} là điểm cộng rất rõ ràng cho sự phù hợp này.` : t("Phòng này có nhiều yếu tố phù hợp với nhu cầu của bạn.")}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-6 rounded-[24px] border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600">
+                      {t("Chưa có dữ liệu matching cho phòng này. Hãy hoàn thiện hồ sơ để xem điểm tương thích chi tiết.")}
+                    </div>
+                  )}
+                </section>
+
+                <section className="rounded-[24px] bg-white px-5 py-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.18)] border border-slate-200">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h1 className="text-2xl md:text-[28px] font-extrabold leading-[1.2] text-slate-900">{listing.title}</h1>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                        <MapPinned className="h-4 w-4 text-[#a55b00]" />
+                        <span>{listingAddress || t("Chưa cập nhật")}</span>
+                      </div>
+                    </div>
+                    <div className="text-xl md:text-[24px] font-extrabold text-[#a55b00]">
+                      {listing.rentPrice.toLocaleString("vi-VN")} <span className="text-sm font-semibold text-slate-500">{t("/ tháng")}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 border-t border-slate-100 pt-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       {[
                         [t("Mã tin đăng"), `#${listing.id.slice(0, 8).toUpperCase()}`],
                         [t("Quận/Huyện"), listing.district || "—"],
@@ -523,7 +689,6 @@ export default function PublicListingDetailPage() {
                         [t("Diện tích"), listing.roomAreaSqm ? `${listing.roomAreaSqm} m²` : "—"],
                         [t("Loại phòng"), t(listing.roomType || "Phòng trọ ở ghép")],
                         [t("Đối tượng ưu tiên"), t(listing.preferredGender || "Không yêu cầu")],
-                        [t("Cập nhật"), formatDate(listing.updatedAt)],
                       ].map(([label, value]) => (
                         <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3">
                           <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</div>
@@ -531,6 +696,11 @@ export default function PublicListingDetailPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="mt-5 border-t border-slate-100 pt-4">
+                    <h3 className="text-base font-bold text-slate-900">{t("Mô tả chi tiết")}</h3>
+                    <div className="mt-2 text-[15px] leading-7 text-slate-600 whitespace-pre-wrap">{renderDescription(listing.description)}</div>
                   </div>
 
                   {!listing.source && (
@@ -547,9 +717,9 @@ export default function PublicListingDetailPage() {
                   )}
 
                   {listing.amenities && listing.amenities.length > 0 && (
-                    <div className="mt-6 border-t border-slate-100 pt-5">
+                    <div className="mt-5 border-t border-slate-100 pt-4">
                       <h3 className="text-base font-bold text-slate-900">{t("Tiện nghi")}</h3>
-                      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                         {listing.amenities.map((amenity) => (
                           <span key={amenity.id} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm">
                             <CircleCheck className="h-4 w-4 text-[#a55b00] flex-shrink-0" />
@@ -560,7 +730,7 @@ export default function PublicListingDetailPage() {
                     </div>
                   )}
 
-                  <div className="mt-6 border-t border-slate-100 pt-5">
+                  <div className="mt-5 border-t border-slate-100 pt-4">
                     <button onClick={() => setMapExpanded(!mapExpanded)} className="flex w-full items-center justify-between gap-3 mb-3">
                       <h3 className="text-base font-bold text-slate-900">{t("Vị trí")}</h3>
                       <div className="flex items-center gap-2">
@@ -588,7 +758,7 @@ export default function PublicListingDetailPage() {
                     </div>
                   </div>
 
-                  <div className="mx-0 mt-6 rounded-[18px] border border-[#edd7be] bg-[#fff6eb] p-4 text-left text-xs space-y-1.5 text-[#9a6a3c] leading-relaxed">
+                  <div className="mx-0 mt-5 rounded-[18px] border border-[#edd7be] bg-[#fff6eb] p-4 text-left text-xs space-y-1.5 text-[#9a6a3c] leading-relaxed">
                     <p className="inline-flex w-full items-center justify-center gap-1.5 font-bold text-[#8d4d08] text-center">
                       <Info className="h-4 w-4 text-[#a55b00]" /> {t("Lưu ý quan trọng:")}
                     </p>
@@ -598,42 +768,7 @@ export default function PublicListingDetailPage() {
                 </section>
               </div>
 
-              <aside className="space-y-4 lg:sticky lg:top-6">
-                {softFilterResult && (
-                  <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.14)] space-y-4">
-                    <div className="text-center">
-                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t("Điểm khớp")}</div>
-                      <div className="mt-1 text-3xl font-extrabold text-[#a55b00]">{Math.round(softFilterResult.total_score)}/100</div>
-                    </div>
-                    {getPrefsFromResult(softFilterResult).good.length > 0 && (
-                      <div>
-                        <div className="text-xs font-bold text-slate-700 mb-2">{t("Điểm tốt")}</div>
-                        <div className="space-y-2 rounded-2xl border border-emerald-100 bg-emerald-50 p-3">
-                          {getPrefsFromResult(softFilterResult).good.map((p: any) => (
-                            <div key={p.field} className="text-xs">
-                              <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[p.field] || p.field}</div>
-                              <div className="text-slate-500">{t("Họ:")} <span className="text-slate-700">{p.profileLabel}</span> · {t("Bạn:")} <span className="text-slate-700">{p.prefLabel}</span></div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {getPrefsFromResult(softFilterResult).caution.length > 0 && (
-                      <div>
-                        <div className="text-xs font-bold text-slate-700 mb-2">{t("Cần lưu ý")}</div>
-                        <div className="space-y-2 rounded-2xl border border-amber-100 bg-amber-50 p-3">
-                          {getPrefsFromResult(softFilterResult).caution.map((p: any) => (
-                            <div key={p.field} className="text-xs">
-                              <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[p.field] || p.field}</div>
-                              <div className="text-slate-500">{t("Họ:")} <span className="text-slate-700">{p.profileLabel}</span> · {t("Bạn:")} <span className="text-slate-700">{p.prefLabel}</span></div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
+              <aside className="space-y-4 lg:sticky lg:top-[5.5rem]">
                 {listing.source ? (
                   <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.14)] text-center space-y-4">
                     <div className="space-y-1">
