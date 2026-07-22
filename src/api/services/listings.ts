@@ -53,9 +53,6 @@ export function resolveListingImageUrl(imageUrl: string) {
   if (!imageUrl) return imageUrl;
   const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
   if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-    if (imageUrl.includes("scontent") || imageUrl.includes("fbcdn") || imageUrl.includes("facebook")) {
-      return `${baseUrl}/api/images/proxy?url=${encodeURIComponent(imageUrl)}`;
-    }
     return imageUrl;
   }
   return `${baseUrl}${imageUrl}`;

@@ -49,6 +49,9 @@ export default function LifestyleProfilePage() {
     setForm((prev) => ({ ...prev, [field]: value === "" ? null : value }));
   };
 
+  const hasValue = (value: number | string | null | undefined) => value !== null && value !== undefined && value !== "";
+  const canShowBlankOption = (field: keyof LifestyleProfile) => !hasValue(form[field]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("");
@@ -123,7 +126,7 @@ export default function LifestyleProfilePage() {
                     value={form.cleanliness ?? ""}
                     onChange={(e) => setNumberField("cleanliness", e.target.value)}
                   >
-                    <option value="">{t("Bỏ trống")}</option>
+                    {canShowBlankOption("cleanliness") && <option value="">{t("Bỏ trống")}</option>}
                     {PROFILE_OPTIONS.cleanliness.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
@@ -135,7 +138,7 @@ export default function LifestyleProfilePage() {
                     value={form.ac_usage ?? ""}
                     onChange={(e) => setNumberField("ac_usage", e.target.value)}
                   >
-                    <option value="">{t("Bỏ trống")}</option>
+                    {canShowBlankOption("ac_usage") && <option value="">{t("Bỏ trống")}</option>}
                     {PROFILE_OPTIONS.ac_usage.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
@@ -148,7 +151,7 @@ export default function LifestyleProfilePage() {
                       value={form.pet_status ?? ""}
                       onChange={(e) => setNumberField("pet_status", e.target.value)}
                     >
-                      <option value="">{t("Bỏ trống")}</option>
+                      {canShowBlankOption("pet_status") && <option value="">{t("Bỏ trống")}</option>}
                       {PROFILE_OPTIONS.binary.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                     </select>
                   </label>
@@ -159,7 +162,7 @@ export default function LifestyleProfilePage() {
                       value={form.smoking_status ?? ""}
                       onChange={(e) => setNumberField("smoking_status", e.target.value)}
                     >
-                      <option value="">{t("Bỏ trống")}</option>
+                      {canShowBlankOption("smoking_status") && <option value="">{t("Bỏ trống")}</option>}
                       {PROFILE_OPTIONS.binary.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                     </select>
                   </label>
@@ -186,7 +189,7 @@ export default function LifestyleProfilePage() {
                     value={form.cooking ?? ""}
                     onChange={(e) => setNumberField("cooking", e.target.value)}
                   >
-                    <option value="">{t("Bỏ trống")}</option>
+                    {canShowBlankOption("cooking") && <option value="">{t("Bỏ trống")}</option>}
                     {PROFILE_OPTIONS.cooking.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
@@ -198,7 +201,7 @@ export default function LifestyleProfilePage() {
                     value={form.guest ?? ""}
                     onChange={(e) => setNumberField("guest", e.target.value)}
                   >
-                    <option value="">{t("Bỏ trống")}</option>
+                    {canShowBlankOption("guest") && <option value="">{t("Bỏ trống")}</option>}
                     {PROFILE_OPTIONS.guest.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
@@ -210,7 +213,7 @@ export default function LifestyleProfilePage() {
                     value={form.home_frequency ?? ""}
                     onChange={(e) => setNumberField("home_frequency", e.target.value)}
                   >
-                    <option value="">{t("Bỏ trống")}</option>
+                    {canShowBlankOption("home_frequency") && <option value="">{t("Bỏ trống")}</option>}
                     {PROFILE_OPTIONS.home_frequency.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
@@ -222,7 +225,7 @@ export default function LifestyleProfilePage() {
                     value={form.work_schedule ?? ""}
                     onChange={(e) => setTextField("work_schedule", e.target.value)}
                   >
-                    <option value="">{t("Bỏ trống")}</option>
+                    {canShowBlankOption("work_schedule") && <option value="">{t("Bỏ trống")}</option>}
                     {PROFILE_OPTIONS.work_schedule.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
@@ -248,7 +251,7 @@ export default function LifestyleProfilePage() {
                     value={form.sharing ?? ""}
                     onChange={(e) => setNumberField("sharing", e.target.value)}
                   >
-                    <option value="">{t("Bỏ trống")}</option>
+                    {canShowBlankOption("sharing") && <option value="">{t("Bỏ trống")}</option>}
                     {PROFILE_OPTIONS.sharing.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
@@ -260,7 +263,7 @@ export default function LifestyleProfilePage() {
                     value={form.noise ?? ""}
                     onChange={(e) => setNumberField("noise", e.target.value)}
                   >
-                    <option value="">{t("Bỏ trống")}</option>
+                    {canShowBlankOption("noise") && <option value="">{t("Bỏ trống")}</option>}
                     {PROFILE_OPTIONS.noise.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
@@ -272,7 +275,7 @@ export default function LifestyleProfilePage() {
                     value={form.call_frequency ?? ""}
                     onChange={(e) => setNumberField("call_frequency", e.target.value)}
                   >
-                    <option value="">{t("Bỏ trống")}</option>
+                    {canShowBlankOption("call_frequency") && <option value="">{t("Bỏ trống")}</option>}
                     {PROFILE_OPTIONS.call_frequency.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>
@@ -284,7 +287,7 @@ export default function LifestyleProfilePage() {
                     value={form.game_mic ?? ""}
                     onChange={(e) => setNumberField("game_mic", e.target.value)}
                   >
-                    <option value="">{t("Bỏ trống")}</option>
+                    {canShowBlankOption("game_mic") && <option value="">{t("Bỏ trống")}</option>}
                     {PROFILE_OPTIONS.game_mic.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                   </select>
                 </label>

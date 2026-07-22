@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MapPin, X, Sparkles, ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { fetchPublicListings, resolveListingImageUrl } from "../api/services/listings";
+import { MapPin, X, Sparkles, ChevronLeft, ChevronRight, Search, CheckCircle2, AlertCircle, Heart } from "lucide-react";
+import { fetchPublicListings, resolveListingImageUrl, toggleSaveListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import type { SoftFilterResult, RoommatePreferences } from "../api/services/lifestyle";
 import { fetchProfile } from "../api/services/user";
@@ -30,7 +30,9 @@ export default function PublicListingsPage() {
   const [genderFilter, setGenderFilter] = useState(initialParams.get("gender") || "all");
   const [interestFilter] = useState(initialParams.get("interest") || "all");
   
-  const [page, setPage] = useState(1);
+  const [recommendedPage, setRecommendedPage] = useState(1);
+  const [unscoredPage, setUnscoredPage] = useState(1);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [softFilterResults, setSoftFilterResults] = useState<Record<string, SoftFilterResult>>({});
   const [softFilterSource, setSoftFilterSource] = useState<'roommate_preferences' | 'lifestyle_profile' | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -38,7 +40,8 @@ export default function PublicListingsPage() {
   const [softFilterLoading, setSoftFilterLoading] = useState(false);
   const [softFilterSection, setSoftFilterSection] = useState(1);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
-  const PAGE_SIZE = 9;
+  const RECOMMENDED_PAGE_SIZE = 6;
+  const UNSCORED_PAGE_SIZE = 6;
 
   const highlightListingId = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -173,44 +176,23 @@ export default function PublicListingsPage() {
     return null;
   };
 
-  // Lấy tất cả lifestyle preferences của một result
-  const getAllLifestylePrefs = (result: SoftFilterResult | undefined) => {
-    if (!result?.field_scores) return [];
-    
-    // Định thứ tự hiển thị
-    const fieldOrder = [
-      "cleanliness",
-      "ac_usage",
-      "pet",
-      "smoking",
-      "cooking",
-      "guest",
-      "home_frequency",
-      "work_schedule",
-      "sharing",
-      "noise",
-      "call_frequency",
-      "game_mic",
-    ];
-    
-    const prefs: Array<{ field: string; value: any; label: string }> = [];
-    
-    for (const field of fieldOrder) {
+  const getMatchingSummary = (result: SoftFilterResult | undefined) => {
+    if (!result?.field_scores) return { good: [], caution: [] };
+    const order = ["ac_usage", "cooking", "home_frequency", "call_frequency", "smoking", "pet", "cleanliness", "guest", "noise", "game_mic", "work_schedule", "sharing"];
+    const good: Array<{ field: string; prefLabel: string; score: number }> = [];
+    const caution: Array<{ field: string; prefLabel: string; score: number }> = [];
+
+    for (const field of order) {
       const data = result.field_scores[field];
-      // Only include fields that have a good score (>= 0.75)
-      if (data && typeof data.score === "number" && data.score >= 0.75 && data.profile_value !== null && data.profile_value !== undefined) {
-        const label = getFieldValueLabel(field, data.profile_value);
-        if (label) {
-          prefs.push({
-            field,
-            value: data.profile_value,
-            label,
-          });
-        }
-      }
+      if (!data) continue;
+      const prefLabel = getFieldValueLabel(field, data.pref_value) || getFieldValueLabel(field, data.profile_value) || t("Đã chọn");
+      const score = typeof data.score === "number" ? data.score : 0;
+      const entry = { field, prefLabel, score };
+      if (score >= 0.75) good.push(entry);
+      else caution.push(entry);
     }
-    
-    return prefs;
+
+    return { good, caution };
   };
 
   const setPrefNumber = (field: keyof RoommatePreferences, value: string) => {
@@ -219,6 +201,21 @@ export default function PublicListingsPage() {
 
   const setPrefText = (field: keyof RoommatePreferences, value: string) => {
     setSoftFilterPrefs((prev) => ({ ...prev, [field]: value === "" ? null : value }));
+  };
+
+  const handleToggleSave = async (e: React.MouseEvent, listingId: string) => {
+    e.stopPropagation();
+    try {
+      const { isSaved } = await toggleSaveListing(listingId);
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        if (isSaved) next.add(listingId);
+        else next.delete(listingId);
+        return next;
+      });
+    } catch {
+      // ignore
+    }
   };
 
   const loadSoftFilterPrefs = async () => {
@@ -352,6 +349,11 @@ export default function PublicListingsPage() {
     fetchPublicListings()
       .then((data) => {
         setListings(data);
+        const saved = new Set<string>();
+        data.forEach((listing) => {
+          if (listing.isSaved) saved.add(listing.id);
+        });
+        setSavedIds(saved);
         setLoading(false);
       })
       .catch(() => {
@@ -474,17 +476,29 @@ export default function PublicListingsPage() {
     return [...userCreated, ...imported];
   })();
 
-  const totalPages = Math.ceil(filteredListings.length / PAGE_SIZE);
-  const pagedListings = filteredListings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const allScoredListings = [...filteredListings.filter((listing) => Boolean(softFilterResults[listing.id]))].sort((a, b) => {
+    const scoreA = softFilterResults[a.id]?.total_score || 0;
+    const scoreB = softFilterResults[b.id]?.total_score || 0;
+    return scoreB - scoreA;
+  });
+  const allUnscoredListings = filteredListings.filter((listing) => !softFilterResults[listing.id]);
+  const recommendedTotalPages = Math.ceil(allScoredListings.length / RECOMMENDED_PAGE_SIZE);
+  const unscoredTotalPages = Math.ceil(allUnscoredListings.length / UNSCORED_PAGE_SIZE);
+  const scoredListings = allScoredListings.slice((recommendedPage - 1) * RECOMMENDED_PAGE_SIZE, recommendedPage * RECOMMENDED_PAGE_SIZE);
+  const unscoredListings = allUnscoredListings.slice((unscoredPage - 1) * UNSCORED_PAGE_SIZE, unscoredPage * UNSCORED_PAGE_SIZE);
 
   useEffect(() => {
-    if (!highlightListingId || listings.length === 0) return;
-    const targetIndex = listings.findIndex((item) => item.id === highlightListingId);
-    if (targetIndex >= 0) {
-      const targetPage = Math.floor(targetIndex / PAGE_SIZE) + 1;
-      setPage(targetPage);
+    if (!highlightListingId || filteredListings.length === 0) return;
+    const recommendedIndex = allScoredListings.findIndex((item) => item.id === highlightListingId);
+    if (recommendedIndex >= 0) {
+      setRecommendedPage(Math.floor(recommendedIndex / RECOMMENDED_PAGE_SIZE) + 1);
+      return;
     }
-  }, [highlightListingId, listings]);
+    const unscoredIndex = allUnscoredListings.findIndex((item) => item.id === highlightListingId);
+    if (unscoredIndex >= 0) {
+      setUnscoredPage(Math.floor(unscoredIndex / UNSCORED_PAGE_SIZE) + 1);
+    }
+  }, [highlightListingId, filteredListings, allScoredListings, allUnscoredListings]);
 
   useEffect(() => {
     if (!highlightListingId) return;
@@ -496,7 +510,12 @@ export default function PublicListingsPage() {
     }, 250);
 
     return () => window.clearTimeout(timer);
-  }, [highlightListingId, pagedListings]);
+  }, [highlightListingId, scoredListings, unscoredListings]);
+
+  useEffect(() => {
+    setRecommendedPage(1);
+    setUnscoredPage(1);
+  }, [district, price, area, genderFilter, interestFilter, searchLocation]);
 
   // Lắng nghe khi user update soft filter ở trang /soft-filter
   useEffect(() => {
@@ -604,7 +623,6 @@ export default function PublicListingsPage() {
                   onChange={(e) => {
                     const nextDistrict = e.target.value;
                     setDistrict(nextDistrict);
-                    setPage(1);
                     trackEvent({
                       eventName: "listing_filter_applied",
                       district: nextDistrict === "all" ? null : nextDistrict,
@@ -623,7 +641,7 @@ export default function PublicListingsPage() {
                 <span className="text-sm text-slate-500">{t("Giá")}</span>
                 <select
                   value={price}
-                  onChange={(e) => { setPrice(e.target.value); setPage(1); }}
+                  onChange={(e) => { setPrice(e.target.value); }}
                   className="bg-transparent outline-none text-sm"
                 >
                   {PRICE_OPTIONS.map((option) => (
@@ -636,7 +654,7 @@ export default function PublicListingsPage() {
                 <span className="text-sm text-slate-500">{t("Diện tích")}</span>
                 <select
                   value={area}
-                  onChange={(e) => { setArea(e.target.value); setPage(1); }}
+                  onChange={(e) => { setArea(e.target.value); }}
                   className="bg-transparent outline-none text-sm"
                 >
                   {AREA_OPTIONS.map((option) => (
@@ -649,7 +667,7 @@ export default function PublicListingsPage() {
                 <span className="text-sm text-slate-500">{t("Giới tính")}</span>
                 <select
                   value={genderFilter}
-                  onChange={(e) => { setGenderFilter(e.target.value); setPage(1); }}
+                  onChange={(e) => { setGenderFilter(e.target.value); }}
                   className="bg-transparent outline-none text-sm"
                 >
                   <option value="all">{t("Tất cả")}</option>
@@ -879,140 +897,232 @@ export default function PublicListingsPage() {
 
         {!loading && !error && filteredListings.length > 0 && (
           <>
-            {/* Gợi ý phòng phù hợp */}
-            {Object.keys(softFilterResults).length > 0 && (
-              <section className="rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-gradient-to-br from-[var(--primary-container)]/50 to-white p-5">
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-[var(--primary)]" />
-                    <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>
-                      {t("Phòng phù hợp nhất với bạn")}
-                    </h2>
+            <div className="space-y-6">
+              {scoredListings.length > 0 && (
+                <section className="rounded-[36px] border border-[var(--primary)]/20 bg-gradient-to-br from-[var(--primary)]/[0.06] via-white to-amber-50/70 p-4 shadow-[0_18px_45px_-24px_rgba(255,135,78,0.35)] sm:p-5">
+                  <div className="mb-5 flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary)]/10 text-[var(--primary)] shadow-sm">
+                        <Sparkles className="h-4 w-4" />
+                      </div>
+                      <h3 className="text-[1rem] font-extrabold tracking-[0.12em] text-slate-800 leading-6">{t("Bài đăng được đề xuất")}</h3>
+                    </div>
                   </div>
-                  {softFilterSource === "lifestyle_profile" && (
-                    <span className="rounded-full bg-white/80 border border-[var(--primary)]/20 px-3 py-1 text-[11px] font-semibold text-[var(--primary)]">
-                      {t("Theo hồ sơ lối sống")}
-                    </span>
-                  )}
-                </div>
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredListings
-                    .filter((l) => softFilterResults[l.id])
-                    .sort((a, b) => (softFilterResults[b.id]?.total_score || 0) - (softFilterResults[a.id]?.total_score || 0))
-                    .slice(0, 3)
-                    .map((listing) => {
-                      const score = softFilterResults[listing.id]?.total_score || 0;
+                  <div className="grid gap-5">
+                    {scoredListings.map((listing) => {
                       const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
                       const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
+                      const badge = listing.preferredGender === "FEMALE" ? { text: t("Nữ ở ghép"), color: "bg-amber-600" }
+                        : listing.preferredGender === "MALE" ? { text: t("Nam ở ghép"), color: "bg-amber-600" }
+                        : listing.preferredGender === "ANY" ? { text: t("Nam/Nữ"), color: "bg-amber-600" }
+                        : { text: t("Tìm người ở ghép"), color: "bg-amber-600" };
+                      const matchResult = softFilterResults[listing.id];
+                      const matchSummary = getMatchingSummary(matchResult);
+                      const matchScore = matchResult ? Math.round(matchResult.total_score) : 0;
+                      const isSaved = savedIds.has(listing.id);
+                      const goodRows = Array.from({ length: Math.ceil(matchSummary.good.length / 2) }, (_, index) => matchSummary.good.slice(index * 2, index * 2 + 2));
+                      const cautionRows = Array.from({ length: Math.ceil(matchSummary.caution.length / 2) }, (_, index) => matchSummary.caution.slice(index * 2, index * 2 + 2));
+
                       return (
-                        <div
+                        <article
                           key={listing.id}
-                          onClick={() => navigate(`/listings/${listing.id}`)}
-                          className="group cursor-pointer overflow-hidden rounded-[var(--radius-md)] border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
+                          data-listing-id={listing.id}
+                          onClick={() => {
+                            trackEvent({ eventName: "listing_card_click", listingId: listing.id, district: listing.district || null, source: "recommended" });
+                            navigate(`/listings/${listing.id}`);
+                          }}
+                          className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-[32px] border bg-white/85 shadow-[0_22px_55px_-24px_rgba(0,0,0,0.32)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_38px_90px_-28px_rgba(0,0,0,0.35)] sm:flex-row ${highlightListingId === listing.id ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/30" : "border-[var(--primary)]/20"}`}
                         >
-                          <div className="relative h-52 overflow-hidden bg-slate-100">
+                          <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-[var(--primary)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-white shadow-lg">
+                            <Sparkles className="h-3 w-3" /> Recommended
+                          </span>
+                          <div className="relative h-56 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:w-[260px]">
                             {thumbnail ? (
-                              <img src={thumbnail} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                              <img src={thumbnail} alt={listing.title} referrerPolicy="no-referrer" className="h-full w-full object-cover transition duration-700 group-hover:scale-110 group-hover:rotate-1" />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center text-sm text-slate-300">{t("Chưa có ảnh")}</div>
                             )}
-                            <span className="absolute top-3 right-3 rounded-full bg-[var(--primary)] px-2.5 py-1 text-xs font-bold text-white flex items-center gap-1 shadow-md">
-                              <Sparkles className="h-3 w-3" /> {Math.round(score)}%
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-white/10 via-transparent to-white/5 opacity-0 transition duration-500 group-hover:opacity-100" />
+                            <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-xs font-bold text-white ${badge.color}`}>
+                              {badge.text}
                             </span>
+                            {listing.promoExpiresAt && new Date(listing.promoExpiresAt) > new Date() && (
+                              <span className="absolute top-3 right-3 rounded-full bg-red-500/90 backdrop-blur px-2.5 py-1 text-[10px] font-bold text-white flex items-center gap-1">
+                                <Sparkles className="h-3 w-3" /> VIP
+                              </span>
+                            )}
+                            <div className="absolute top-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
+                              {t("Tin mới")}
+                            </div>
                           </div>
-                          <div className="p-4">
-                            <h3 className="text-base font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>{listing.title}</h3>
-                            <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+
+                          <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
+                            <div className="flex items-start justify-between gap-3">
+                              <h3 className="text-base font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>
+                                {listing.title}
+                              </h3>
+                              <button
+                                onClick={(e) => handleToggleSave(e, listing.id)}
+                                className={`flex h-9 w-9 items-center justify-center rounded-full transition ${isSaved ? "text-red-500 hover:bg-red-50" : "text-slate-400 hover:bg-red-50 hover:text-red-500"}`}
+                              >
+                                <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500" : ""}`} />
+                              </button>
+                            </div>
+                            <p className="mt-1.5 flex items-center gap-1 text-xs text-slate-500">
                               <MapPin className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
                               {location || t("Chưa cập nhật")}
                             </p>
+
+                            <div className="mt-3 rounded-[24px] border border-slate-200/80 bg-gradient-to-br from-slate-50/90 to-white/70 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition duration-500 group-hover:translate-y-[-2px]">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">{t("Phù hợp")}</span>
+                                <span className={`text-sm font-black ${matchScore >= 75 ? "text-emerald-600" : matchScore >= 60 ? "text-amber-600" : "text-slate-700"}`}>{matchScore}%</span>
+                              </div>
+                              <div className="mt-3 h-1.5 rounded-full bg-white/70">
+                                <div className="h-1.5 rounded-full bg-gradient-to-r from-[var(--primary)] via-[#ffb04d] to-emerald-500 transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, matchScore))}%` }} />
+                              </div>
+                              <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
+                                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-2">
+                                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">{t("Điểm mạnh")}</div>
+                                  <div className="mt-2 flex flex-col gap-2">
+                                    {goodRows.map((rowItems, rowIndex) => (
+                                      <div key={`good-${rowIndex}`} className="flex flex-wrap gap-2">
+                                        {rowItems.map((item) => (
+                                          <div key={item.field} className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-emerald-200 bg-white/90 px-2.5 py-1 text-[11px] text-slate-700 shadow-sm">
+                                            <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-emerald-600" />
+                                            <span className="whitespace-nowrap">{FIELD_FULL_LABELS[item.field] || item.field}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                {matchSummary.caution.length > 0 && (
+                                  <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-2">
+                                    <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700">{t("Điểm cần lưu ý")}</div>
+                                    <div className="mt-2 flex flex-col gap-2">
+                                      {cautionRows.map((rowItems, rowIndex) => (
+                                        <div key={`caution-${rowIndex}`} className="flex flex-wrap gap-2">
+                                          {rowItems.map((item) => (
+                                            <div key={item.field} className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-200 bg-white/90 px-2.5 py-1 text-[11px] text-slate-700 shadow-sm">
+                                              <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 text-amber-600" />
+                                              <span className="whitespace-nowrap">{FIELD_FULL_LABELS[item.field] || item.field}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="mt-auto flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-3">
+                              <p className="text-base font-extrabold text-[var(--primary)]">
+                                {listing.rentPrice >= 1000000
+                                  ? `${(listing.rentPrice / 1000000).toFixed(listing.rentPrice % 1000000 === 0 ? 0 : 1)}Tr`
+                                  : listing.rentPrice.toLocaleString("vi-VN")}
+                                <span className="text-xs font-medium text-slate-400">{t("đ/tháng")}</span>
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--primary)] px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                                  <Sparkles className="h-3 w-3" />
+                                  {matchResult ? `${matchScore}% ${t("Phù hợp")}` : t("Độ phù hợp")}
+                                </span>
+                                {softFilterSource === "lifestyle_profile" && matchResult && (
+                                  <span className="text-[10px] text-slate-400 italic">{t("Theo hồ sơ")}</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        </article>
                       );
                     })}
-                </div>
-              </section>
-            )}
-
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {pagedListings.map((listing) => {
-                const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
-                const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
-                const badge = listing.preferredGender === "FEMALE" ? { text: t("Nữ ở ghép"), color: "bg-amber-600" }
-                  : listing.preferredGender === "MALE" ? { text: t("Nam ở ghép"), color: "bg-amber-600" }
-                  : listing.preferredGender === "ANY" ? { text: t("Nam/Nữ"), color: "bg-amber-600" }
-                  : { text: t("Tìm người ở ghép"), color: "bg-amber-600" };
-
-                return (
-                  <article
-                    key={listing.id}
-                    data-listing-id={listing.id}
-                    onClick={() => {
-                      trackEvent({ eventName: "listing_card_click", listingId: listing.id, district: listing.district || null, source: softFilterResults[listing.id] ? "recommended" : "normal" });
-                      navigate(`/listings/${listing.id}`);
-                    }}
-                    className={`group cursor-pointer overflow-hidden rounded-[var(--radius-md)] border bg-white transition hover:-translate-y-0.5 hover:shadow-lg ${highlightListingId === listing.id ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/30" : "border-slate-200"}`}
-                  >
-                    <div className="relative h-52 overflow-hidden bg-slate-100">
-                      {thumbnail ? (
-                        <img src={thumbnail} alt={listing.title} referrerPolicy="no-referrer" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-sm text-slate-300">{t("Chưa có ảnh")}</div>
-                      )}
-                      <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-xs font-bold text-white ${badge.color}`}>
-                        {badge.text}
-                      </span>
-                      {listing.promoExpiresAt && new Date(listing.promoExpiresAt) > new Date() && (
-                        <span className="absolute top-3 right-3 rounded-full bg-red-500/90 backdrop-blur px-2.5 py-1 text-[10px] font-bold text-white flex items-center gap-1">
-                          <Sparkles className="h-3 w-3" /> VIP
-                        </span>
-                      )}
+                  </div>
+                  {recommendedTotalPages > 1 && (
+                    <div className="mt-5">
+                      <Pagination currentPage={recommendedPage} totalPages={recommendedTotalPages} onPageChange={setRecommendedPage} />
                     </div>
+                  )}
+                </section>
+              )}
 
-                    <div className="p-4">
-                      <h3 className="text-base font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>
-                        {listing.title}
-                      </h3>
-                      <p className="mt-1.5 flex items-center gap-1 text-xs text-slate-500">
-                        <MapPin className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
-                        {location || t("Chưa cập nhật")}
-                      </p>
+              {unscoredListings.length > 0 && (
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2.5 w-2.5 rounded-full bg-slate-300" />
+                    <h3 className="text-sm font-bold uppercase tracking-[0.12em] text-slate-600">{t("Danh sách các bài đăng")}</h3>
+                  </div>
+                  <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {unscoredListings.map((listing) => {
+                      const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
+                      const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
+                      const isSaved = savedIds.has(listing.id);
+                      const badge = listing.preferredGender === "FEMALE" ? { text: t("Nữ ở ghép"), color: "bg-amber-600" }
+                        : listing.preferredGender === "MALE" ? { text: t("Nam ở ghép"), color: "bg-amber-600" }
+                        : listing.preferredGender === "ANY" ? { text: t("Nam/Nữ"), color: "bg-amber-600" }
+                        : { text: t("Tìm người ở ghép"), color: "bg-amber-600" };
 
-                      {softFilterResults[listing.id] && getAllLifestylePrefs(softFilterResults[listing.id]).length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {getAllLifestylePrefs(softFilterResults[listing.id]).slice(0, 2).map((pref) => (
-                            <span key={pref.field} className="rounded-full border border-slate-200 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">
-                              {FIELD_FULL_LABELS[pref.field] || pref.field}: {pref.label}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                        <div className="mt-4 flex items-end justify-between border-t border-slate-100 pt-3">
-                          <p className="text-base font-extrabold text-[var(--primary)]">
-                            {listing.rentPrice >= 1000000
-                              ? `${(listing.rentPrice / 1000000).toFixed(listing.rentPrice % 1000000 === 0 ? 0 : 1)}Tr`
-                              : listing.rentPrice.toLocaleString("vi-VN")}
-                            <span className="text-xs font-medium text-slate-400">{t("đ/tháng")}</span>
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1 text-xs font-bold text-white bg-[var(--primary)] rounded-full px-3 py-1.5 shadow-sm">
-                              <Sparkles className="h-3 w-3" />
-                              {softFilterResults[listing.id]
-                                ? `${Math.round(softFilterResults[listing.id].total_score)}% ${t("Phù hợp")}`
-                                : t("Độ phù hợp")}
-                            </span>
-                            {softFilterSource === "lifestyle_profile" && softFilterResults[listing.id] && (
-                              <span className="text-[10px] text-slate-400 italic">{t("Theo hồ sơ")}</span>
+                      return (
+                        <article
+                          key={listing.id}
+                          data-listing-id={listing.id}
+                          onClick={() => {
+                            trackEvent({ eventName: "listing_card_click", listingId: listing.id, district: listing.district || null, source: "normal" });
+                            navigate(`/listings/${listing.id}`);
+                          }}
+                          className={`group relative flex min-h-[320px] cursor-pointer flex-col overflow-hidden rounded-[32px] border bg-white/70 shadow-[0_16px_35px_-24px_rgba(0,0,0,0.22)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_28px_65px_-28px_rgba(0,0,0,0.24)] ${highlightListingId === listing.id ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/30" : "border-white/60"}`}
+                        >
+                          <div className="relative h-48 overflow-hidden bg-slate-100">
+                            {thumbnail ? (
+                              <img src={thumbnail} alt={listing.title} referrerPolicy="no-referrer" className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-sm text-slate-300">{t("Chưa có ảnh")}</div>
                             )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                            <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-xs font-bold text-white ${badge.color}`}>
+                              {badge.text}
+                            </span>
                           </div>
-                        </div>
+
+                          <div className="flex flex-1 flex-col p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <h3 className="text-base font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>
+                                {listing.title}
+                              </h3>
+                              <button
+                                onClick={(e) => handleToggleSave(e, listing.id)}
+                                className={`flex h-9 w-9 items-center justify-center rounded-full transition ${isSaved ? "text-red-500 hover:bg-red-50" : "text-slate-400 hover:bg-red-50 hover:text-red-500"}`}
+                              >
+                                <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500" : ""}`} />
+                              </button>
+                            </div>
+                            <p className="mt-1.5 flex items-center gap-1 text-xs text-slate-500">
+                              <MapPin className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
+                              {location || t("Chưa cập nhật")}
+                            </p>
+                            <div className="mt-4 border-t border-slate-100 pt-3">
+                              <p className="text-base font-extrabold text-[var(--primary)]">
+                                {listing.rentPrice >= 1000000
+                                  ? `${(listing.rentPrice / 1000000).toFixed(listing.rentPrice % 1000000 === 0 ? 0 : 1)}Tr`
+                                  : listing.rentPrice.toLocaleString("vi-VN")}
+                                <span className="text-xs font-medium text-slate-400">{t("đ/tháng")}</span>
+                              </p>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                  {unscoredTotalPages > 1 && (
+                    <div className="mt-5">
+                      <Pagination currentPage={unscoredPage} totalPages={unscoredTotalPages} onPageChange={setUnscoredPage} />
                     </div>
-                  </article>
-                );
-              })}
+                  )}
+                </section>
+              )}
             </div>
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
       </main>

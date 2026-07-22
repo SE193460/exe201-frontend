@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPinned, Heart, Shield, MessageCircle, Lock, ChevronRight, Zap, DollarSign, User, Sparkles, MapPin } from "lucide-react";
+import { Search, MapPinned, Heart, Shield, MessageCircle, Lock, ChevronRight, Zap, DollarSign, User, Sparkles, MapPin, CheckCircle2, AlertCircle } from "lucide-react";
 import { fetchProfile, resolveAvatarUrl } from "../api/services/user";
 import { fetchPublicListings, resolveListingImageUrl, toggleSaveListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
+import type { SoftFilterResult } from "../api/services/lifestyle";
 import { PRICE_OPTIONS } from "./listingRangeOptions";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -42,6 +43,8 @@ export default function HomePage() {
   const [selectedGender, setSelectedGender] = useState("all");
   const [selectedInterest, setSelectedInterest] = useState("all");
   const [selectedArea, setSelectedArea] = useState("all");
+  const [softFilterResults, setSoftFilterResults] = useState<Record<string, SoftFilterResult>>({});
+  const [softFilterSource, setSoftFilterSource] = useState<"roommate_preferences" | "lifestyle_profile" | null>(null);
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -95,6 +98,93 @@ export default function HomePage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const loadSoftFilterResults = () => {
+      try {
+        const savedResults = localStorage.getItem("softFilterResults");
+        if (savedResults) {
+          const results: SoftFilterResult[] = JSON.parse(savedResults);
+          const resultsMap = results.reduce(
+            (acc, result) => {
+              acc[result.id] = result;
+              return acc;
+            },
+            {} as Record<string, SoftFilterResult>
+          );
+          setSoftFilterResults(resultsMap);
+        } else {
+          setSoftFilterResults({});
+        }
+
+        const savedSource = localStorage.getItem("softFilterSource") as "roommate_preferences" | "lifestyle_profile" | null;
+        setSoftFilterSource(savedSource);
+      } catch {
+        setSoftFilterResults({});
+        setSoftFilterSource(null);
+      }
+    };
+
+    loadSoftFilterResults();
+
+    const handleSoftFilterUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent<SoftFilterResult[]>;
+      const results = customEvent.detail || [];
+      const resultsMap = results.reduce(
+        (acc, result) => {
+          acc[result.id] = result;
+          return acc;
+        },
+        {} as Record<string, SoftFilterResult>
+      );
+      setSoftFilterResults(resultsMap);
+    };
+
+    window.addEventListener("softFilterUpdated", handleSoftFilterUpdated);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) loadSoftFilterResults();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("softFilterUpdated", handleSoftFilterUpdated);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  const FIELD_FULL_LABELS: Record<string, string> = {
+    cleanliness: t("Mức độ sạch sẽ"),
+    ac_usage: t("Tần suất sử dụng điều hòa"),
+    pet: t("Thú cưng"),
+    smoking: t("Hút thuốc"),
+    cooking: t("Nấu ăn"),
+    guest: t("Tần suất dẫn bạn bè về phòng"),
+    home_frequency: t("Tần suất ở trong phòng"),
+    work_schedule: t("Thời gian làm việc"),
+    sharing: t("Mức độ chia sẻ đồ dùng"),
+    noise: t("Mức độ giữ yên tĩnh"),
+    call_frequency: t("Tần suất gọi điện/video call"),
+    game_mic: t("Mức độ chơi game voice chat"),
+  };
+
+  const getMatchingSummary = (result?: SoftFilterResult) => {
+    if (!result?.field_scores) return { good: [], caution: [] };
+    const order = ["ac_usage", "cooking", "home_frequency", "call_frequency", "smoking", "pet", "cleanliness", "guest", "noise", "game_mic", "work_schedule", "sharing"];
+    const good: Array<{ field: string; prefLabel: string; score: number }> = [];
+    const caution: Array<{ field: string; prefLabel: string; score: number }> = [];
+
+    for (const field of order) {
+      const item = result.field_scores[field];
+      if (!item) continue;
+      const prefLabel = String(item.pref_value ?? item.profile_value ?? "");
+      const score = typeof item.score === "number" ? item.score : 0;
+      const entry = { field, prefLabel: prefLabel || t("Đã chọn"), score };
+      if (score >= 0.75) good.push(entry);
+      else caution.push(entry);
+    }
+
+    return { good, caution };
+  };
 
   const parseSearchQuery = (query: string) => {
     const lower = query.toLowerCase();
@@ -365,34 +455,99 @@ export default function HomePage() {
               const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
               const avatarUrl = resolveAvatarUrl(listing.ownerAvatar || "");
               const isSaved = savedIds.has(listing.id);
+              const matchResult = softFilterResults[listing.id];
+              const matchingSummary = getMatchingSummary(matchResult);
+              const matchScore = matchResult ? Math.round(matchResult.total_score) : 0;
 
               return (
                 <div
                   key={listing.id}
-                  className="group overflow-hidden rounded-[var(--radius-md)] border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
+                  className="group relative cursor-pointer overflow-hidden rounded-[30px] border border-white/60 bg-white/70 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_35px_80px_-28px_rgba(0,0,0,0.35)]"
                   onClick={() => navigate(`/listings/${listing.id}`)}
                 >
-                  <div className="relative h-48 overflow-hidden bg-slate-100">
-                    <img src={thumbnail} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="relative h-60 overflow-hidden bg-slate-100">
+                    <img src={thumbnail} alt={listing.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-110 group-hover:rotate-1" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <div className="absolute inset-0 rounded-[30px] bg-gradient-to-br from-white/10 via-transparent to-white/5 opacity-0 transition duration-500 group-hover:opacity-100" />
                     <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-emerald-600 backdrop-blur-sm">
                       <Shield className="h-3 w-3" /> {t("Đã xác thực")}
                     </span>
-                    <span className="absolute bottom-3 right-3 rounded-full bg-[var(--primary)] px-2.5 py-1 text-xs font-bold text-white">
-                      {formatPrice(listing.rentPrice)}<span className="text-[10px] font-medium">{t("/tháng")}</span>
-                    </span>
+                    <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3">
+                      <div className="rounded-full bg-white/95 px-3 py-1.5 text-sm font-black text-slate-800 shadow-sm">
+                        {formatPrice(listing.rentPrice)}<span className="ml-1 text-[10px] font-medium text-slate-500">{t("/tháng")}</span>
+                      </div>
+                      {matchResult && (
+                        <div className="rounded-full bg-[var(--primary)]/95 px-3 py-1.5 text-xs font-bold text-white shadow-lg">
+                          {matchScore}% {t("phù hợp")}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="p-4">
-                    <h3 className="text-sm font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>
-                      {listing.title}
-                    </h3>
-                    <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                      <MapPinned className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
-                      {location || t("Chưa cập nhật")}
-                    </p>
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>
+                          {listing.title}
+                        </h3>
+                        <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                          <MapPinned className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
+                          {location || t("Chưa cập nhật")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => handleToggleSave(e, listing.id)}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full transition ${
+                          isSaved ? "text-red-500 hover:bg-red-50" : "text-slate-400 hover:bg-red-50 hover:text-red-500"
+                        }`}
+                      >
+                        <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500" : ""}`} />
+                      </button>
+                    </div>
+
+                    {matchResult ? (
+                      <div className="mt-4 rounded-[22px] border border-[var(--primary)]/15 bg-gradient-to-br from-[var(--primary-container)]/80 to-white/70 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition duration-500 group-hover:translate-y-[-2px]">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--primary)]">{t("Tương thích")}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-black text-[var(--primary)]">{matchScore}%</span>
+                            {softFilterSource === "lifestyle_profile" && matchResult && (
+                              <span className="rounded-full border border-[var(--primary)]/20 bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-[var(--primary)]">
+                                {t("Theo hồ sơ")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mt-3 h-1.5 rounded-full bg-white/70">
+                          <div className="h-1.5 rounded-full bg-gradient-to-r from-[var(--primary)] via-[#ffb04d] to-emerald-500 transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, matchScore))}%` }} />
+                        </div>
+                        <div className="mt-3 space-y-1.5 text-xs text-slate-600">
+                          {matchingSummary.good.slice(0, 2).map((item) => (
+                            <div key={item.field} className="flex items-start gap-2">
+                              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-600" />
+                              <span className="line-clamp-2">
+                                <span className="font-semibold text-slate-700">{FIELD_FULL_LABELS[item.field] || item.field}</span>: {item.prefLabel}
+                              </span>
+                            </div>
+                          ))}
+                          {matchingSummary.caution[0] && (
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-600" />
+                              <span className="line-clamp-2">
+                                <span className="font-semibold text-slate-700">{FIELD_FULL_LABELS[matchingSummary.caution[0].field] || matchingSummary.caution[0].field}</span>: {matchingSummary.caution[0].prefLabel}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-4 rounded-[20px] border border-dashed border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
+                        {t("Hoàn thiện hồ sơ để thấy điểm tương thích")}
+                      </div>
+                    )}
 
                     {listing.amenities && listing.amenities.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
+                      <div className="mt-4 flex flex-wrap gap-1.5">
                         {listing.amenities.slice(0, 3).map((a) => (
                           <span key={a.id} className="rounded-full border border-slate-200 bg-[var(--surface)] px-2.5 py-0.5 text-[10px] font-medium text-slate-600">
                             {a.name}
@@ -401,12 +556,12 @@ export default function HomePage() {
                       </div>
                     )}
 
-                    <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                    <div className="mt-4 flex items-center justify-between border-t border-slate-100/80 pt-3">
                       <div className="flex items-center gap-2">
                         {avatarUrl ? (
-                          <img src={avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+                          <img src={avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
                         ) : (
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--primary-container)] text-[10px] font-bold text-[var(--primary)]">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary-container)] text-[10px] font-bold text-[var(--primary)]">
                             {(listing.ownerName || "C")[0].toUpperCase()}
                           </div>
                         )}
@@ -414,14 +569,7 @@ export default function HomePage() {
                           <p className="text-xs font-bold text-slate-700">{listing.ownerName || t("Chủ phòng")}</p>
                         </div>
                       </div>
-                      <button
-                        onClick={(e) => handleToggleSave(e, listing.id)}
-                        className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
-                          isSaved ? "text-red-500 hover:bg-red-50" : "text-slate-400 hover:bg-red-50 hover:text-red-500"
-                        }`}
-                      >
-                        <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500" : ""}`} />
-                      </button>
+                      <span className="text-[11px] font-semibold text-slate-400">{t("Xem chi tiết")}</span>
                     </div>
                   </div>
                 </div>

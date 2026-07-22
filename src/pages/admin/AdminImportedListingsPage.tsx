@@ -397,7 +397,7 @@ export default function AdminImportedListingsPage() {
                           {existingImages.map((img) => (
                             <div key={img.id} className="relative group border border-slate-200 rounded-lg overflow-hidden bg-slate-50 hover:border-red-300 transition">
                               <img 
-                                src={img.imageUrl} 
+                                src={resolveListingImageUrl(img.imageUrl)} 
                                 alt="preview" 
                                 className="w-full h-24 object-cover"
                                 onError={(e) => {

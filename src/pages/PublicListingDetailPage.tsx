@@ -380,6 +380,11 @@ export default function PublicListingDetailPage() {
   };
 
   const matchingSummary = getPrefsFromResult(softFilterResult);
+  const hasMatchingData = Boolean(
+    softFilterResult &&
+    Object.keys(softFilterResult.field_scores || {}).length > 0 &&
+    (softFilterResult.total_score ?? 0) > 0
+  );
 
   useEffect(() => {
     const load = () => {
@@ -511,7 +516,8 @@ export default function PublicListingDetailPage() {
                   )}
                 </section>
 
-                <section ref={matchingSectionRef} className="group -mt-2 overflow-hidden rounded-[28px] border border-[#f2dfc6] bg-gradient-to-br from-[#fffaf4] via-white to-[#fff6eb] p-5 md:p-6 shadow-[0_20px_55px_-35px_rgba(0,0,0,0.25)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(0,0,0,0.32)]">
+                {hasMatchingData ? (
+                  <section ref={matchingSectionRef} className="group -mt-2 overflow-hidden rounded-[28px] border border-[#f2dfc6] bg-gradient-to-br from-[#fffaf4] via-white to-[#fff6eb] p-5 md:p-6 shadow-[0_20px_55px_-35px_rgba(0,0,0,0.25)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(0,0,0,0.32)]">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="max-w-2xl">
                       <div className="inline-flex items-center gap-2 rounded-full bg-[#a55b00]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#a55b00]">
@@ -614,14 +620,13 @@ export default function PublicListingDetailPage() {
                         <div className="rounded-[24px] border border-emerald-100 bg-white/85 p-4 md:p-5">
                           <div className="flex items-center justify-between">
                             <h3 className="text-lg font-bold text-slate-900">{t("Điểm nổi bật")}</h3>
-                            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">{t("điểm mạnh")}</span>
+                            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">{t("Điểm mạnh")}</span>
                           </div>
                           <div className="mt-4 space-y-3">
-                            {matchingSummary.good.slice(0, 4).map((item: any) => (
+                            {matchingSummary.good.map((item: any) => (
                               <div key={item.field} className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3 transition hover:border-emerald-200 hover:bg-emerald-50/70">
                                 <div className="flex items-center justify-between gap-3">
                                   <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[item.field] || item.field}</div>
-                                  <div className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">{Math.round((item.score || 0) * 100)}%</div>
                                 </div>
                                 <div className="mt-1 text-sm text-slate-600">{t("Bạn: ")}<span className="font-semibold text-slate-800">{item.prefLabel}</span></div>
                               </div>
@@ -632,10 +637,10 @@ export default function PublicListingDetailPage() {
                         <div className="rounded-[24px] border border-amber-100 bg-amber-50/90 p-4 md:p-5">
                           <div className="flex items-center justify-between">
                             <h3 className="text-lg font-bold text-slate-900">{t("Cần lưu ý")}</h3>
-                            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-700">{t("trao đổi")}</span>
+                            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-700">{t("Trao đổi")}</span>
                           </div>
                           <div className="mt-4 space-y-3">
-                            {matchingSummary.caution.slice(0, 4).map((item: any) => (
+                            {matchingSummary.caution.map((item: any) => (
                               <div key={item.field} className="rounded-2xl border border-amber-100 bg-white/70 p-3 transition hover:border-amber-200 hover:bg-amber-100/70">
                                 <div className="font-semibold text-slate-800">{FIELD_FULL_LABELS[item.field] || item.field}</div>
                                 <div className="mt-1 text-sm text-slate-600">{t("Bạn: ")}<span className="font-semibold text-slate-800">{item.prefLabel}</span></div>
@@ -665,6 +670,7 @@ export default function PublicListingDetailPage() {
                     </div>
                   )}
                 </section>
+                ) : null}
 
                 <section className="rounded-[24px] bg-white px-5 py-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.18)] border border-slate-200">
                   <div className="flex flex-wrap items-center justify-between gap-3">
