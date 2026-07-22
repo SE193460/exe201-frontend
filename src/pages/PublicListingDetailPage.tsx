@@ -891,18 +891,16 @@ export default function PublicListingDetailPage() {
                     </div>
 
                     <div className="mt-4 space-y-3">
+                      {listing?.ownerPhone && (
+                        <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b63ff] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0058eb]">
+                          <MessageCircle className="h-4 w-4" /> {t("Liên hệ qua Zalo")}
+                        </a>
+                      )}
                       {phoneRevealed ? (
-                        <>
-                          <button onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#8f4f00]">
-                            <Phone className="h-4 w-4" /> {listing?.ownerPhone || t("Chưa có SĐT")}
-                            <span className="ml-1">{copiedPhone === listing?.ownerPhone ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</span>
-                          </button>
-                          {listing?.ownerPhone && (
-                            <a href={`https://zalo.me/${listing.ownerPhone}`} target="_blank" rel="noopener noreferrer" onClick={handleZaloClick} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b63ff] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0058eb]">
-                              <MessageCircle className="h-4 w-4" /> {t("Liên hệ qua Zalo")}
-                            </a>
-                          )}
-                        </>
+                        <button onClick={() => listing?.ownerPhone && handleCopyPhone(listing.ownerPhone)} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#a55b00] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#8f4f00]">
+                          <Phone className="h-4 w-4" /> {listing?.ownerPhone || t("Chưa có SĐT")}
+                          <span className="ml-1">{copiedPhone === listing?.ownerPhone ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</span>
+                        </button>
                       ) : (
                         <button onClick={handleRevealPhone} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
                           <Phone className="h-4 w-4" /> {t("Hiện số điện thoại")}
