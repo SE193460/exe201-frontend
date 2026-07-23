@@ -15,7 +15,7 @@ const loginSchema = z.object({
 const registerSchema = z
   .object({
     fullName: z.string().min(2, "Nhập họ và tên"),
-    username: z.string().refine((val) => val === "" || val.length >= 3, { message: "Tên đăng nhập tối thiểu 3 ký tự" }).optional(),
+    username: z.string().min(3, "Tên đăng nhập tối thiểu 3 ký tự").or(z.literal("")).optional(),
     email: z.string().email("Email không hợp lệ"),
     password: z
       .string()
@@ -136,10 +136,10 @@ export default function AuthPage() {
     setStatus("");
     try {
       await register({
-        email: values.email,
-        password: values.password,
         fullName: values.fullName,
         username: values.username || undefined,
+        email: values.email,
+        password: values.password,
       });
       setStatus("Đã gửi email xác nhận. Vui lòng kiểm tra hộp thư.");
     }catch (err: any) {
