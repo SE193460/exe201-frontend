@@ -127,6 +127,10 @@ export default function AuthPage() {
         setError("Tài khoản đã bị vô hiệu hóa.");
         return;
       }
+      if (message === "Email not verified") {
+        setError("Email chưa được xác thực.");
+        return;
+      }
       setError("Sai email hoặc mật khẩu.");
     }
   });
@@ -233,6 +237,7 @@ export default function AuthPage() {
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                     <input
                       type="email"
+                      autoComplete="email"
                       className={`w-full rounded-lg border pl-10 pr-4 py-3 text-sm outline-none transition focus:border-[var(--primary)] ${
                         loginForm.formState.errors.email ? "border-red-300 bg-red-50/30" : "border-slate-200 bg-white"
                       }`}
@@ -250,6 +255,7 @@ export default function AuthPage() {
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <input
                       type="password"
+                      autoComplete="current-password"
                       className={`w-full rounded-lg border pl-10 pr-4 py-3 text-sm outline-none transition focus:border-[var(--primary)] ${
                         loginForm.formState.errors.password ? "border-red-300 bg-red-50/30" : "border-slate-200 bg-white"
                       }`}
@@ -276,6 +282,7 @@ export default function AuthPage() {
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     <input
                       type="text"
+                      autoComplete="name"
                       className={`w-full rounded-lg border pl-10 pr-4 py-2.5 text-sm outline-none transition focus:border-[var(--primary)] ${
                         registerForm.formState.errors.fullName ? "border-red-300 bg-red-50/30" : "border-slate-200 bg-white"
                       }`}
@@ -293,6 +300,7 @@ export default function AuthPage() {
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     <input
                       type="text"
+                      autoComplete="username"
                       className="w-full rounded-lg border border-slate-200 pl-10 pr-4 py-2.5 text-sm outline-none transition focus:border-[var(--primary)] bg-white"
                       placeholder="vd: minh_hanoi"
                       {...registerForm.register("username")}
@@ -308,6 +316,7 @@ export default function AuthPage() {
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                     <input
                       type="email"
+                      autoComplete="email"
                       className={`w-full rounded-lg border pl-10 pr-4 py-2.5 text-sm outline-none transition focus:border-[var(--primary)] ${
                         registerForm.formState.errors.email ? "border-red-300 bg-red-50/30" : "border-slate-200 bg-white"
                       }`}
@@ -325,6 +334,7 @@ export default function AuthPage() {
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <input
                       type={showRegisterPassword ? "text" : "password"}
+                      autoComplete="new-password"
                       className={`w-full rounded-lg border pl-10 pr-12 py-2.5 text-sm outline-none transition focus:border-[var(--primary)] ${
                         registerForm.formState.errors.password ? "border-red-300 bg-red-50/30" : "border-slate-200 bg-white"
                       }`}
@@ -351,6 +361,7 @@ export default function AuthPage() {
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <input
                       type={showRegisterConfirmPassword ? "text" : "password"}
+                      autoComplete="new-password"
                       className={`w-full rounded-lg border pl-10 pr-12 py-2.5 text-sm outline-none transition focus:border-[var(--primary)] ${
                         registerForm.formState.errors.confirmPassword ? "border-red-300 bg-red-50/30" : "border-slate-200 bg-white"
                       }`}
