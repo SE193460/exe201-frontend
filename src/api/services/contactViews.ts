@@ -27,3 +27,10 @@ export async function purchaseContactViews(amount: number, packageName: string) 
   });
   return res.data;
 }
+
+export async function confirmContactViewPurchase(transactionId: string) {
+  const res = await axiosInstance.post("/api/contact-views/confirm-purchase", {
+    transactionId,
+  });
+  return res.data;
+}
