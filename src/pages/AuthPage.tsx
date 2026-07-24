@@ -141,7 +141,7 @@ export default function AuthPage() {
         email: values.email,
         password: values.password,
       });
-      setStatus("Đã gửi email xác nhận. Vui lòng kiểm tra hộp thư.");
+      setStatus("Đăng kí thành công.");
     }catch (err: any) {
         console.error(err);
 
