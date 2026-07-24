@@ -1,12 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPinned, Heart, Shield, MessageCircle, Lock, ChevronRight, Zap, DollarSign, User, Sparkles, MapPin, CheckCircle2, AlertCircle } from "lucide-react";
+import { Search, MapPinned, Heart, Shield, MessageCircle, Lock, ChevronRight, Zap, DollarSign, User, Sparkles, MapPin, CheckCircle2, AlertCircle, Copy } from "lucide-react";
 import { fetchProfile, resolveAvatarUrl } from "../api/services/user";
 import { fetchPublicListings, resolveListingImageUrl, toggleSaveListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import type { SoftFilterResult } from "../api/services/lifestyle";
 import { PRICE_OPTIONS } from "./listingRangeOptions";
+import { purchaseContactViews, confirmContactViewPurchase } from "../api/services/contactViews";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -36,6 +37,11 @@ export default function HomePage() {
   ];
   const navigate = useNavigate();
   const [error, setError] = useState("");
+
+  const depositPackages = [
+    { key: "cv_5", amount: 5000, label: "Xem liên hệ 5", desc: "5 lượt xem liên hệ" },
+    { key: "cv_20", amount: 15000, label: "Xem liên hệ 20", desc: "20 lượt xem liên hệ" },
+  ];
   const [listings, setListings] = useState<Listing[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -48,6 +54,21 @@ export default function HomePage() {
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const [user, setUser] = useState<any>(null);
+  const [showDeposit, setShowDeposit] = useState(false);
+  const [depositing, setDepositing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [depositQR, setDepositQR] = useState<{ qrUrl: string; content: string; amount: number } | null>(null);
+  const [depositSuccess, setDepositSuccess] = useState(false);
+  const [depositTransactionId, setDepositTransactionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      fetchProfile().then(setUser).catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -445,6 +466,138 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Nạp tiền nhanh */}
+        <section className="border-b border-slate-100 bg-white px-6 py-4">
+          <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--primary)]/10">
+                <DollarSign className="h-4 w-4 text-[var(--primary)]" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-[var(--on-surface)]">{t("Nạp tiền nhanh")}</p>
+                <p className="text-xs text-slate-500">{t("Mua lượt xem liên hệ, gắn tin VIP")}</p>
+              </div>
+            </div>
+            {user ? (
+              <div className="flex items-center gap-2">
+                {!showDeposit ? (
+                  <button
+                    onClick={() => setShowDeposit(true)}
+                    className="rounded-full bg-[var(--primary)] px-5 py-2 text-xs font-bold text-white transition hover:opacity-90"
+                  >
+                    {t("Nạp ngay")}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setShowDeposit(false); setDepositQR(null); }}
+                    className="rounded-full border border-slate-200 px-5 py-2 text-xs font-bold text-slate-500 transition hover:bg-slate-50"
+                  >
+                    {t("Đóng")}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate("/auth")}
+                className="rounded-full border border-[var(--primary)] px-5 py-2 text-xs font-bold text-[var(--primary)] transition hover:bg-[var(--primary)]/5"
+              >
+                {t("Đăng nhập để nạp")}
+              </button>
+            )}
+          </div>
+
+          {user && showDeposit && (
+            <div className="mx-auto mt-4 max-w-[1200px]">
+              {!depositQR ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {depositPackages.map((pkg) => (
+                    <button
+                      key={pkg.key}
+                      disabled={depositing}
+                      onClick={async () => {
+                        setDepositing(true);
+                        try {
+                          const res = await purchaseContactViews(pkg.amount, pkg.label);
+                          setDepositQR({ qrUrl: res.qrUrl, content: res.content, amount: pkg.amount });
+                          setDepositTransactionId(res.transactionId);
+                          setDepositSuccess(false);
+                        } catch {
+                          setError(t("Không thể tạo mã QR, vui lòng thử lại"));
+                        }
+                        setDepositing(false);
+                      }}
+                      className="group rounded-[var(--radius-md)] border border-slate-200 bg-white p-4 text-left transition hover:border-[var(--primary)] hover:shadow-md disabled:opacity-50"
+                    >
+                      <p className="text-sm font-bold text-[var(--on-surface)]">{pkg.label}</p>
+                      <p className="mt-1 text-lg font-extrabold text-[var(--primary)]">{pkg.amount.toLocaleString()}đ</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{pkg.desc}</p>
+                      {depositing && <p className="mt-2 text-xs text-slate-400">{t("Đang tạo...")}</p>}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-3 rounded-[var(--radius-md)] border border-slate-200 bg-white p-6 sm:flex-row sm:items-start">
+                  <img src={depositQR.qrUrl} alt="QR" className="h-40 w-40 rounded-[var(--radius-md)] border border-slate-100" />
+                  <div className="flex flex-col items-center gap-2 sm:items-start">
+                    <p className="text-sm font-bold text-[var(--on-surface)]">{t("Quét mã để chuyển khoản")}</p>
+                    <p className="text-xs text-slate-500">
+                      {t("Số tiền")}: <span className="font-bold text-[var(--on-surface)]">{depositQR.amount.toLocaleString()}đ</span>
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {t("Nội dung CK")}:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-mono font-bold text-[var(--primary)]">
+                        {depositQR.content}
+                      </code>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(depositQR.content)}
+                        className="flex items-center gap-1 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                        {t("Sao chép")}
+                      </button>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {t("Sau khi chuyển, admin sẽ cộng lượt xem thủ công.")}
+                    </p>
+                    {!depositSuccess ? (
+                      <button
+                        disabled={confirming}
+                        onClick={async () => {
+                          if (!depositTransactionId) return;
+                          setConfirming(true);
+                          try {
+                            await confirmContactViewPurchase(depositTransactionId);
+                            setDepositSuccess(true);
+                          } catch {
+                            setError(t("Xác nhận thất bại, vui lòng thử lại."));
+                          }
+                          setConfirming(false);
+                        }}
+                        className="mt-3 rounded-full bg-[var(--primary)] px-6 py-2 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+                      >
+                        {confirming ? t("Đang xác nhận...") : t("Tôi đã chuyển khoản")}
+                      </button>
+                    ) : (
+                      <div className="mt-3 flex items-center gap-2 rounded-[var(--radius-md)] bg-green-50 px-4 py-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <p className="text-xs font-medium text-green-700">{t("Đã gửi thông báo, admin sẽ xử lý trong ít phút.")}</p>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setDepositQR(null)}
+                      className="mt-1 text-xs font-semibold text-[var(--primary)] transition hover:underline"
+                    >
+                      {t("Chọn gói khác")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Featured listings */}

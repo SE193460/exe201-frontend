@@ -614,6 +614,19 @@ const en: Record<string, string> = {
   "Google Maps": "Google Maps",
   "Đóng": "Close",
   "Không thể tạo mã QR. Vui lòng thử lại.": "Cannot generate QR code. Please try again.",
+  "Nạp tiền nhanh": "Quick top-up",
+  "Mua lượt xem liên hệ, gắn tin VIP": "Buy contact views, VIP listings",
+  "Nạp ngay": "Top up now",
+  "Đăng nhập để nạp": "Login to top up",
+  "Không thể tạo mã QR, vui lòng thử lại": "Cannot create QR code, please try again",
+  "Quét mã để chuyển khoản": "Scan QR to transfer",
+  "Nội dung CK": "Transfer content",
+  "Sao chép": "Copy",
+  "Sau khi chuyển, admin sẽ cộng lượt xem thủ công.": "After transfer, admin will manually add credits.",
+  "Chọn gói khác": "Choose another package",
+  "Đang tạo...": "Creating...",
+  "Đã gửi thông báo, admin sẽ xử lý trong ít phút.": "Notification sent, admin will process shortly.",
+  "Xác nhận thất bại, vui lòng thử lại.": "Confirmation failed, please try again.",
 };
 
 export default en;
