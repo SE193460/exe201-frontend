@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MapPin, X, Sparkles, ChevronLeft, ChevronRight, Search, CheckCircle2, AlertCircle, Heart, RotateCcw, Clock, ToggleLeft, ToggleRight } from "lucide-react";
+import { MapPin, MapPinned, X, Sparkles, ChevronLeft, ChevronRight, Search, CheckCircle2, AlertCircle, Heart, RotateCcw, ToggleLeft, ToggleRight } from "lucide-react";
 import { fetchPublicListings, resolveListingImageUrl, toggleSaveListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import type { SoftFilterResult, RoommatePreferences } from "../api/services/lifestyle";
@@ -12,25 +12,24 @@ import Footer from "../components/Footer";
 import Pagination from "../components/Pagination";
 const ListingsMap = lazy(() => import("../components/ListingsMap"));
 import { hasAccessToken, isAutoMatchEnabled, setAutoMatchEnabled, clearSoftFilterCache } from "../api/services/session";
-import { formatRelativeTime, isListingOld } from "../utils/listingTime";
+import PostedTimeTag from "../components/PostedTimeTag";
 import { matchAreaRange, matchPriceRange, AREA_OPTIONS, PRICE_OPTIONS } from "./listingRangeOptions";
+import {
+  VIETNAM_PROVINCES,
+  findProvince,
+  getWardsForProvince,
+  regionTextIncludes,
+  resolveProvinceName,
+} from "../data/vietnamRegions";
+import type { MapFocus } from "../components/ListingsMap";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { trackEvent } from "../api/services/analytics";
-function PostedTimeTag({ listing }: { listing: Listing }) {
-  const { t } = useTranslation();
-  const postedAt = listing.publishedAt || listing.createdAt;
-  const relative = formatRelativeTime(postedAt, t);
-  if (!relative) return null;
-  const old = isListingOld(postedAt);
+
+/** Canonical 2025 province of a listing, inferred from its stored location text. */
+function listingProvinceName(item: Listing): string | null {
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm ${
-        old ? "bg-slate-800/85 text-white" : "bg-white/90 text-slate-700"
-      }`}
-    >
-      <Clock className="h-3 w-3" />
-      {old ? `${t("Đã cũ")} · ${relative}` : relative}
-    </span>
+    resolveProvinceName(item.city) ??
+    resolveProvinceName([item.district, item.ward, item.address].filter(Boolean).join(" "))
   );
 }
 
@@ -44,6 +43,7 @@ export default function PublicListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [province, setProvince] = useState(initialParams.get("province") || "all");
   const [district, setDistrict] = useState(initialParams.get("area") || "all");
   const [price, setPrice] = useState(initialParams.get("price") || "all");
   const [area, setArea] = useState("all");
@@ -71,14 +71,57 @@ export default function PublicListingsPage() {
     return params.get("highlightListingId");
   }, [location.search]);
 
-  const districtOptions = useMemo(() => {
-    const districts = Array.from(new Set(listings.map((item) => item.district).filter(Boolean)));
-    const all = ["all", ...districts];
-    if (district !== "all" && !all.includes(district)) {
-      all.splice(1, 0, district);
+  const provincesInListings = useMemo(() => {
+    const set = new Set<string>();
+    for (const item of listings) {
+      const name = listingProvinceName(item);
+      if (name) set.add(name);
     }
+    return set;
+  }, [listings]);
+
+  // Areas that actually have listings for the selected province (keeps every
+  // option useful) — derived from the stored district/ward values.
+  const dataAreaOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const item of listings) {
+      if (province !== "all" && listingProvinceName(item) !== province) continue;
+      if (item.district) set.add(item.district);
+      if (item.ward) set.add(item.ward);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "vi"));
+  }, [listings, province]);
+
+  // Complete list of the province's wards/communes per the 2025 reform, so the
+  // filter can reach every area of the province (e.g. all of HCMC).
+  const wardAreaOptions = useMemo(() => getWardsForProvince(province), [province]);
+
+  const districtOptions = useMemo(() => {
+    const all = ["all", ...dataAreaOptions];
+    if (district !== "all" && !all.includes(district)) all.splice(1, 0, district);
     return all;
-  }, [listings, district]);
+  }, [dataAreaOptions, district]);
+
+  // Focus the map on the filtered province so it never shows HCMC while the
+  // listings (or the filter) point at another province.
+  const mapFocus = useMemo<MapFocus | null>(() => {
+    if (province !== "all") {
+      const target = findProvince(province);
+      return target ? { center: target.center, zoom: 9, bounds: target.bounds } : null;
+    }
+    const names = new Set(listings.map(listingProvinceName).filter(Boolean) as string[]);
+    if (names.size === 1) {
+      const target = findProvince([...names][0]);
+      if (target) return { center: target.center, zoom: 9, bounds: target.bounds };
+    }
+    return null;
+  }, [province, listings]);
+
+  const mapFocusProvinceName = useMemo(() => {
+    if (province !== "all") return findProvince(province)?.name ?? null;
+    const names = new Set(listings.map(listingProvinceName).filter(Boolean) as string[]);
+    return names.size === 1 ? [...names][0] : null;
+  }, [province, listings]);
 
   // Mapping để lấy label đầy đủ cho mỗi field
   const FIELD_FULL_LABELS: Record<string, string> = {
@@ -259,8 +302,10 @@ export default function PublicListingsPage() {
     event.preventDefault();
     setSoftFilterLoading(true);
     try {
-      // Cập nhật preferences
-      await updateRoommatePreferences(softFilterPrefs);
+      // Logged-in users persist their preferences; guests only pass them inline.
+      if (hasAccessToken()) {
+        await updateRoommatePreferences(softFilterPrefs);
+      }
 
       // Chạy soft filter
       await trackEvent({
@@ -279,6 +324,9 @@ export default function PublicListingsPage() {
           min_area: null,
           max_area: null,
         },
+        // Always send the values the visitor just picked so guests get scores
+        // even without an account.
+        preferences: softFilterPrefs,
       });
 
       const resultsData = response.results || [];
@@ -305,6 +353,17 @@ export default function PublicListingsPage() {
   const handleClearSoftFilter = async () => {
     // Reset the soft-filter form back to its defaults ("Bỏ trống" for every option).
     setSoftFilterPrefs({});
+
+    // Guests have no stored preferences to clear and no profile to re-score with.
+    if (!hasAccessToken()) {
+      setSoftFilterResults({});
+      setSoftFilterSource(null);
+      localStorage.removeItem("softFilterResults");
+      localStorage.removeItem("softFilterSource");
+      window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: [] }));
+      return;
+    }
+
     // Delete roommate preferences from DB (best-effort)
     try {
       await deleteRoommatePreferences();
@@ -359,6 +418,7 @@ export default function PublicListingsPage() {
   };
 
   const hasActiveFilters =
+    province !== "all" ||
     district !== "all" ||
     price !== "all" ||
     area !== "all" ||
@@ -366,6 +426,7 @@ export default function PublicListingsPage() {
     searchLocation.trim() !== "";
 
   const handleClearFilters = () => {
+    setProvince("all");
     setDistrict("all");
     setPrice("all");
     setArea("all");
@@ -506,11 +567,15 @@ export default function PublicListingsPage() {
   };
 
   const filteredListings = (() => {
-    const normalizeStr = (s: string) =>
-      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/đ/g, "d").replace(/[^a-z0-9]/g, "");
-
     const filtered = listings.filter((item) => {
-      const matchesDistrict = district === "all" ? true : normalizeStr(item.district || "").includes(normalizeStr(district));
+      const matchesProvince = province === "all" ? true : listingProvinceName(item) === province;
+      const matchesDistrict =
+        district === "all"
+          ? true
+          : regionTextIncludes(item.district, district) ||
+            regionTextIncludes(item.ward, district) ||
+            regionTextIncludes(item.address, district) ||
+            regionTextIncludes(item.city, district);
       const matchesPrice = matchPriceRange(item.rentPrice, price);
       const matchesArea = matchAreaRange(item.roomAreaSqm, area);
       const locationStr = [item.ward, item.district, item.city].filter(Boolean).join(" ").toLowerCase();
@@ -535,7 +600,7 @@ export default function PublicListingsPage() {
         interestFilter === "social" ? true :
         true
       );
-      return matchesDistrict && matchesPrice && matchesArea && matchesSearch && matchesGender && matchesInterest;
+      return matchesProvince && matchesDistrict && matchesPrice && matchesArea && matchesSearch && matchesGender && matchesInterest;
     });
 
     // Tách thành 2 nhóm: user created (source = null) và imported (source != null)
@@ -596,7 +661,7 @@ export default function PublicListingsPage() {
   useEffect(() => {
     setRecommendedPage(1);
     setUnscoredPage(1);
-  }, [district, price, area, genderFilter, interestFilter, searchLocation]);
+  }, [province, district, price, area, genderFilter, interestFilter, searchLocation]);
 
   // Lắng nghe khi user update soft filter ở trang /soft-filter
   useEffect(() => {
@@ -722,6 +787,39 @@ export default function PublicListingsPage() {
 
               <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm">
                 <MapPin className="h-4 w-4 text-[var(--primary)]" />
+                <span className="text-sm text-slate-500">{t("Tỉnh/Thành")}</span>
+                <select
+                  value={province}
+                  onChange={(e) => {
+                    const nextProvince = e.target.value;
+                    setProvince(nextProvince);
+                    setDistrict("all");
+                    trackEvent({
+                      eventName: "listing_filter_applied",
+                      metadata: { filterType: "province", value: nextProvince },
+                    });
+                  }}
+                  className="bg-transparent outline-none text-sm max-w-[10rem]"
+                >
+                  <option value="all">{t("Tất cả")}</option>
+                  {VIETNAM_PROVINCES.filter((p) => provincesInListings.has(p.name)).length > 0 && (
+                    <optgroup label={t("Có tin đăng")}>
+                      {VIETNAM_PROVINCES.filter((p) => provincesInListings.has(p.name)).map((p) => (
+                        <option key={p.name} value={p.name}>{p.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <optgroup label={t("Tỉnh/thành khác")}>
+                    {VIETNAM_PROVINCES.filter((p) => !provincesInListings.has(p.name)).map((p) => (
+                      <option key={p.name} value={p.name}>{p.name}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm">
+                <MapPinned className="h-4 w-4 text-[var(--primary)]" />
+                <span className="text-sm text-slate-500">{t("Khu vực")}</span>
                 <select
                   value={district}
                   onChange={(e) => {
@@ -733,11 +831,25 @@ export default function PublicListingsPage() {
                       metadata: { filterType: "district", value: nextDistrict },
                     });
                   }}
-                  className="bg-transparent outline-none text-sm"
+                  className="bg-transparent outline-none text-sm max-w-[11rem]"
                 >
-                    {districtOptions.map((d) => (
-                    <option key={d} value={d}>{d === "all" ? t("Tất cả") : d}</option>
-                  ))}
+                  <option value="all">{t("Tất cả khu vực")}</option>
+                  {districtOptions.filter((d) => d !== "all").length > 0 && (
+                    <optgroup label={t("Khu vực có tin đăng")}>
+                      {districtOptions.filter((d) => d !== "all").map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {wardAreaOptions.filter((w) => !dataAreaOptions.includes(w)).length > 0 && (
+                    <optgroup label={t("Phường/Xã (2025)")}>
+                      {wardAreaOptions
+                        .filter((w) => !dataAreaOptions.includes(w))
+                        .map((w) => (
+                          <option key={w} value={w}>{w}</option>
+                        ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 
@@ -998,6 +1110,8 @@ export default function PublicListingsPage() {
                 >
                   <ListingsMap
                     listings={filteredListings}
+                    focus={mapFocus}
+                    focusProvinceName={mapFocusProvinceName}
                     onSelect={(listing) => {
                       setIsMapModalOpen(false);
                       navigate(`/listings/${listing.id}`);
@@ -1081,7 +1195,7 @@ export default function PublicListingsPage() {
                               </span>
                             )}
                             <div className="absolute top-3 left-3">
-                              <PostedTimeTag listing={listing} />
+                              <PostedTimeTag postedAt={listing.publishedAt || listing.createdAt} />
                             </div>
                           </div>
 
@@ -1210,7 +1324,7 @@ export default function PublicListingsPage() {
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                             <div className="absolute top-3 left-3">
-                              <PostedTimeTag listing={listing} />
+                              <PostedTimeTag postedAt={listing.publishedAt || listing.createdAt} />
                             </div>
                             <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-xs font-bold text-white ${badge.color}`}>
                               {badge.text}

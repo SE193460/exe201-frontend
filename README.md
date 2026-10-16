@@ -68,6 +68,8 @@ The app is available at `http://localhost:5173`.
 - **Listing boost** — promote a listing (QR payment) and confirm the transfer.
 - **User dashboard** — profile, my listings, saved listings, payment history (PDF export).
 - **Admin dashboard** — users, listings approval, imported listings, amenities, payments, reports, feedback.
+- **Area map** — Leaflet map of the 34 provinces (2025 reform) that highlights the filtered province and plots listings by coordinates.
+- **AI assistant** — floating chat widget on every page; answers via the backend assistant endpoint (LLM or offline FAQ).
 - **i18n** — Vietnamese / English toggle.
 
 ## Performance & quality notes
@@ -85,8 +87,21 @@ src/
   assets/       # static assets
   components/   # shared UI (Navbar, Sidebar, Pagination, Toast, ConfirmDialog, …)
   contexts/     # React contexts (auth, toast, …)
+  data/         # 2025 Vietnam province/ward data for region filters + map
   i18n/         # translations
   layouts/      # page shells (UserShell, admin layouts)
   lib/          # utilities
   pages/        # route components (admin pages under pages/admin)
+```
+
+### Region data
+
+`src/data/vietnamProvinces.ts`, `src/data/vietnamWards.ts` and
+`public/data/vietnam-provinces-34.geojson` are generated from a public 34-province
+GeoJSON. To regenerate them:
+
+```bash
+node scripts/simplify-geojson.cjs <raw.geojson> public/data/vietnam-provinces-34.geojson
+node scripts/gen-provinces.cjs public/data/vietnam-provinces-34.geojson src/data/vietnamProvinces.ts
+node scripts/gen-wards.cjs src/data/vietnamWards.ts
 ```

@@ -306,6 +306,11 @@ const en: Record<string, string> = {
   "Lưu tiêu chí mềm, áp dụng bộ lọc cứng, sau đó xem danh sách gợi ý theo điểm tương thích.": "Save soft criteria, apply hard filters, then view suggestions by compatibility score.",
   "Bộ lọc cứng": "Hard filters",
   "Tất cả khu vực": "All areas",
+  "Tỉnh/Thành": "Province/City",
+  "Có tin đăng": "With listings",
+  "Tỉnh/thành khác": "Other provinces",
+  "Khu vực có tin đăng": "Areas with listings",
+  "Phường/Xã (2025)": "Wards/Communes (2025)",
   "Giá (triệu VND)": "Price (million VND)",
   "Diện tích (m²)": "Area (m²)",
   "Bộ lọc mềm - Sinh hoạt cơ bản": "Soft filter - Basic living",
@@ -671,6 +676,21 @@ const en: Record<string, string> = {
     "No listings with coordinates to display on the map yet.",
   "Bài đăng chưa có tọa độ": "Listings without coordinates",
   "Mở bản đồ": "Open map",
+
+  // AI assistant
+  "Mở trợ lý AI": "Open AI assistant",
+  "Trợ lý Roomie": "Roomie Assistant",
+  "Hỗ trợ sử dụng website": "Helps you use the website",
+  "Xin chào! Mình là trợ lý Roomie. Bạn cần hỗ trợ gì?":
+    "Hi! I'm the Roomie assistant. How can I help you?",
+  "Đang trả lời...": "Typing...",
+  "Nhập câu hỏi của bạn...": "Type your question...",
+  "Không kết nối được trợ lý. Vui lòng thử lại.":
+    "Couldn't reach the assistant. Please try again.",
+  "Làm sao để tìm phòng?": "How do I find a room?",
+  "Bộ lọc mềm hoạt động thế nào?": "How does the soft filter work?",
+  "Cách đăng tin cho thuê?": "How do I post a listing?",
+  "Mua lượt xem liên hệ ở đâu?": "Where do I buy contact views?",
 };
 
 export default en;

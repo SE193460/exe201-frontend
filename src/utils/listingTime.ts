@@ -23,6 +23,16 @@ export function isListingOld(input?: string | null, now: Date = new Date()): boo
   return days !== null && days >= OLD_LISTING_DAYS;
 }
 
+/** Exact posted date as dd/mm/yyyy, e.g. "16/10/2026". Empty string when invalid. */
+export function formatListingDate(
+  input: string | null | undefined,
+  locale = "vi-VN",
+): string {
+  const date = getListingDate(input);
+  if (!date) return "";
+  return date.toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
 /** Human friendly Vietnamese relative time, e.g. "3 ngày trước". */
 export function formatRelativeTime(
   input: string | null | undefined,

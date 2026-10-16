@@ -1,10 +1,12 @@
-import { useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { useEffect, useMemo, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslation } from "react-i18next";
+import type { FeatureCollection } from "geojson";
 import type { Listing } from "../api/services/listings";
 import { resolveListingImageUrl } from "../api/services/listings";
+import { PROVINCE_GEOJSON_URL, normalizeRegionText } from "../data/vietnamRegions";
 
 // Custom pin so we don't depend on Leaflet's bundler-fragile default icon assets.
 const pinIcon = L.divIcon({
@@ -15,23 +17,60 @@ const pinIcon = L.divIcon({
   popupAnchor: [0, -16],
 });
 
-const HCMC_CENTER: [number, number] = [10.7769, 106.7009];
+// Country-wide fallback view so we never default to a single city when the
+// filtered listings live somewhere else (e.g. Hà Nội instead of HCMC).
+const VIETNAM_CENTER: [number, number] = [16.0, 106.3];
+const VIETNAM_ZOOM = 6;
+
+export type MapFocus = {
+  /** Focus centroid as [lat, lng]. */
+  center: [number, number];
+  zoom?: number;
+  /** Optional bounding box [[south, west], [north, east]] to fit. */
+  bounds?: [[number, number], [number, number]];
+};
 
 type MapListing = Listing & { latitude: number; longitude: number };
 
-function FitBounds({ points }: { points: Array<[number, number]> }) {
+function FitBounds({
+  points,
+  focus,
+}: {
+  points: Array<[number, number]>;
+  focus?: MapFocus | null;
+}) {
   const map = useMap();
 
   useEffect(() => {
-    if (points.length === 0) return;
+    // An explicit region focus + bounds wins so the map always matches the
+    // active area filter.
+    if (focus?.bounds) {
+      map.fitBounds(L.latLngBounds(focus.bounds), { padding: [20, 20] });
+      return;
+    }
+    if (points.length === 0) {
+      if (focus?.center) map.setView(focus.center, focus.zoom ?? 10);
+      return;
+    }
     if (points.length === 1) {
-      map.setView(points[0], 15);
+      map.setView(points[0], focus?.zoom ?? 15);
       return;
     }
     map.fitBounds(L.latLngBounds(points), { padding: [40, 40] });
-  }, [map, points]);
+  }, [map, points, focus]);
 
   return null;
+}
+
+/** Loads the simplified 34-province boundary GeoJSON once, lazily. */
+let provinceGeoJsonPromise: Promise<FeatureCollection | null> | null = null;
+function loadProvinceGeoJson(): Promise<FeatureCollection | null> {
+  if (!provinceGeoJsonPromise) {
+    provinceGeoJsonPromise = fetch(PROVINCE_GEOJSON_URL)
+      .then((res) => (res.ok ? (res.json() as Promise<FeatureCollection>) : null))
+      .catch(() => null);
+  }
+  return provinceGeoJsonPromise;
 }
 
 function formatPrice(price: number) {
@@ -49,11 +88,28 @@ function hasCoords(listing: Listing): listing is MapListing {
 export default function ListingsMap({
   listings,
   onSelect,
+  focus,
+  focusProvinceName,
 }: {
   listings: Listing[];
   onSelect?: (listing: Listing) => void;
+  /** Region the map should frame (province selected in the filter). */
+  focus?: MapFocus | null;
+  /** Canonical province name to highlight in the boundaries overlay. */
+  focusProvinceName?: string | null;
 }) {
   const { t } = useTranslation();
+  const [geo, setGeo] = useState<FeatureCollection | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadProvinceGeoJson().then((data) => {
+      if (!cancelled && data) setGeo(data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const located = useMemo(() => listings.filter(hasCoords), [listings]);
   const withoutCoords = useMemo(() => listings.filter((listing) => !hasCoords(listing)), [listings]);
@@ -62,12 +118,14 @@ export default function ListingsMap({
     [located],
   );
 
+  const activeName = focusProvinceName ? normalizeRegionText(focusProvinceName) : "";
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="relative min-h-[320px] flex-1">
         <MapContainer
-          center={points[0] ?? HCMC_CENTER}
-          zoom={points.length > 0 ? 14 : 12}
+          center={focus?.center ?? points[0] ?? VIETNAM_CENTER}
+          zoom={focus?.zoom ?? (points.length > 0 ? 13 : VIETNAM_ZOOM)}
           scrollWheelZoom
           style={{ height: "100%", width: "100%", minHeight: 320 }}
         >
@@ -75,7 +133,24 @@ export default function ListingsMap({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <FitBounds points={points} />
+          {geo && (
+            <GeoJSON
+              data={geo}
+              interactive={false}
+              style={(feature) => {
+                const isActive =
+                  activeName.length > 0 &&
+                  normalizeRegionText(String(feature?.properties?.name ?? "")) === activeName;
+                return {
+                  color: isActive ? "#ff8c00" : "#94a3b8",
+                  weight: isActive ? 2 : 1,
+                  fillColor: isActive ? "#ff8c00" : "#cbd5e1",
+                  fillOpacity: isActive ? 0.22 : 0.06,
+                };
+              }}
+            />
+          )}
+          <FitBounds points={points} focus={focus} />
           {located.map((listing) => (
             <Marker key={listing.id} position={[listing.latitude, listing.longitude]} icon={pinIcon}>
               <Popup>

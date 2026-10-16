@@ -17,6 +17,7 @@ import {
 } from "./listingRangeOptions";
 import { DISTRICT_OPTIONS, FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { trackEvent } from "../api/services/analytics";
+import { hasAccessToken } from "../api/services/session";
 
 type HardFiltersForm = {
   district: string;
@@ -62,6 +63,7 @@ export default function SoftFilterPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!hasAccessToken()) return;
     fetchRoommatePreferences()
       .then((data) => setPrefs(data || {}))
       .catch(() => {
@@ -100,7 +102,10 @@ export default function SoftFilterPage() {
     setError("");
     setStep(3);
     try {
-      await updateRoommatePreferences(prefs);
+      // Only logged-in users have a profile row to persist preferences to.
+      if (hasAccessToken()) {
+        await updateRoommatePreferences(prefs);
+      }
 
       trackEvent({
         eventName: "listing_filter_applied",
@@ -120,6 +125,7 @@ export default function SoftFilterPage() {
           min_area: areaRangeToBounds(hardFilters.area_range).min,
           max_area: areaRangeToBounds(hardFilters.area_range).max,
         },
+        preferences: prefs,
       });
 
       const resultsData = response.results || [];

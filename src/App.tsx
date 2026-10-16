@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { fetchProfile, getOnboardingStorageKey } from "./api/services/user";
 import { fetchLifestyleProfile, fetchRoommatePreferences } from "./api/services/lifestyle";
 import AdminRoute from "./components/AdminRoute";
+import AssistantWidget from "./components/AssistantWidget";
 
 // Route-level code splitting: each page is loaded on demand.
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -156,6 +157,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      <AssistantWidget />
     </>
   );
 }

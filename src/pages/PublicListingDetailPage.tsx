@@ -11,6 +11,7 @@ import Footer from "../components/Footer";
 import { trackEvent } from "../api/services/analytics";
 import { fetchLifestyleProfileAccess, fetchMyContactCredits, viewLifestyleProfile } from "../api/services/contactViews";
 import { useToast } from "../contexts/ToastContext";
+import PostedTimeTag from "../components/PostedTimeTag";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "";
@@ -776,6 +777,12 @@ export default function PublicListingDetailPage() {
                         <MapPinned className="h-4 w-4 text-[#a55b00]" />
                         <span>{listingAddress || t("Chưa cập nhật")}</span>
                       </div>
+                      <div className="mt-2">
+                        <PostedTimeTag
+                          variant="inline"
+                          postedAt={listing.publishedAt || listing.createdAt}
+                        />
+                      </div>
                     </div>
                     <div className="text-xl md:text-[24px] font-extrabold text-[#a55b00]">
                       {listing.rentPrice.toLocaleString("vi-VN")} <span className="text-sm font-semibold text-slate-500">{t("/ tháng")}</span>
@@ -973,6 +980,9 @@ export default function PublicListingDetailPage() {
                         <div className="p-4">
                           <h4 className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-[#a55b00]">{item.title}</h4>
                           <p className="mt-2 line-clamp-1 text-xs text-slate-500">{location || t("Chưa cập nhật địa chỉ")}</p>
+                          <div className="mt-2">
+                            <PostedTimeTag variant="inline" postedAt={item.publishedAt || item.createdAt} />
+                          </div>
                         </div>
                       </button>
                     );
