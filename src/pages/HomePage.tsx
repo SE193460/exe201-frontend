@@ -1,13 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPinned, Heart, Shield, MessageCircle, Lock, ChevronRight, Zap, DollarSign, User, Sparkles, MapPin, CheckCircle2, AlertCircle, Copy } from "lucide-react";
+import { Search, MapPinned, Heart, Shield, MessageCircle, Lock, ChevronRight, Zap, DollarSign, User, Sparkles, MapPin, CheckCircle2, AlertCircle, Copy, Clock } from "lucide-react";
 import { fetchProfile, resolveAvatarUrl } from "../api/services/user";
 import { fetchPublicListings, resolveListingImageUrl, toggleSaveListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import type { SoftFilterResult } from "../api/services/lifestyle";
 import { PRICE_OPTIONS } from "./listingRangeOptions";
 import { purchaseContactViews, confirmContactViewPurchase } from "../api/services/contactViews";
+import { hasAccessToken, clearSoftFilterCache } from "../api/services/session";
+import { formatRelativeTime, isListingOld } from "../utils/listingTime";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -37,6 +39,7 @@ export default function HomePage() {
   ];
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [searchError, setSearchError] = useState("");
 
   const depositPackages = [
     { key: "cv_5", amount: 5000, label: "Xem liên hệ 5", desc: "5 lượt xem liên hệ" },
@@ -122,6 +125,13 @@ export default function HomePage() {
 
   useEffect(() => {
     const loadSoftFilterResults = () => {
+      // Anonymous visitors must never see leftover compatibility scores.
+      if (!hasAccessToken()) {
+        clearSoftFilterCache();
+        setSoftFilterResults({});
+        setSoftFilterSource(null);
+        return;
+      }
       try {
         const savedResults = localStorage.getItem("softFilterResults");
         if (savedResults) {
@@ -173,7 +183,13 @@ export default function HomePage() {
     };
   }, []);
 
-  const featuredListings = [...listings]
+  // The featured section only surfaces listings posted within the last month.
+  // If every listing is older than a month we still show them (each card is
+  // tagged "Đã cũ").
+  const recentListings = listings.filter((l) => !isListingOld(l.publishedAt || l.createdAt));
+  const featuredPool = recentListings.length > 0 ? recentListings : listings;
+
+  const featuredListings = [...featuredPool]
     .sort((a, b) => {
       const matchA = softFilterResults[a.id];
       const matchB = softFilterResults[b.id];
@@ -341,16 +357,21 @@ export default function HomePage() {
     if (finalArea !== "all") params.set("area", finalArea);
 
     if (params.toString() === "") {
-      setError(t("Vui lòng chọn bộ lọc hoặc nhập thông tin tìm kiếm."));
+      setSearchError(t("Bạn chưa chọn tiêu chí nào. Hãy chọn khu vực, khoảng giá, giới tính, sở thích hoặc nhập từ khóa để tìm kiếm."));
       return;
     }
 
     setError("");
+    setSearchError("");
     navigate(`/listings?${params.toString()}`);
   };
 
   const handleToggleSave = async (e: React.MouseEvent, listingId: string) => {
     e.stopPropagation();
+    if (!hasAccessToken()) {
+      navigate("/auth");
+      return;
+    }
     try {
       const { isSaved } = await toggleSaveListing(listingId);
       setSavedIds((prev) => {
@@ -411,7 +432,7 @@ export default function HomePage() {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setError(""); }}
+                  onChange={(e) => { setSearchQuery(e.target.value); setError(""); setSearchError(""); }}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder={t("Bạn muốn sống ở khu vực nào?")}
                   className="w-full bg-transparent py-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
@@ -424,6 +445,12 @@ export default function HomePage() {
                 {t("Tìm kiếm")}
               </button>
             </div>
+            {searchError && (
+              <p className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-600">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {searchError}
+              </p>
+            )}
           </div>
 
           {/* Filter chips with dropdowns */}
@@ -640,6 +667,21 @@ export default function HomePage() {
                     <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-emerald-600 backdrop-blur-sm">
                       <Shield className="h-3 w-3" /> {t("Đã xác thực")}
                     </span>
+                    {(() => {
+                      const postedAt = listing.publishedAt || listing.createdAt;
+                      const relative = formatRelativeTime(postedAt, t);
+                      if (!relative) return null;
+                      const old = isListingOld(postedAt);
+                      return (
+                        <span
+                          className={`absolute right-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold backdrop-blur-sm ${
+                            old ? "bg-slate-800/85 text-white" : "bg-white/90 text-slate-700"
+                          }`}
+                        >
+                          <Clock className="h-3 w-3" /> {old ? `${t("Đã cũ")} · ${relative}` : relative}
+                        </span>
+                      );
+                    })()}
                     <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3">
                       <div className="rounded-full bg-white/95 px-3 py-1.5 text-sm font-black text-slate-800 shadow-sm">
                         {formatPrice(listing.rentPrice)}<span className="ml-1 text-[10px] font-medium text-slate-500">{t("/tháng")}</span>

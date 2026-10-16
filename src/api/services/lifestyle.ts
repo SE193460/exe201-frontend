@@ -15,6 +15,7 @@ export type LifestyleProfile = {
   noise?: number | null;
   call_frequency?: number | null;
   game_mic?: number | null;
+  auto_match_enabled?: boolean;
 };
 
 export type RoommatePreferences = {

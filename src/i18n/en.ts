@@ -627,6 +627,50 @@ const en: Record<string, string> = {
   "Đang tạo...": "Creating...",
   "Đã gửi thông báo, admin sẽ xử lý trong ít phút.": "Notification sent, admin will process shortly.",
   "Xác nhận thất bại, vui lòng thử lại.": "Confirmation failed, please try again.",
+
+  // Relative timestamps & old-listing badge (items 10-11)
+  "{{count}} phút trước": "{{count}} minutes ago",
+  "{{count}} phút trước_one": "{{count}} minute ago",
+  "{{count}} phút trước_other": "{{count}} minutes ago",
+  "{{count}} giờ trước": "{{count}} hours ago",
+  "{{count}} giờ trước_one": "{{count}} hour ago",
+  "{{count}} giờ trước_other": "{{count}} hours ago",
+  "{{count}} ngày trước": "{{count}} days ago",
+  "{{count}} ngày trước_one": "{{count}} day ago",
+  "{{count}} ngày trước_other": "{{count}} days ago",
+  "{{count}} tuần trước": "{{count}} weeks ago",
+  "{{count}} tuần trước_one": "{{count}} week ago",
+  "{{count}} tuần trước_other": "{{count}} weeks ago",
+  "{{count}} tháng trước": "{{count}} months ago",
+  "{{count}} tháng trước_one": "{{count}} month ago",
+  "{{count}} tháng trước_other": "{{count}} months ago",
+  "{{count}} năm trước": "{{count}} years ago",
+  "{{count}} năm trước_one": "{{count}} year ago",
+  "{{count}} năm trước_other": "{{count}} years ago",
+  "Đã cũ": "Outdated",
+
+  // Auto match (item 6)
+  "Tự động match": "Auto match",
+  "Tự động chấm điểm tương thích cho mọi tin đăng khi bạn xem danh sách.":
+    "Automatically score compatibility for every listing while you browse.",
+  "Bật/tắt tự động match": "Toggle auto match",
+  "Tự động chấm điểm mức độ phù hợp dựa trên hồ sơ của bạn":
+    "Automatically score compatibility based on your profile",
+  "Đang bật tự động match": "Auto match is on",
+  "Đã tắt tự động match": "Auto match is off",
+
+  // Search (item 3)
+  "Bạn chưa chọn tiêu chí nào. Hãy chọn khu vực, khoảng giá, giới tính, sở thích hoặc nhập từ khóa để tìm kiếm.":
+    "You haven't chosen any criteria yet. Pick an area, price range, gender, or preferences, or type a keyword to search.",
+
+  // Listings / clear filter (items 8)
+  "Xóa bộ lọc mềm": "Clear soft filter",
+
+  // Leaflet map (item 7)
+  "Chưa có bài đăng nào có tọa độ để hiển thị trên bản đồ.":
+    "No listings with coordinates to display on the map yet.",
+  "Bài đăng chưa có tọa độ": "Listings without coordinates",
+  "Mở bản đồ": "Open map",
 };
 
 export default en;

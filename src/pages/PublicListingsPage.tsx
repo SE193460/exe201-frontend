@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MapPin, X, Sparkles, ChevronLeft, ChevronRight, Search, CheckCircle2, AlertCircle, Heart } from "lucide-react";
+import { MapPin, X, Sparkles, ChevronLeft, ChevronRight, Search, CheckCircle2, AlertCircle, Heart, RotateCcw, Clock, ToggleLeft, ToggleRight } from "lucide-react";
 import { fetchPublicListings, resolveListingImageUrl, toggleSaveListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import type { SoftFilterResult, RoommatePreferences } from "../api/services/lifestyle";
@@ -10,9 +10,30 @@ import { fetchRoommatePreferences, updateRoommatePreferences, runSoftFilter, del
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Pagination from "../components/Pagination";
+const ListingsMap = lazy(() => import("../components/ListingsMap"));
+import { hasAccessToken, isAutoMatchEnabled, setAutoMatchEnabled, clearSoftFilterCache } from "../api/services/session";
+import { formatRelativeTime, isListingOld } from "../utils/listingTime";
 import { matchAreaRange, matchPriceRange, AREA_OPTIONS, PRICE_OPTIONS } from "./listingRangeOptions";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { trackEvent } from "../api/services/analytics";
+function PostedTimeTag({ listing }: { listing: Listing }) {
+  const { t } = useTranslation();
+  const postedAt = listing.publishedAt || listing.createdAt;
+  const relative = formatRelativeTime(postedAt, t);
+  if (!relative) return null;
+  const old = isListingOld(postedAt);
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm ${
+        old ? "bg-slate-800/85 text-white" : "bg-white/90 text-slate-700"
+      }`}
+    >
+      <Clock className="h-3 w-3" />
+      {old ? `${t("Đã cũ")} · ${relative}` : relative}
+    </span>
+  );
+}
+
 export default function PublicListingsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -40,6 +61,8 @@ export default function PublicListingsPage() {
   const [softFilterLoading, setSoftFilterLoading] = useState(false);
   const [softFilterSection, setSoftFilterSection] = useState(1);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [isAuthed] = useState(() => hasAccessToken());
+  const [autoMatch, setAutoMatch] = useState(() => isAutoMatchEnabled());
   const RECOMMENDED_PAGE_SIZE = 3;
   const UNSCORED_PAGE_SIZE = 6;
 
@@ -205,6 +228,10 @@ export default function PublicListingsPage() {
 
   const handleToggleSave = async (e: React.MouseEvent, listingId: string) => {
     e.stopPropagation();
+    if (!isAuthed) {
+      navigate("/auth");
+      return;
+    }
     try {
       const { isSaved } = await toggleSaveListing(listingId);
       setSavedIds((prev) => {
@@ -219,6 +246,7 @@ export default function PublicListingsPage() {
   };
 
   const loadSoftFilterPrefs = async () => {
+    if (!hasAccessToken()) return;
     try {
       const prefs = await fetchRoommatePreferences();
       setSoftFilterPrefs(prefs || {});
@@ -275,6 +303,8 @@ export default function PublicListingsPage() {
   };
 
   const handleClearSoftFilter = async () => {
+    // Reset the soft-filter form back to its defaults ("Bỏ trống" for every option).
+    setSoftFilterPrefs({});
     // Delete roommate preferences from DB (best-effort)
     try {
       await deleteRoommatePreferences();
@@ -310,6 +340,37 @@ export default function PublicListingsPage() {
       localStorage.removeItem("softFilterSource");
       window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: [] }));
     }
+  };
+
+  // Turn automatic compatibility matching on/off. When off, no score is
+  // invented for the visitor so they can browse purely on their own criteria.
+  const handleToggleAutoMatch = () => {
+    const next = !autoMatch;
+    setAutoMatch(next);
+    setAutoMatchEnabled(next);
+    if (!next) {
+      setSoftFilterResults({});
+      setSoftFilterSource(null);
+      clearSoftFilterCache();
+      window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: [] }));
+    } else if (hasAccessToken()) {
+      autoRunSoftFilter();
+    }
+  };
+
+  const hasActiveFilters =
+    district !== "all" ||
+    price !== "all" ||
+    area !== "all" ||
+    genderFilter !== "all" ||
+    searchLocation.trim() !== "";
+
+  const handleClearFilters = () => {
+    setDistrict("all");
+    setPrice("all");
+    setArea("all");
+    setGenderFilter("all");
+    setSearchLocation("");
   };
 
   // Load soft filter prefs khi dropdown mở
@@ -361,28 +422,38 @@ export default function PublicListingsPage() {
         setLoading(false);
       });
 
-    // Tải soft filter results từ localStorage
-    try {
-      const savedResults = localStorage.getItem("softFilterResults");
-      if (savedResults) {
-        const results: SoftFilterResult[] = JSON.parse(savedResults);
-        const resultsMap = results.reduce(
-          (acc, result) => {
-            acc[result.id] = result;
-            return acc;
-          },
-          {} as Record<string, SoftFilterResult>
-        );
-        setSoftFilterResults(resultsMap);
+    // Only restore cached match scores for logged-in users. Anonymous visitors
+    // (or users who logged out) must never see leftover compatibility scores.
+    if (hasAccessToken()) {
+      try {
+        const savedResults = localStorage.getItem("softFilterResults");
+        if (savedResults) {
+          const results: SoftFilterResult[] = JSON.parse(savedResults);
+          const resultsMap = results.reduce(
+            (acc, result) => {
+              acc[result.id] = result;
+              return acc;
+            },
+            {} as Record<string, SoftFilterResult>
+          );
+          setSoftFilterResults(resultsMap);
+        }
+        const savedSource = localStorage.getItem("softFilterSource") as 'roommate_preferences' | 'lifestyle_profile' | null;
+        if (savedSource) setSoftFilterSource(savedSource);
+      } catch (e) {
+        console.error("Lỗi khi tải soft filter results:", e);
       }
-      const savedSource = localStorage.getItem("softFilterSource") as 'roommate_preferences' | 'lifestyle_profile' | null;
-      if (savedSource) setSoftFilterSource(savedSource);
-    } catch (e) {
-      console.error("Lỗi khi tải soft filter results:", e);
+    } else {
+      clearSoftFilterCache();
+      setSoftFilterResults({});
+      setSoftFilterSource(null);
     }
 
-    // Auto-run soft filter on mount to show scores for all listings
-    autoRunSoftFilter();
+    // Auto-run soft filter on mount to show scores for all listings.
+    // Skipped for anonymous visitors and when the user turned auto-match off.
+    if (hasAccessToken() && isAutoMatchEnabled()) {
+      autoRunSoftFilter();
+    }
   }, []);
 
   const autoRunSoftFilter = async () => {
@@ -393,7 +464,16 @@ export default function PublicListingsPage() {
       const { fetchLifestyleProfile } = await import("../api/services/lifestyle");
       const lifestyle = await fetchLifestyleProfile();
       if (!lifestyle) return;
-      const filledFields = Object.entries(lifestyle).filter(([k, v]) => k !== "user_id" && k !== "preferred_district" && v !== null && v !== undefined);
+      // The server is the source of truth: respect the DB auto-match flag.
+      if (lifestyle.auto_match_enabled === false) return;
+      const filledFields = Object.entries(lifestyle).filter(
+        ([k, v]) =>
+          k !== "user_id" &&
+          k !== "preferred_district" &&
+          k !== "auto_match_enabled" &&
+          v !== null &&
+          v !== undefined,
+      );
       if (filledFields.length < 3) return; // Not enough profile data
 
       const { runSoftFilter } = await import("../api/services/lifestyle");
@@ -582,25 +662,48 @@ export default function PublicListingsPage() {
               {loading ? t("Đang tải...") : t("Tìm thấy {{count}} phòng phù hợp.", { count: filteredListings.length })}
             </p>
           </div>
-          <button
-            onClick={() => {
-              setIsDropdownOpen(!isDropdownOpen);
-              setSoftFilterSection(1);
-            }}
-            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-          >
-            <Sparkles className="h-4 w-4 text-[var(--primary)]" />
-            {t("Bộ lọc mềm")}
-          </button>
-          {Object.keys(softFilterResults).length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={handleClearSoftFilter}
-              className="flex items-center gap-2 rounded-full border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+              onClick={handleToggleAutoMatch}
+              title={t("Tự động chấm điểm mức độ phù hợp dựa trên hồ sơ của bạn")}
+              className={`flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+                autoMatch
+                  ? "border-[var(--primary)]/30 bg-[var(--primary-container)] text-[var(--primary)]"
+                  : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+              }`}
             >
-              <X className="h-4 w-4" />
-              {t("Xóa bộ lọc")}
+              {autoMatch ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
+              {autoMatch ? t("Đang bật tự động match") : t("Đã tắt tự động match")}
             </button>
-          )}
+            <button
+              onClick={() => {
+                setIsDropdownOpen(!isDropdownOpen);
+                setSoftFilterSection(1);
+              }}
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+            >
+              <Sparkles className="h-4 w-4 text-[var(--primary)]" />
+              {t("Bộ lọc mềm")}
+            </button>
+            {Object.keys(softFilterResults).length > 0 && (
+              <button
+                onClick={handleClearSoftFilter}
+                className="flex items-center gap-2 rounded-full border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+              >
+                <X className="h-4 w-4" />
+                {t("Xóa bộ lọc mềm")}
+              </button>
+            )}
+            {hasActiveFilters && (
+              <button
+                onClick={handleClearFilters}
+                className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                <RotateCcw className="h-4 w-4" />
+                {t("Xóa bộ lọc")}
+              </button>
+            )}
+          </div>
         </header>
 
         {/* Filters */}
@@ -678,7 +781,15 @@ export default function PublicListingsPage() {
                 </select>
               </div>
 
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-2">
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleClearFilters}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                  >
+                    <RotateCcw className="h-4 w-4" /> {t("Xóa bộ lọc")}
+                  </button>
+                )}
                 <button
                   onClick={() => setIsMapModalOpen(true)}
                   className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
@@ -877,8 +988,22 @@ export default function PublicListingsPage() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="aspect-[16/9] bg-slate-100">
-                <iframe title={t("Bản đồ")} src="https://maps.google.com/maps?q=Thủ+Đức&output=embed" className="h-full w-full border-0" allowFullScreen loading="lazy" />
+              <div className="h-[70vh] max-h-[640px] min-h-[380px] bg-slate-100">
+                <Suspense
+                  fallback={
+                    <div className="flex h-full items-center justify-center">
+                      <span className="inline-block h-7 w-7 animate-spin rounded-full border-[3px] border-[var(--primary)] border-t-transparent" />
+                    </div>
+                  }
+                >
+                  <ListingsMap
+                    listings={filteredListings}
+                    onSelect={(listing) => {
+                      setIsMapModalOpen(false);
+                      navigate(`/listings/${listing.id}`);
+                    }}
+                  />
+                </Suspense>
               </div>
             </div>
           </div>
@@ -955,8 +1080,8 @@ export default function PublicListingsPage() {
                                 <Sparkles className="h-3 w-3" /> VIP
                               </span>
                             )}
-                            <div className="absolute top-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
-                              {t("Tin mới")}
+                            <div className="absolute top-3 left-3">
+                              <PostedTimeTag listing={listing} />
                             </div>
                           </div>
 
@@ -1084,6 +1209,9 @@ export default function PublicListingsPage() {
                               <div className="flex h-full w-full items-center justify-center text-sm text-slate-300">{t("Chưa có ảnh")}</div>
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                            <div className="absolute top-3 left-3">
+                              <PostedTimeTag listing={listing} />
+                            </div>
                             <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-xs font-bold text-white ${badge.color}`}>
                               {badge.text}
                             </span>
