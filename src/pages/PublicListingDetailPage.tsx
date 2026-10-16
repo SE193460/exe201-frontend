@@ -10,6 +10,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { trackEvent } from "../api/services/analytics";
 import { fetchLifestyleProfileAccess, fetchMyContactCredits, viewLifestyleProfile } from "../api/services/contactViews";
+import { useToast } from "../contexts/ToastContext";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "";
@@ -43,6 +44,7 @@ function renderDescription(desc: string) {
 export default function PublicListingDetailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const { id } = useParams();
 
   function timeAgo(dateStr: string | null | undefined): string {
@@ -215,11 +217,11 @@ export default function PublicListingDetailPage() {
       const res = await toggleSaveListing(listing.id);
       setIsSaved(res.isSaved);
     } catch {
-      alert(t("Không thể lưu bài đăng. Vui lòng đăng nhập."));
+      showToast({ type: "error", message: t("Không thể lưu bài đăng. Vui lòng đăng nhập.") });
     } finally {
       setSaving(false);
     }
-  }, [listing?.id]);
+  }, [listing?.id, showToast, t]);
 
   const handleCopyLink = useCallback(async () => {
     try {
@@ -227,9 +229,9 @@ export default function PublicListingDetailPage() {
       setShareCopied(true);
       setTimeout(() => setShareCopied(false), 2000);
     } catch {
-      alert(t("Không thể sao chép đường link"));
+      showToast({ type: "error", message: t("Không thể sao chép đường link") });
     }
-  }, []);
+  }, [showToast, t]);
 
   const handleViewLifestyleProfile = async () => {
     if (!listing?.id || revealingLifestyleProfile) return;
@@ -258,6 +260,10 @@ export default function PublicListingDetailPage() {
 
   const handleSubmitReport = useCallback(async () => {
     if (!listing?.id || !reportReason) return;
+    if (!localStorage.getItem("access_token")) {
+      showToast({ type: "warning", message: t("Vui lòng đăng nhập để gửi báo cáo") });
+      return;
+    }
     setSubmittingReport(true);
     try {
       await reportListing(listing.id, {
@@ -273,11 +279,11 @@ export default function PublicListingDetailPage() {
         setReportPhone("");
       }, 2000);
     } catch {
-      alert(t("Không thể gửi báo cáo"));
+      showToast({ type: "error", message: t("Không thể gửi báo cáo") });
     } finally {
       setSubmittingReport(false);
     }
-  }, [listing?.id, reportReason, reportDescription]);
+  }, [listing?.id, reportReason, reportDescription, showToast, t]);
 
   const handlePrevImg = () => {
     if (!listing || !listing.images || listing.images.length === 0) return;
@@ -455,7 +461,9 @@ export default function PublicListingDetailPage() {
           setSoftFilterResult(found);
           return;
         }
-      } catch {}
+      } catch {
+        // ignore malformed event payloads and fall back to a reload below
+      }
       load();
     };
     window.addEventListener("softFilterUpdated", onUpdate as EventListener);
@@ -522,8 +530,8 @@ export default function PublicListingDetailPage() {
                         />
                         {listing.images.length > 1 && (
                           <>
-                            <button onClick={(e) => { e.stopPropagation(); handlePrevImg(); }} className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">‹</button>
-                            <button onClick={(e) => { e.stopPropagation(); handleNextImg(); }} className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">›</button>
+                            <button aria-label="Ảnh trước" onClick={(e) => { e.stopPropagation(); handlePrevImg(); }} className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">‹</button>
+                            <button aria-label="Ảnh sau" onClick={(e) => { e.stopPropagation(); handleNextImg(); }} className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">›</button>
                             <div className="absolute bottom-4 right-4 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur flex items-center gap-1.5">
                               <Camera className="h-3.5 w-3.5" /> {selectedImgIdx + 1}/{listing.images.length}
                             </div>
@@ -1001,8 +1009,8 @@ export default function PublicListingDetailPage() {
                     <img src={resolveListingImageUrl(listing.images[selectedImgIdx].imageUrl)} alt={listing.title} className="h-full w-full object-contain" />
                     {listing.images.length > 1 && (
                       <>
-                        <button onClick={handlePrevImg} className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">‹</button>
-                        <button onClick={handleNextImg} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">›</button>
+                        <button aria-label="Ảnh trước" onClick={handlePrevImg} className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">‹</button>
+                        <button aria-label="Ảnh sau" onClick={handleNextImg} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">›</button>
                         <div className="absolute bottom-3 right-3 rounded-full bg-slate-900/75 px-3 py-1 text-xs font-semibold text-white">{selectedImgIdx + 1} / {listing.images.length}</div>
                       </>
                     )}

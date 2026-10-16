@@ -8,9 +8,11 @@ import {
 } from "../../api/services/reports";
 import Sidebar from "../../components/Sidebar";
 import Pagination from "../../components/Pagination";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function AdminReportsPage() {
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [error, setError] = useState("");
     const [reports, setReports] = useState<Report[]>([]);
     const [page, setPage] = useState(1);
@@ -38,7 +40,7 @@ export default function AdminReportsPage() {
                 )
             );
         } catch {
-            alert("Cập nhật thất bại");
+            showToast({ type: "error", message: "Cập nhật thất bại" });
         }
     };
 

@@ -1,33 +1,44 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
-import AuthPage from "./pages/AuthPage";
-import ProfilePage from "./pages/ProfilePage";
-import AdminUsersPage from "./pages/admin/AdminUsersPage";
-import AdminListingsPage from "./pages/admin/AdminListingsPage";
-import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
-import AdminAmenitiesPage from "./pages/admin/AdminAmenitiesPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
-import MyListingsPage from "./pages/MyListingsPage";
-import CreateListingPage from "./pages/CreateListingPage";
-import ListingDetailPage from "./pages/ListingDetailPage";
-import EditListingPage from "./pages/EditListingPage";
-import PublicListingsPage from "./pages/PublicListingsPage";
-import PublicListingDetailPage from "./pages/PublicListingDetailPage";
-import HomePage from "./pages/HomePage";
-import AdminImportedListingsPage from "./pages/admin/AdminImportedListingsPage";
-import LifestyleProfilePage from "./pages/LifestyleProfilePage";
-import SoftFilterPage from "./pages/SoftFilterPage";
-import PaymentPackages from "./pages/PaymentPackages";
-import BuyContactViewsPage from "./pages/BuyContactViewsPage";
-import SavedListingsPage from "./pages/SavedListingsPage";
-import PaymentHistory from "./pages/PaymentHistory";
-import AdminPayments from "./pages/admin/AdminPayments";
-import AdminReportsPage from "./pages/admin/AdminReportsPage";
-import SupportContactPage from "./pages/SupportContactPage";
-import AdminFeedbacksPage from "./pages/admin/AdminFeedbacksPage";
-import OnboardingPage from "./pages/OnboardingPage";
 import { fetchProfile, getOnboardingStorageKey } from "./api/services/user";
 import { fetchLifestyleProfile, fetchRoommatePreferences } from "./api/services/lifestyle";
+import AdminRoute from "./components/AdminRoute";
+
+// Route-level code splitting: each page is loaded on demand.
+const HomePage = lazy(() => import("./pages/HomePage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const LifestyleProfilePage = lazy(() => import("./pages/LifestyleProfilePage"));
+const SoftFilterPage = lazy(() => import("./pages/SoftFilterPage"));
+const MyListingsPage = lazy(() => import("./pages/MyListingsPage"));
+const CreateListingPage = lazy(() => import("./pages/CreateListingPage"));
+const EditListingPage = lazy(() => import("./pages/EditListingPage"));
+const ListingDetailPage = lazy(() => import("./pages/ListingDetailPage"));
+const PublicListingsPage = lazy(() => import("./pages/PublicListingsPage"));
+const PublicListingDetailPage = lazy(() => import("./pages/PublicListingDetailPage"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+const SavedListingsPage = lazy(() => import("./pages/SavedListingsPage"));
+const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
+const PaymentPackages = lazy(() => import("./pages/PaymentPackages"));
+const BuyContactViewsPage = lazy(() => import("./pages/BuyContactViewsPage"));
+const PaymentHistory = lazy(() => import("./pages/PaymentHistory"));
+const SupportContactPage = lazy(() => import("./pages/SupportContactPage"));
+const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage"));
+const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
+const AdminListingsPage = lazy(() => import("./pages/admin/AdminListingsPage"));
+const AdminAmenitiesPage = lazy(() => import("./pages/admin/AdminAmenitiesPage"));
+const AdminImportedListingsPage = lazy(() => import("./pages/admin/AdminImportedListingsPage"));
+const AdminPayments = lazy(() => import("./pages/admin/AdminPayments"));
+const AdminReportsPage = lazy(() => import("./pages/admin/AdminReportsPage"));
+const AdminFeedbacksPage = lazy(() => import("./pages/admin/AdminFeedbacksPage"));
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-white">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--primary)]" />
+    </div>
+  );
+}
 
 function GoogleCallbackHandler() {
   const navigate = useNavigate();
@@ -44,28 +55,23 @@ function GoogleCallbackHandler() {
         return;
       }
 
-      console.log("App: Handling Google callback...", { success, error, hasToken: !!token });
-
       // Clear URL params immediately to prevent re-processing
       window.history.replaceState({}, document.title, window.location.pathname);
 
       if (success === "google" && token) {
         localStorage.setItem("access_token", token);
-        console.log("App: Token saved to localStorage");
 
         let loggedInUserId = "";
         try {
           const profile = await fetchProfile();
           loggedInUserId = profile.id;
-          console.log("App: Profile fetched:", profile);
 
           if (profile.roleName === "admin") {
-            console.log("App: User is admin, redirecting to admin dashboard");
             navigate("/admin/dashboard");
             return;
           }
-        } catch (err) {
-          console.log("App: Error fetching profile:", err);
+        } catch {
+          // fall through to onboarding
         }
 
         // Check onboarding status
@@ -75,17 +81,13 @@ function GoogleCallbackHandler() {
         }
         const onboardingKey = getOnboardingStorageKey(loggedInUserId);
         const alreadyCompleted = localStorage.getItem(onboardingKey) === "true";
-        console.log("App: Onboarding already completed:", alreadyCompleted);
 
         if (!alreadyCompleted) {
           try {
-            console.log("App: Fetching lifestyle profile and roommate preferences...");
             const [lifestyleProfile, roommatePreferences] = await Promise.all([
               fetchLifestyleProfile(),
               fetchRoommatePreferences(),
             ]);
-            console.log("App: Lifestyle profile:", lifestyleProfile);
-            console.log("App: Roommate preferences:", roommatePreferences);
 
             const hasLifestyleData = Object.values(lifestyleProfile || {}).some(
               (value) => value !== null && value !== undefined && value !== ""
@@ -93,29 +95,19 @@ function GoogleCallbackHandler() {
             const hasPreferencesData = Object.values(roommatePreferences || {}).some(
               (value) => value !== null && value !== undefined && value !== ""
             );
-            console.log("App: Has lifestyle data:", hasLifestyleData);
-            console.log("App: Has preferences data:", hasPreferencesData);
 
             if (!hasLifestyleData && !hasPreferencesData) {
-              console.log("App: No profile data, navigating to /onboarding");
               navigate("/onboarding");
               return;
             }
-          } catch (err) {
-            console.log("App: Error checking profile data:", err);
-            console.log("App: Error occurred, navigating to /onboarding as fallback");
+          } catch {
             navigate("/onboarding");
             return;
           }
         }
 
-        console.log("App: User has profile data, navigating to /listings");
         navigate("/listings");
-      } else if (error === "google") {
-        console.log("App: Google login error");
-        navigate("/auth");
-      } else if (error === "inactive") {
-        console.log("App: Account inactive error");
+      } else if (error === "google" || error === "inactive") {
         navigate("/auth");
       }
     };
@@ -130,36 +122,40 @@ export default function App() {
   return (
     <>
       <GoogleCallbackHandler />
-      <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/home" element={<Navigate to="/" replace />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/profile/lifestyle" element={<LifestyleProfilePage />} />
-      <Route path="/soft-filter" element={<SoftFilterPage />} />
-      <Route path="/my-listings" element={<MyListingsPage />} />
-      <Route path="/my-listings/new" element={<CreateListingPage />} />
-      <Route path="/my-listings/:id/edit" element={<EditListingPage />} />
-      <Route path="/my-listings/:id" element={<ListingDetailPage />} />
-      <Route path="/listings" element={<PublicListingsPage />} />
-      <Route path="/listings/:id" element={<PublicListingDetailPage />} />
-      <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-      <Route path="/admin/users" element={<AdminUsersPage />} />
-      <Route path="/admin/listings" element={<AdminListingsPage />} />
-      <Route path="/admin/amenities" element={<AdminAmenitiesPage />} />
-      <Route path="/admin/imported-listings" element={<AdminImportedListingsPage />} />
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
-      <Route path="/saved-listings" element={<SavedListingsPage />} />
-      <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route path="/payment/:listingId" element={<PaymentPackages />}/>
-      <Route path="/buy-views" element={<BuyContactViewsPage />} />
-      <Route path="/payment-history" element={<PaymentHistory />} />
-      <Route path="/support" element={<SupportContactPage />} />
-      <Route path="/admin/payments" element={<AdminPayments />} />
-      <Route path="/admin/reports" element={<AdminReportsPage />} />
-      <Route path="/admin/feedbacks" element={<AdminFeedbacksPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/lifestyle" element={<LifestyleProfilePage />} />
+          <Route path="/soft-filter" element={<SoftFilterPage />} />
+          <Route path="/my-listings" element={<MyListingsPage />} />
+          <Route path="/my-listings/new" element={<CreateListingPage />} />
+          <Route path="/my-listings/:id/edit" element={<EditListingPage />} />
+          <Route path="/my-listings/:id" element={<ListingDetailPage />} />
+          <Route path="/listings" element={<PublicListingsPage />} />
+          <Route path="/listings/:id" element={<PublicListingDetailPage />} />
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/listings" element={<AdminListingsPage />} />
+            <Route path="/admin/amenities" element={<AdminAmenitiesPage />} />
+            <Route path="/admin/imported-listings" element={<AdminImportedListingsPage />} />
+            <Route path="/admin/payments" element={<AdminPayments />} />
+            <Route path="/admin/reports" element={<AdminReportsPage />} />
+            <Route path="/admin/feedbacks" element={<AdminFeedbacksPage />} />
+          </Route>
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/saved-listings" element={<SavedListingsPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/payment/:listingId" element={<PaymentPackages />} />
+          <Route path="/buy-views" element={<BuyContactViewsPage />} />
+          <Route path="/payment-history" element={<PaymentHistory />} />
+          <Route path="/support" element={<SupportContactPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

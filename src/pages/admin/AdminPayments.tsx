@@ -10,6 +10,7 @@ import {
 } from "../../api/services/payments";
 import Sidebar from "../../components/Sidebar";
 import Pagination from "../../components/Pagination";
+import { useToast } from "../../contexts/ToastContext";
 
 const PACKAGE_OPTIONS = [
     { value: "", label: "Tất cả gói" },
@@ -22,6 +23,7 @@ const PACKAGE_OPTIONS = [
 export default function AdminPayments() {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { showToast } = useToast();
     const [error, setError] = useState("");
     const [payments, setPayments] = useState<PaymentTransaction[]>([]);
     const [pending, setPending] = useState<(PaymentTransaction & { listing_id: string; user_id: string })[]>([]);
@@ -53,13 +55,13 @@ export default function AdminPayments() {
             await adminConfirmPayment(transactionId);
             loadData();
         } catch {
-            alert(t("Xác nhận thất bại"));
+            showToast({ type: "error", message: t("Xác nhận thất bại") });
         }
     };
 
     const handleViewListing = (listingId?: string | null) => {
         if (!listingId) {
-            alert(t("Giao dịch này không có bài đăng liên kết."));
+            showToast({ type: "warning", message: t("Giao dịch này không có bài đăng liên kết.") });
             return;
         }
         navigate(`/listings/${listingId}`);
