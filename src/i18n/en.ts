@@ -306,6 +306,11 @@ const en: Record<string, string> = {
   "Lưu tiêu chí mềm, áp dụng bộ lọc cứng, sau đó xem danh sách gợi ý theo điểm tương thích.": "Save soft criteria, apply hard filters, then view suggestions by compatibility score.",
   "Bộ lọc cứng": "Hard filters",
   "Tất cả khu vực": "All areas",
+  "Tỉnh/Thành": "Province/City",
+  "Có tin đăng": "With listings",
+  "Tỉnh/thành khác": "Other provinces",
+  "Khu vực có tin đăng": "Areas with listings",
+  "Phường/Xã (2025)": "Wards/Communes (2025)",
   "Giá (triệu VND)": "Price (million VND)",
   "Diện tích (m²)": "Area (m²)",
   "Bộ lọc mềm - Sinh hoạt cơ bản": "Soft filter - Basic living",
@@ -627,6 +632,65 @@ const en: Record<string, string> = {
   "Đang tạo...": "Creating...",
   "Đã gửi thông báo, admin sẽ xử lý trong ít phút.": "Notification sent, admin will process shortly.",
   "Xác nhận thất bại, vui lòng thử lại.": "Confirmation failed, please try again.",
+
+  // Relative timestamps & old-listing badge (items 10-11)
+  "{{count}} phút trước": "{{count}} minutes ago",
+  "{{count}} phút trước_one": "{{count}} minute ago",
+  "{{count}} phút trước_other": "{{count}} minutes ago",
+  "{{count}} giờ trước": "{{count}} hours ago",
+  "{{count}} giờ trước_one": "{{count}} hour ago",
+  "{{count}} giờ trước_other": "{{count}} hours ago",
+  "{{count}} ngày trước": "{{count}} days ago",
+  "{{count}} ngày trước_one": "{{count}} day ago",
+  "{{count}} ngày trước_other": "{{count}} days ago",
+  "{{count}} tuần trước": "{{count}} weeks ago",
+  "{{count}} tuần trước_one": "{{count}} week ago",
+  "{{count}} tuần trước_other": "{{count}} weeks ago",
+  "{{count}} tháng trước": "{{count}} months ago",
+  "{{count}} tháng trước_one": "{{count}} month ago",
+  "{{count}} tháng trước_other": "{{count}} months ago",
+  "{{count}} năm trước": "{{count}} years ago",
+  "{{count}} năm trước_one": "{{count}} year ago",
+  "{{count}} năm trước_other": "{{count}} years ago",
+  "Đã cũ": "Outdated",
+
+  // Auto match (item 6)
+  "Tự động match": "Auto match",
+  "Tự động chấm điểm tương thích cho mọi tin đăng khi bạn xem danh sách.":
+    "Automatically score compatibility for every listing while you browse.",
+  "Bật/tắt tự động match": "Toggle auto match",
+  "Tự động chấm điểm mức độ phù hợp dựa trên hồ sơ của bạn":
+    "Automatically score compatibility based on your profile",
+  "Đang bật tự động match": "Auto match is on",
+  "Đã tắt tự động match": "Auto match is off",
+
+  // Search (item 3)
+  "Bạn chưa chọn tiêu chí nào. Hãy chọn khu vực, khoảng giá, giới tính, sở thích hoặc nhập từ khóa để tìm kiếm.":
+    "You haven't chosen any criteria yet. Pick an area, price range, gender, or preferences, or type a keyword to search.",
+
+  // Listings / clear filter (items 8)
+  "Xóa bộ lọc mềm": "Clear soft filter",
+
+  // Leaflet map (item 7)
+  "Chưa có bài đăng nào có tọa độ để hiển thị trên bản đồ.":
+    "No listings with coordinates to display on the map yet.",
+  "Bài đăng chưa có tọa độ": "Listings without coordinates",
+  "Mở bản đồ": "Open map",
+
+  // AI assistant
+  "Mở trợ lý AI": "Open AI assistant",
+  "Trợ lý Roomie": "Roomie Assistant",
+  "Hỗ trợ sử dụng website": "Helps you use the website",
+  "Xin chào! Mình là trợ lý Roomie. Bạn cần hỗ trợ gì?":
+    "Hi! I'm the Roomie assistant. How can I help you?",
+  "Đang trả lời...": "Typing...",
+  "Nhập câu hỏi của bạn...": "Type your question...",
+  "Không kết nối được trợ lý. Vui lòng thử lại.":
+    "Couldn't reach the assistant. Please try again.",
+  "Làm sao để tìm phòng?": "How do I find a room?",
+  "Bộ lọc mềm hoạt động thế nào?": "How does the soft filter work?",
+  "Cách đăng tin cho thuê?": "How do I post a listing?",
+  "Mua lượt xem liên hệ ở đâu?": "Where do I buy contact views?",
 };
 
 export default en;

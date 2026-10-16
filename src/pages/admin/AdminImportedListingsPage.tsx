@@ -574,7 +574,7 @@ export default function AdminImportedListingsPage() {
                     ? resolveListingImageUrl(listing.images[0].imageUrl)
                     : null;
                   const badge = STATUS_LABELS[listing.status] || { text: listing.status, cls: "bg-slate-100 text-slate-600 border border-slate-200" };
-                  let sourceDomain = "";
+                  let sourceDomain: string;
                   try { sourceDomain = new URL(listing.source || "").hostname; } catch { sourceDomain = listing.source || ""; }
 
                   return (

@@ -13,6 +13,7 @@ export default function LanguageToggle() {
   return (
     <button
       onClick={toggle}
+      aria-label={current === "vi" ? "Switch to English" : "Chuyển sang tiếng Việt"}
       className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-800"
       title={current === "vi" ? "Switch to English" : "Chuyển sang tiếng Việt"}
     >

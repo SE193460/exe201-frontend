@@ -5,6 +5,7 @@ import { fetchSavedListings, resolveListingImageUrl, toggleSaveListing } from ".
 import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
 import Pagination from "../components/Pagination";
+import PostedTimeTag from "../components/PostedTimeTag";
 
 function getBadge(listing: Listing) {
   if (listing.roomType === "SINGLE") return { text: "Phòng đơn", color: "bg-amber-600" };
@@ -147,6 +148,9 @@ export default function SavedListingsPage() {
                         <MapPinned className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
                         {location || "Chưa cập nhật"}
                       </p>
+                      <div className="mt-1.5">
+                        <PostedTimeTag variant="inline" postedAt={listing.publishedAt || listing.createdAt} />
+                      </div>
 
                       {/* Amenity tags */}
                       {listing.amenities && listing.amenities.length > 0 && (

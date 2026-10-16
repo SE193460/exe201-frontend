@@ -15,6 +15,7 @@ export type LifestyleProfile = {
   noise?: number | null;
   call_frequency?: number | null;
   game_mic?: number | null;
+  auto_match_enabled?: boolean;
 };
 
 export type RoommatePreferences = {
@@ -43,6 +44,11 @@ export type SoftFilterPayload = {
     max_area?: number | null;
   };
   use_lifestyle_profile?: boolean;
+  /**
+   * Inline preferences. Required for anonymous visitors so the soft filter can
+   * run without an account; optional otherwise.
+   */
+  preferences?: RoommatePreferences;
 };
 
 export type SoftFilterFieldScore = {

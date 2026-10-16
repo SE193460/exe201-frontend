@@ -5,6 +5,7 @@ import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
 import Pagination from "../components/Pagination";
 import { useToast } from "../contexts/ToastContext";
+import PostedTimeTag from "../components/PostedTimeTag";
 import { LucideRocket, Trash2, XCircle, Eye, Pencil, ImageIcon, Clock } from "lucide-react";
 
 function timeAgo(value: string | null) {
@@ -213,9 +214,12 @@ export default function MyListingsPage() {
             </div>
 
             <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-              <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                <Clock className="h-3.5 w-3.5" />
-                Cập nhật {timeAgo(listing.updatedAt)}
+              <div className="flex flex-col gap-1">
+                <PostedTimeTag variant="inline" postedAt={listing.publishedAt || listing.createdAt} />
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  <Clock className="h-3.5 w-3.5" />
+                  Cập nhật {timeAgo(listing.updatedAt)}
+                </div>
               </div>
               <div className="flex items-center gap-1">
                 {listing.status === "APPROVED" && (

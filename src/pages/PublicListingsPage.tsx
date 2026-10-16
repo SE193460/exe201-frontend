@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MapPin, X, Sparkles, ChevronLeft, ChevronRight, Search, CheckCircle2, AlertCircle, Heart } from "lucide-react";
+import { MapPin, MapPinned, X, Sparkles, ChevronLeft, ChevronRight, Search, CheckCircle2, AlertCircle, Heart, RotateCcw, ToggleLeft, ToggleRight } from "lucide-react";
 import { fetchPublicListings, resolveListingImageUrl, toggleSaveListing } from "../api/services/listings";
 import type { Listing } from "../api/services/listings";
 import type { SoftFilterResult, RoommatePreferences } from "../api/services/lifestyle";
@@ -10,9 +10,29 @@ import { fetchRoommatePreferences, updateRoommatePreferences, runSoftFilter, del
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Pagination from "../components/Pagination";
+const ListingsMap = lazy(() => import("../components/ListingsMap"));
+import { hasAccessToken, isAutoMatchEnabled, setAutoMatchEnabled, clearSoftFilterCache } from "../api/services/session";
+import PostedTimeTag from "../components/PostedTimeTag";
 import { matchAreaRange, matchPriceRange, AREA_OPTIONS, PRICE_OPTIONS } from "./listingRangeOptions";
+import {
+  VIETNAM_PROVINCES,
+  findProvince,
+  getWardsForProvince,
+  regionTextIncludes,
+  resolveProvinceName,
+} from "../data/vietnamRegions";
+import type { MapFocus } from "../components/ListingsMap";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { trackEvent } from "../api/services/analytics";
+
+/** Canonical 2025 province of a listing, inferred from its stored location text. */
+function listingProvinceName(item: Listing): string | null {
+  return (
+    resolveProvinceName(item.city) ??
+    resolveProvinceName([item.district, item.ward, item.address].filter(Boolean).join(" "))
+  );
+}
+
 export default function PublicListingsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -23,6 +43,7 @@ export default function PublicListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [province, setProvince] = useState(initialParams.get("province") || "all");
   const [district, setDistrict] = useState(initialParams.get("area") || "all");
   const [price, setPrice] = useState(initialParams.get("price") || "all");
   const [area, setArea] = useState("all");
@@ -40,6 +61,8 @@ export default function PublicListingsPage() {
   const [softFilterLoading, setSoftFilterLoading] = useState(false);
   const [softFilterSection, setSoftFilterSection] = useState(1);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [isAuthed] = useState(() => hasAccessToken());
+  const [autoMatch, setAutoMatch] = useState(() => isAutoMatchEnabled());
   const RECOMMENDED_PAGE_SIZE = 3;
   const UNSCORED_PAGE_SIZE = 6;
 
@@ -48,14 +71,57 @@ export default function PublicListingsPage() {
     return params.get("highlightListingId");
   }, [location.search]);
 
-  const districtOptions = useMemo(() => {
-    const districts = Array.from(new Set(listings.map((item) => item.district).filter(Boolean)));
-    const all = ["all", ...districts];
-    if (district !== "all" && !all.includes(district)) {
-      all.splice(1, 0, district);
+  const provincesInListings = useMemo(() => {
+    const set = new Set<string>();
+    for (const item of listings) {
+      const name = listingProvinceName(item);
+      if (name) set.add(name);
     }
+    return set;
+  }, [listings]);
+
+  // Areas that actually have listings for the selected province (keeps every
+  // option useful) — derived from the stored district/ward values.
+  const dataAreaOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const item of listings) {
+      if (province !== "all" && listingProvinceName(item) !== province) continue;
+      if (item.district) set.add(item.district);
+      if (item.ward) set.add(item.ward);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "vi"));
+  }, [listings, province]);
+
+  // Complete list of the province's wards/communes per the 2025 reform, so the
+  // filter can reach every area of the province (e.g. all of HCMC).
+  const wardAreaOptions = useMemo(() => getWardsForProvince(province), [province]);
+
+  const districtOptions = useMemo(() => {
+    const all = ["all", ...dataAreaOptions];
+    if (district !== "all" && !all.includes(district)) all.splice(1, 0, district);
     return all;
-  }, [listings, district]);
+  }, [dataAreaOptions, district]);
+
+  // Focus the map on the filtered province so it never shows HCMC while the
+  // listings (or the filter) point at another province.
+  const mapFocus = useMemo<MapFocus | null>(() => {
+    if (province !== "all") {
+      const target = findProvince(province);
+      return target ? { center: target.center, zoom: 9, bounds: target.bounds } : null;
+    }
+    const names = new Set(listings.map(listingProvinceName).filter(Boolean) as string[]);
+    if (names.size === 1) {
+      const target = findProvince([...names][0]);
+      if (target) return { center: target.center, zoom: 9, bounds: target.bounds };
+    }
+    return null;
+  }, [province, listings]);
+
+  const mapFocusProvinceName = useMemo(() => {
+    if (province !== "all") return findProvince(province)?.name ?? null;
+    const names = new Set(listings.map(listingProvinceName).filter(Boolean) as string[]);
+    return names.size === 1 ? [...names][0] : null;
+  }, [province, listings]);
 
   // Mapping để lấy label đầy đủ cho mỗi field
   const FIELD_FULL_LABELS: Record<string, string> = {
@@ -205,6 +271,10 @@ export default function PublicListingsPage() {
 
   const handleToggleSave = async (e: React.MouseEvent, listingId: string) => {
     e.stopPropagation();
+    if (!isAuthed) {
+      navigate("/auth");
+      return;
+    }
     try {
       const { isSaved } = await toggleSaveListing(listingId);
       setSavedIds((prev) => {
@@ -219,6 +289,7 @@ export default function PublicListingsPage() {
   };
 
   const loadSoftFilterPrefs = async () => {
+    if (!hasAccessToken()) return;
     try {
       const prefs = await fetchRoommatePreferences();
       setSoftFilterPrefs(prefs || {});
@@ -231,8 +302,10 @@ export default function PublicListingsPage() {
     event.preventDefault();
     setSoftFilterLoading(true);
     try {
-      // Cập nhật preferences
-      await updateRoommatePreferences(softFilterPrefs);
+      // Logged-in users persist their preferences; guests only pass them inline.
+      if (hasAccessToken()) {
+        await updateRoommatePreferences(softFilterPrefs);
+      }
 
       // Chạy soft filter
       await trackEvent({
@@ -251,6 +324,9 @@ export default function PublicListingsPage() {
           min_area: null,
           max_area: null,
         },
+        // Always send the values the visitor just picked so guests get scores
+        // even without an account.
+        preferences: softFilterPrefs,
       });
 
       const resultsData = response.results || [];
@@ -275,6 +351,19 @@ export default function PublicListingsPage() {
   };
 
   const handleClearSoftFilter = async () => {
+    // Reset the soft-filter form back to its defaults ("Bỏ trống" for every option).
+    setSoftFilterPrefs({});
+
+    // Guests have no stored preferences to clear and no profile to re-score with.
+    if (!hasAccessToken()) {
+      setSoftFilterResults({});
+      setSoftFilterSource(null);
+      localStorage.removeItem("softFilterResults");
+      localStorage.removeItem("softFilterSource");
+      window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: [] }));
+      return;
+    }
+
     // Delete roommate preferences from DB (best-effort)
     try {
       await deleteRoommatePreferences();
@@ -310,6 +399,39 @@ export default function PublicListingsPage() {
       localStorage.removeItem("softFilterSource");
       window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: [] }));
     }
+  };
+
+  // Turn automatic compatibility matching on/off. When off, no score is
+  // invented for the visitor so they can browse purely on their own criteria.
+  const handleToggleAutoMatch = () => {
+    const next = !autoMatch;
+    setAutoMatch(next);
+    setAutoMatchEnabled(next);
+    if (!next) {
+      setSoftFilterResults({});
+      setSoftFilterSource(null);
+      clearSoftFilterCache();
+      window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: [] }));
+    } else if (hasAccessToken()) {
+      autoRunSoftFilter();
+    }
+  };
+
+  const hasActiveFilters =
+    province !== "all" ||
+    district !== "all" ||
+    price !== "all" ||
+    area !== "all" ||
+    genderFilter !== "all" ||
+    searchLocation.trim() !== "";
+
+  const handleClearFilters = () => {
+    setProvince("all");
+    setDistrict("all");
+    setPrice("all");
+    setArea("all");
+    setGenderFilter("all");
+    setSearchLocation("");
   };
 
   // Load soft filter prefs khi dropdown mở
@@ -361,28 +483,38 @@ export default function PublicListingsPage() {
         setLoading(false);
       });
 
-    // Tải soft filter results từ localStorage
-    try {
-      const savedResults = localStorage.getItem("softFilterResults");
-      if (savedResults) {
-        const results: SoftFilterResult[] = JSON.parse(savedResults);
-        const resultsMap = results.reduce(
-          (acc, result) => {
-            acc[result.id] = result;
-            return acc;
-          },
-          {} as Record<string, SoftFilterResult>
-        );
-        setSoftFilterResults(resultsMap);
+    // Only restore cached match scores for logged-in users. Anonymous visitors
+    // (or users who logged out) must never see leftover compatibility scores.
+    if (hasAccessToken()) {
+      try {
+        const savedResults = localStorage.getItem("softFilterResults");
+        if (savedResults) {
+          const results: SoftFilterResult[] = JSON.parse(savedResults);
+          const resultsMap = results.reduce(
+            (acc, result) => {
+              acc[result.id] = result;
+              return acc;
+            },
+            {} as Record<string, SoftFilterResult>
+          );
+          setSoftFilterResults(resultsMap);
+        }
+        const savedSource = localStorage.getItem("softFilterSource") as 'roommate_preferences' | 'lifestyle_profile' | null;
+        if (savedSource) setSoftFilterSource(savedSource);
+      } catch (e) {
+        console.error("Lỗi khi tải soft filter results:", e);
       }
-      const savedSource = localStorage.getItem("softFilterSource") as 'roommate_preferences' | 'lifestyle_profile' | null;
-      if (savedSource) setSoftFilterSource(savedSource);
-    } catch (e) {
-      console.error("Lỗi khi tải soft filter results:", e);
+    } else {
+      clearSoftFilterCache();
+      setSoftFilterResults({});
+      setSoftFilterSource(null);
     }
 
-    // Auto-run soft filter on mount to show scores for all listings
-    autoRunSoftFilter();
+    // Auto-run soft filter on mount to show scores for all listings.
+    // Skipped for anonymous visitors and when the user turned auto-match off.
+    if (hasAccessToken() && isAutoMatchEnabled()) {
+      autoRunSoftFilter();
+    }
   }, []);
 
   const autoRunSoftFilter = async () => {
@@ -393,7 +525,16 @@ export default function PublicListingsPage() {
       const { fetchLifestyleProfile } = await import("../api/services/lifestyle");
       const lifestyle = await fetchLifestyleProfile();
       if (!lifestyle) return;
-      const filledFields = Object.entries(lifestyle).filter(([k, v]) => k !== "user_id" && k !== "preferred_district" && v !== null && v !== undefined);
+      // The server is the source of truth: respect the DB auto-match flag.
+      if (lifestyle.auto_match_enabled === false) return;
+      const filledFields = Object.entries(lifestyle).filter(
+        ([k, v]) =>
+          k !== "user_id" &&
+          k !== "preferred_district" &&
+          k !== "auto_match_enabled" &&
+          v !== null &&
+          v !== undefined,
+      );
       if (filledFields.length < 3) return; // Not enough profile data
 
       const { runSoftFilter } = await import("../api/services/lifestyle");
@@ -426,11 +567,15 @@ export default function PublicListingsPage() {
   };
 
   const filteredListings = (() => {
-    const normalizeStr = (s: string) =>
-      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/đ/g, "d").replace(/[^a-z0-9]/g, "");
-
     const filtered = listings.filter((item) => {
-      const matchesDistrict = district === "all" ? true : normalizeStr(item.district || "").includes(normalizeStr(district));
+      const matchesProvince = province === "all" ? true : listingProvinceName(item) === province;
+      const matchesDistrict =
+        district === "all"
+          ? true
+          : regionTextIncludes(item.district, district) ||
+            regionTextIncludes(item.ward, district) ||
+            regionTextIncludes(item.address, district) ||
+            regionTextIncludes(item.city, district);
       const matchesPrice = matchPriceRange(item.rentPrice, price);
       const matchesArea = matchAreaRange(item.roomAreaSqm, area);
       const locationStr = [item.ward, item.district, item.city].filter(Boolean).join(" ").toLowerCase();
@@ -455,7 +600,7 @@ export default function PublicListingsPage() {
         interestFilter === "social" ? true :
         true
       );
-      return matchesDistrict && matchesPrice && matchesArea && matchesSearch && matchesGender && matchesInterest;
+      return matchesProvince && matchesDistrict && matchesPrice && matchesArea && matchesSearch && matchesGender && matchesInterest;
     });
 
     // Tách thành 2 nhóm: user created (source = null) và imported (source != null)
@@ -516,7 +661,7 @@ export default function PublicListingsPage() {
   useEffect(() => {
     setRecommendedPage(1);
     setUnscoredPage(1);
-  }, [district, price, area, genderFilter, interestFilter, searchLocation]);
+  }, [province, district, price, area, genderFilter, interestFilter, searchLocation]);
 
   // Lắng nghe khi user update soft filter ở trang /soft-filter
   useEffect(() => {
@@ -582,25 +727,48 @@ export default function PublicListingsPage() {
               {loading ? t("Đang tải...") : t("Tìm thấy {{count}} phòng phù hợp.", { count: filteredListings.length })}
             </p>
           </div>
-          <button
-            onClick={() => {
-              setIsDropdownOpen(!isDropdownOpen);
-              setSoftFilterSection(1);
-            }}
-            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-          >
-            <Sparkles className="h-4 w-4 text-[var(--primary)]" />
-            {t("Bộ lọc mềm")}
-          </button>
-          {Object.keys(softFilterResults).length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={handleClearSoftFilter}
-              className="flex items-center gap-2 rounded-full border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+              onClick={handleToggleAutoMatch}
+              title={t("Tự động chấm điểm mức độ phù hợp dựa trên hồ sơ của bạn")}
+              className={`flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+                autoMatch
+                  ? "border-[var(--primary)]/30 bg-[var(--primary-container)] text-[var(--primary)]"
+                  : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+              }`}
             >
-              <X className="h-4 w-4" />
-              {t("Xóa bộ lọc")}
+              {autoMatch ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
+              {autoMatch ? t("Đang bật tự động match") : t("Đã tắt tự động match")}
             </button>
-          )}
+            <button
+              onClick={() => {
+                setIsDropdownOpen(!isDropdownOpen);
+                setSoftFilterSection(1);
+              }}
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+            >
+              <Sparkles className="h-4 w-4 text-[var(--primary)]" />
+              {t("Bộ lọc mềm")}
+            </button>
+            {Object.keys(softFilterResults).length > 0 && (
+              <button
+                onClick={handleClearSoftFilter}
+                className="flex items-center gap-2 rounded-full border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+              >
+                <X className="h-4 w-4" />
+                {t("Xóa bộ lọc mềm")}
+              </button>
+            )}
+            {hasActiveFilters && (
+              <button
+                onClick={handleClearFilters}
+                className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                <RotateCcw className="h-4 w-4" />
+                {t("Xóa bộ lọc")}
+              </button>
+            )}
+          </div>
         </header>
 
         {/* Filters */}
@@ -619,6 +787,39 @@ export default function PublicListingsPage() {
 
               <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm">
                 <MapPin className="h-4 w-4 text-[var(--primary)]" />
+                <span className="text-sm text-slate-500">{t("Tỉnh/Thành")}</span>
+                <select
+                  value={province}
+                  onChange={(e) => {
+                    const nextProvince = e.target.value;
+                    setProvince(nextProvince);
+                    setDistrict("all");
+                    trackEvent({
+                      eventName: "listing_filter_applied",
+                      metadata: { filterType: "province", value: nextProvince },
+                    });
+                  }}
+                  className="bg-transparent outline-none text-sm max-w-[10rem]"
+                >
+                  <option value="all">{t("Tất cả")}</option>
+                  {VIETNAM_PROVINCES.filter((p) => provincesInListings.has(p.name)).length > 0 && (
+                    <optgroup label={t("Có tin đăng")}>
+                      {VIETNAM_PROVINCES.filter((p) => provincesInListings.has(p.name)).map((p) => (
+                        <option key={p.name} value={p.name}>{p.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <optgroup label={t("Tỉnh/thành khác")}>
+                    {VIETNAM_PROVINCES.filter((p) => !provincesInListings.has(p.name)).map((p) => (
+                      <option key={p.name} value={p.name}>{p.name}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm">
+                <MapPinned className="h-4 w-4 text-[var(--primary)]" />
+                <span className="text-sm text-slate-500">{t("Khu vực")}</span>
                 <select
                   value={district}
                   onChange={(e) => {
@@ -630,11 +831,25 @@ export default function PublicListingsPage() {
                       metadata: { filterType: "district", value: nextDistrict },
                     });
                   }}
-                  className="bg-transparent outline-none text-sm"
+                  className="bg-transparent outline-none text-sm max-w-[11rem]"
                 >
-                    {districtOptions.map((d) => (
-                    <option key={d} value={d}>{d === "all" ? t("Tất cả") : d}</option>
-                  ))}
+                  <option value="all">{t("Tất cả khu vực")}</option>
+                  {districtOptions.filter((d) => d !== "all").length > 0 && (
+                    <optgroup label={t("Khu vực có tin đăng")}>
+                      {districtOptions.filter((d) => d !== "all").map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {wardAreaOptions.filter((w) => !dataAreaOptions.includes(w)).length > 0 && (
+                    <optgroup label={t("Phường/Xã (2025)")}>
+                      {wardAreaOptions
+                        .filter((w) => !dataAreaOptions.includes(w))
+                        .map((w) => (
+                          <option key={w} value={w}>{w}</option>
+                        ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 
@@ -678,7 +893,15 @@ export default function PublicListingsPage() {
                 </select>
               </div>
 
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-2">
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleClearFilters}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                  >
+                    <RotateCcw className="h-4 w-4" /> {t("Xóa bộ lọc")}
+                  </button>
+                )}
                 <button
                   onClick={() => setIsMapModalOpen(true)}
                   className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
@@ -877,8 +1100,24 @@ export default function PublicListingsPage() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="aspect-[16/9] bg-slate-100">
-                <iframe title={t("Bản đồ")} src="https://maps.google.com/maps?q=Thủ+Đức&output=embed" className="h-full w-full border-0" allowFullScreen loading="lazy" />
+              <div className="h-[70vh] max-h-[640px] min-h-[380px] bg-slate-100">
+                <Suspense
+                  fallback={
+                    <div className="flex h-full items-center justify-center">
+                      <span className="inline-block h-7 w-7 animate-spin rounded-full border-[3px] border-[var(--primary)] border-t-transparent" />
+                    </div>
+                  }
+                >
+                  <ListingsMap
+                    listings={filteredListings}
+                    focus={mapFocus}
+                    focusProvinceName={mapFocusProvinceName}
+                    onSelect={(listing) => {
+                      setIsMapModalOpen(false);
+                      navigate(`/listings/${listing.id}`);
+                    }}
+                  />
+                </Suspense>
               </div>
             </div>
           </div>
@@ -955,8 +1194,8 @@ export default function PublicListingsPage() {
                                 <Sparkles className="h-3 w-3" /> VIP
                               </span>
                             )}
-                            <div className="absolute top-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
-                              {t("Tin mới")}
+                            <div className="absolute top-3 left-3">
+                              <PostedTimeTag postedAt={listing.publishedAt || listing.createdAt} />
                             </div>
                           </div>
 
@@ -1084,6 +1323,9 @@ export default function PublicListingsPage() {
                               <div className="flex h-full w-full items-center justify-center text-sm text-slate-300">{t("Chưa có ảnh")}</div>
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                            <div className="absolute top-3 left-3">
+                              <PostedTimeTag postedAt={listing.publishedAt || listing.createdAt} />
+                            </div>
                             <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-xs font-bold text-white ${badge.color}`}>
                               {badge.text}
                             </span>

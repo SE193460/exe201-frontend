@@ -4,9 +4,11 @@ import { createAmenity, deleteAmenity, fetchAdminAmenities, updateAmenity, type 
 import { logout } from "../../api/services/auth";
 import Pagination from "../../components/Pagination";
 import Sidebar from "../../components/Sidebar";
+import { useConfirm } from "../../components/ConfirmDialog";
 
 export default function AdminAmenitiesPage() {
   const navigate = useNavigate();
+  const { confirm, dialog } = useConfirm();
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -79,7 +81,11 @@ export default function AdminAmenitiesPage() {
   };
 
   const handleDelete = async (amenityId: string) => {
-    const confirmed = window.confirm("Bạn chắc chắn muốn xóa tiện nghi này?");
+    const confirmed = await confirm({
+      message: "Bạn chắc chắn muốn xóa tiện nghi này?",
+      confirmLabel: "Xóa",
+      danger: true,
+    });
     if (!confirmed) return;
     setActionLoading(true);
     setError("");
@@ -105,6 +111,7 @@ export default function AdminAmenitiesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {dialog}
       <div className="mx-auto flex min-h-screen w-full max-w-[1400px] gap-6 px-6 py-8">
         <Sidebar activeKey="amenities" onLogout={handleLogout} />
 

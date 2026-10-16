@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPinned, Heart, Shield, MessageCircle, Lock, ChevronRight, Zap, DollarSign, User, Sparkles, MapPin, CheckCircle2, AlertCircle, Copy } from "lucide-react";
 import { fetchProfile, resolveAvatarUrl } from "../api/services/user";
@@ -8,6 +8,9 @@ import type { Listing } from "../api/services/listings";
 import type { SoftFilterResult } from "../api/services/lifestyle";
 import { PRICE_OPTIONS } from "./listingRangeOptions";
 import { purchaseContactViews, confirmContactViewPurchase } from "../api/services/contactViews";
+import { hasAccessToken, clearSoftFilterCache } from "../api/services/session";
+import { isListingOld } from "../utils/listingTime";
+import PostedTimeTag from "../components/PostedTimeTag";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -37,6 +40,7 @@ export default function HomePage() {
   ];
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [searchError, setSearchError] = useState("");
 
   const depositPackages = [
     { key: "cv_5", amount: 5000, label: "Xem liên hệ 5", desc: "5 lượt xem liên hệ" },
@@ -110,6 +114,18 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
+  // Area options are derived from the live listings so every entry is
+  // selectable everywhere (all HCMC districts, not just a hardcoded few).
+  const areaOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const listing of listings) {
+      if (listing.district) set.add(listing.district);
+      if (listing.ward) set.add(listing.ward);
+    }
+    const names = Array.from(set).sort((a, b) => a.localeCompare(b, "vi"));
+    return [{ id: "all", label: t("Tất cả") }, ...names.map((name) => ({ id: name, label: name }))];
+  }, [listings, t]);
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -122,6 +138,13 @@ export default function HomePage() {
 
   useEffect(() => {
     const loadSoftFilterResults = () => {
+      // Anonymous visitors must never see leftover compatibility scores.
+      if (!hasAccessToken()) {
+        clearSoftFilterCache();
+        setSoftFilterResults({});
+        setSoftFilterSource(null);
+        return;
+      }
       try {
         const savedResults = localStorage.getItem("softFilterResults");
         if (savedResults) {
@@ -173,7 +196,13 @@ export default function HomePage() {
     };
   }, []);
 
-  const featuredListings = [...listings]
+  // The featured section only surfaces listings posted within the last month.
+  // If every listing is older than a month we still show them (each card is
+  // tagged "Đã cũ").
+  const recentListings = listings.filter((l) => !isListingOld(l.publishedAt || l.createdAt));
+  const featuredPool = recentListings.length > 0 ? recentListings : listings;
+
+  const featuredListings = [...featuredPool]
     .sort((a, b) => {
       const matchA = softFilterResults[a.id];
       const matchB = softFilterResults[b.id];
@@ -244,17 +273,35 @@ export default function HomePage() {
       }
     }
 
-    // Area detection
-    const areaMap: Record<string, string> = {
-      "quận 2": "quan2", "q2": "quan2",
-      "quận 9": "quan9", "q9": "quan9",
-      "thủ đức": "thuduc", "thu duc": "thuduc",
+    // Area detection — match any area/district that actually has listings, plus
+    // a few common shorthands (q1, q2, ...).
+    const areaAliases: Record<string, string> = {
+      q1: "Quận 1", q2: "Quận 2", q3: "Quận 3", q4: "Quận 4", q5: "Quận 5",
+      q6: "Quận 6", q7: "Quận 7", q8: "Quận 8", q9: "Quận 9", q10: "Quận 10",
+      q11: "Quận 11", q12: "Quận 12", qbt: "Bình Thạnh", qpn: "Phú Nhuận",
+      qtb: "Tân Bình", qtd: "Thủ Đức",
     };
-    for (const [kw, val] of Object.entries(areaMap)) {
-      if (lower.includes(kw)) {
-        area = val;
-        remaining = remaining.replace(new RegExp(kw, "gi"), "").trim();
+    const areaCandidates = areaOptions
+      .filter((o) => o.id !== "all")
+      .sort((a, b) => b.id.length - a.id.length);
+    let areaMatched = false;
+    for (const opt of areaCandidates) {
+      const idx = lower.indexOf(opt.id.toLowerCase());
+      if (idx >= 0) {
+        area = opt.id;
+        areaMatched = true;
+        remaining = (remaining.slice(0, idx) + remaining.slice(idx + opt.id.length)).trim();
         break;
+      }
+    }
+    if (!areaMatched) {
+      for (const [kw, val] of Object.entries(areaAliases)) {
+        const match = lower.match(new RegExp(`\\b${kw}\\b`));
+        if (match && typeof match.index === "number") {
+          area = val;
+          remaining = (remaining.slice(0, match.index) + remaining.slice(match.index + kw.length)).trim();
+          break;
+        }
       }
     }
 
@@ -341,16 +388,21 @@ export default function HomePage() {
     if (finalArea !== "all") params.set("area", finalArea);
 
     if (params.toString() === "") {
-      setError(t("Vui lòng chọn bộ lọc hoặc nhập thông tin tìm kiếm."));
+      setSearchError(t("Bạn chưa chọn tiêu chí nào. Hãy chọn khu vực, khoảng giá, giới tính, sở thích hoặc nhập từ khóa để tìm kiếm."));
       return;
     }
 
     setError("");
+    setSearchError("");
     navigate(`/listings?${params.toString()}`);
   };
 
   const handleToggleSave = async (e: React.MouseEvent, listingId: string) => {
     e.stopPropagation();
+    if (!hasAccessToken()) {
+      navigate("/auth");
+      return;
+    }
     try {
       const { isSaved } = await toggleSaveListing(listingId);
       setSavedIds((prev) => {
@@ -370,12 +422,7 @@ export default function HomePage() {
     { key: "price", icon: <DollarSign className="h-3.5 w-3.5" />, label: t("Khoảng giá"), value: selectedPrice, options: PRICE_OPTIONS, set: setSelectedPrice },
     { key: "gender", icon: <User className="h-3.5 w-3.5" />, label: t("Giới tính"), value: selectedGender, options: GENDER_OPTIONS, set: setSelectedGender },
     { key: "interest", icon: <Sparkles className="h-3.5 w-3.5" />, label: t("Sở thích"), value: selectedInterest, options: INTEREST_OPTIONS, set: setSelectedInterest },
-    { key: "area", icon: <MapPin className="h-3.5 w-3.5" />, label: t("Khu vực"), value: selectedArea, options: [
-      { id: "all", label: t("Tất cả") },
-      { id: "quan2", label: t("Quận 2") },
-      { id: "quan9", label: t("Quận 9") },
-      { id: "thuduc", label: t("Thủ Đức") },
-    ], set: setSelectedArea },
+    { key: "area", icon: <MapPin className="h-3.5 w-3.5" />, label: t("Khu vực"), value: selectedArea, options: areaOptions, set: setSelectedArea },
   ];
 
   return (
@@ -411,7 +458,7 @@ export default function HomePage() {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setError(""); }}
+                  onChange={(e) => { setSearchQuery(e.target.value); setError(""); setSearchError(""); }}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder={t("Bạn muốn sống ở khu vực nào?")}
                   className="w-full bg-transparent py-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
@@ -424,6 +471,12 @@ export default function HomePage() {
                 {t("Tìm kiếm")}
               </button>
             </div>
+            {searchError && (
+              <p className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-600">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {searchError}
+              </p>
+            )}
           </div>
 
           {/* Filter chips with dropdowns */}
@@ -640,6 +693,10 @@ export default function HomePage() {
                     <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-emerald-600 backdrop-blur-sm">
                       <Shield className="h-3 w-3" /> {t("Đã xác thực")}
                     </span>
+                    <PostedTimeTag
+                      className="absolute right-3 top-3 backdrop-blur-sm"
+                      postedAt={listing.publishedAt || listing.createdAt}
+                    />
                     <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3">
                       <div className="rounded-full bg-white/95 px-3 py-1.5 text-sm font-black text-slate-800 shadow-sm">
                         {formatPrice(listing.rentPrice)}<span className="ml-1 text-[10px] font-medium text-slate-500">{t("/tháng")}</span>
