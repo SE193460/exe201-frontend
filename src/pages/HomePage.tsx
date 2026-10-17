@@ -46,8 +46,8 @@ export default function HomePage() {
   const [searchError, setSearchError] = useState("");
 
   const depositPackages = [
-    { key: "cv_5", amount: 5000, label: t("Gói 5 lượt xem hồ sơ lối sống"), desc: t("5 lượt xem hồ sơ lối sống") },
-    { key: "cv_20", amount: 15000, label: t("Gói 20 lượt xem hồ sơ lối sống"), desc: t("20 lượt xem hồ sơ lối sống") },
+    { key: "cv_5", amount: 5000, name: "Gói 5 lượt xem hồ sơ lối sống", label: t("Gói 5 lượt xem hồ sơ lối sống"), desc: t("5 lượt xem hồ sơ lối sống") },
+    { key: "cv_20", amount: 15000, name: "Gói 20 lượt xem hồ sơ lối sống", label: t("Gói 20 lượt xem hồ sơ lối sống"), desc: t("20 lượt xem hồ sơ lối sống") },
   ];
   const [listings, setListings] = useState<Listing[]>([]);
   const localize = useListingLocalizer(listings, i18n.language);
@@ -577,7 +577,7 @@ export default function HomePage() {
                       onClick={async () => {
                         setDepositing(true);
                         try {
-                          const res = await purchaseContactViews(pkg.amount, pkg.label);
+                          const res = await purchaseContactViews(pkg.amount, pkg.name);
                           setDepositQR({ qrUrl: res.qrUrl, content: res.content, amount: pkg.amount });
                           setDepositTransactionId(res.transactionId);
                           setDepositSuccess(false);

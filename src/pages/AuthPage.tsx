@@ -261,7 +261,7 @@ export default function AuthPage() {
                     />
                   </div>
                   {loginForm.formState.errors.email && (
-                    <p className="mt-1 text-xs text-red-500">{loginForm.formState.errors.email.message}</p>
+                    <p className="mt-1 text-xs text-red-500">{t(loginForm.formState.errors.email.message ?? "")}</p>
                   )}
                 </div>
                 <div>
@@ -279,7 +279,7 @@ export default function AuthPage() {
                     />
                   </div>
                   {loginForm.formState.errors.password && (
-                    <p className="mt-1 text-xs text-red-500">{loginForm.formState.errors.password.message}</p>
+                    <p className="mt-1 text-xs text-red-500">{t(loginForm.formState.errors.password.message ?? "")}</p>
                   )}
                 </div>
                 <button
@@ -306,7 +306,7 @@ export default function AuthPage() {
                     />
                   </div>
                   {registerForm.formState.errors.fullName && (
-                    <p className="mt-1 text-xs text-red-500">{registerForm.formState.errors.fullName.message}</p>
+                    <p className="mt-1 text-xs text-red-500">{t(registerForm.formState.errors.fullName.message ?? "")}</p>
                   )}
                 </div>
                 <div>
@@ -322,7 +322,7 @@ export default function AuthPage() {
                     />
                   </div>
                   {registerForm.formState.errors.username && (
-                    <p className="mt-1 text-xs text-red-500">{registerForm.formState.errors.username.message}</p>
+                    <p className="mt-1 text-xs text-red-500">{t(registerForm.formState.errors.username.message ?? "")}</p>
                   )}
                 </div>
                 <div>
@@ -340,7 +340,7 @@ export default function AuthPage() {
                     />
                   </div>
                   {registerForm.formState.errors.email && (
-                    <p className="mt-1 text-xs text-red-500">{registerForm.formState.errors.email.message}</p>
+                    <p className="mt-1 text-xs text-red-500">{t(registerForm.formState.errors.email.message ?? "")}</p>
                   )}
                 </div>
                 <div>
@@ -367,7 +367,7 @@ export default function AuthPage() {
                     </button>
                   </div>
                   {registerForm.formState.errors.password && (
-                    <p className="mt-1 text-xs text-red-500">{registerForm.formState.errors.password.message}</p>
+                    <p className="mt-1 text-xs text-red-500">{t(registerForm.formState.errors.password.message ?? "")}</p>
                   )}
                 </div>
                 <div>
@@ -394,7 +394,7 @@ export default function AuthPage() {
                     </button>
                   </div>
                   {registerForm.formState.errors.confirmPassword && (
-                    <p className="mt-1 text-xs text-red-500">{registerForm.formState.errors.confirmPassword.message}</p>
+                    <p className="mt-1 text-xs text-red-500">{t(registerForm.formState.errors.confirmPassword.message ?? "")}</p>
                   )}
                 </div>
                 <label className="flex items-start gap-2 text-sm text-slate-600">

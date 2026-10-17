@@ -284,7 +284,7 @@ export default function EditListingPage() {
                     {t("Địa chỉ cụ thể")}
                     <input type="text" value={form.address} onChange={(e) => handleChange("address", e.target.value)}
                       className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
-                      placeholder="123 Đường ABC" />
+                      placeholder={t("123 Đường ABC")} />
                   </label>
                 </div>
               </section>

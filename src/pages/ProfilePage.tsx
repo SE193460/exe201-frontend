@@ -342,7 +342,7 @@ export default function ProfilePage() {
                 </button>
               </div>
               {passwordForm.formState.errors.currentPassword && (
-                <span className="mt-1 block text-xs text-red-600">{passwordForm.formState.errors.currentPassword.message}</span>
+                <span className="mt-1 block text-xs text-red-600">{t(passwordForm.formState.errors.currentPassword.message ?? "")}</span>
               )}
             </label>
 
@@ -366,7 +366,7 @@ export default function ProfilePage() {
                 </button>
               </div>
               {passwordForm.formState.errors.newPassword && (
-                <span className="mt-1 block text-xs text-red-600">{passwordForm.formState.errors.newPassword.message}</span>
+                <span className="mt-1 block text-xs text-red-600">{t(passwordForm.formState.errors.newPassword.message ?? "")}</span>
               )}
             </label>
 
@@ -390,7 +390,7 @@ export default function ProfilePage() {
                 </button>
               </div>
               {passwordForm.formState.errors.confirmPassword && (
-                <span className="mt-1 block text-xs text-red-600">{passwordForm.formState.errors.confirmPassword.message}</span>
+                <span className="mt-1 block text-xs text-red-600">{t(passwordForm.formState.errors.confirmPassword.message ?? "")}</span>
               )}
             </label>
 
