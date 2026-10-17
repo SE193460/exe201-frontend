@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -54,6 +55,7 @@ function EyeOffIcon() {
 }
 
 export default function AuthPage() {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [status, setStatus] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -91,7 +93,7 @@ export default function AuthPage() {
     try {
       const result = await login(values);
       localStorage.setItem("access_token", result.accessToken);
-      setStatus("Đăng nhập thành công.");
+      setStatus(t("Đăng nhập thành công."));
       let loggedInUserId = "";
       try {
         const profile = await fetchProfile();
@@ -132,14 +134,14 @@ export default function AuthPage() {
     } catch (err) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       if (message === "Account is inactive") {
-        setError("Tài khoản đã bị vô hiệu hóa.");
+        setError(t("Tài khoản đã bị vô hiệu hóa."));
         return;
       }
       if (message === "Email not verified") {
-        setError("Email chưa được xác thực.");
+        setError(t("Email chưa được xác thực."));
         return;
       }
-      setError("Sai email hoặc mật khẩu.");
+      setError(t("Sai email hoặc mật khẩu."));
     }
   });
 
@@ -158,13 +160,13 @@ export default function AuthPage() {
       switchMode("login");
       loginForm.setValue("email", values.email, { shouldValidate: true });
       loginForm.setFocus("password");
-      setStatus("Đăng ký thành công. Vui lòng đăng nhập.");
+      setStatus(t("Đăng ký thành công. Vui lòng đăng nhập."));
     }catch (err: any) {
         console.error(err);
 
         setError(
           err?.response?.data?.message ||
-          "Đăng ký thất bại. Vui lòng thử lại."
+          t("Đăng ký thất bại. Vui lòng thử lại.")
         );
       }
     });
@@ -191,23 +193,23 @@ export default function AuthPage() {
             </button>
             <div>
               <h1 className="text-3xl font-extrabold leading-tight text-white md:text-4xl" style={{ fontFamily: "var(--font-main)" }}>
-                Tìm người ở ghép<br />hoàn hảo.
+                {t("Tìm người ở ghép")}<br />{t("hoàn hảo.")}
               </h1>
               <p className="mt-4 max-w-sm text-sm text-white/80">
-                Tham gia cùng hơn 10.000+ người dùng đang tìm kiếm không gian sống lý tưởng và những người bạn đồng hành tin cậy tại Roomie.
+                {t("Tham gia cùng hơn 10.000+ người dùng đang tìm kiếm không gian sống lý tưởng và những người bạn đồng hành tin cậy tại Roomie.")}
               </p>
               <div className="mt-6 space-y-3 text-sm text-white/90">
                 <div className="flex items-center gap-3">
                   <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
-                  <span>Hồ sơ được xác thực 100%</span>
+                  <span>{t("Hồ sơ được xác thực 100%")}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                  <span>Thuật toán ghép nối thông minh</span>
+                  <span>{t("Thuật toán ghép nối thông minh")}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  <span>Trò chuyện an toàn trực tiếp</span>
+                  <span>{t("Trò chuyện an toàn trực tiếp")}</span>
                 </div>
               </div>
             </div>
@@ -229,13 +231,13 @@ export default function AuthPage() {
 
             {mode === "register" ? (
               <>
-                <h2 className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>Tạo tài khoản mới</h2>
-                <p className="mt-1 text-sm text-slate-500">Bắt đầu hành trình tìm kiếm roomie của bạn ngay hôm nay.</p>
+                <h2 className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>{t("Tạo tài khoản mới")}</h2>
+                <p className="mt-1 text-sm text-slate-500">{t("Bắt đầu hành trình tìm kiếm roomie của bạn ngay hôm nay.")}</p>
               </>
             ) : (
               <>
-                <h2 className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>Đăng nhập</h2>
-                <p className="mt-1 text-sm text-slate-500">Chào mừng bạn quay lại Roomie.</p>
+                <h2 className="text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>{t("Đăng nhập")}</h2>
+                <p className="mt-1 text-sm text-slate-500">{t("Chào mừng bạn quay lại Roomie.")}</p>
               </>
             )}
 
@@ -245,7 +247,7 @@ export default function AuthPage() {
             {mode === "login" ? (
               <form onSubmit={handleLogin} className="mt-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Email</label>
+                  <label className="block text-sm font-medium text-slate-700">{t("Email")}</label>
                   <div className="relative mt-2">
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                     <input
@@ -263,7 +265,7 @@ export default function AuthPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Mật khẩu</label>
+                  <label className="block text-sm font-medium text-slate-700">{t("Mật khẩu")}</label>
                   <div className="relative mt-2">
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <input
@@ -284,13 +286,13 @@ export default function AuthPage() {
                   type="submit"
                   className="mt-2 w-full rounded-lg bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
                 >
-                  Đăng nhập
+                  {t("Đăng nhập")}
                 </button>
               </form>
             ) : (
               <form onSubmit={handleRegister} className="mt-6 space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Họ và tên</label>
+                  <label className="block text-sm font-medium text-slate-700">{t("Họ và tên")}</label>
                   <div className="relative mt-1.5">
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     <input
@@ -299,7 +301,7 @@ export default function AuthPage() {
                       className={`w-full rounded-lg border pl-10 pr-4 py-2.5 text-sm outline-none transition focus:border-[var(--primary)] ${
                         registerForm.formState.errors.fullName ? "border-red-300 bg-red-50/30" : "border-slate-200 bg-white"
                       }`}
-                      placeholder="Nguyễn Văn A"
+                      placeholder={t("Nguyễn Văn A")}
                       {...registerForm.register("fullName")}
                     />
                   </div>
@@ -308,14 +310,14 @@ export default function AuthPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Tên đăng nhập <span className="text-slate-400 font-normal">(tuỳ chọn)</span></label>
+                  <label className="block text-sm font-medium text-slate-700">{t("Tên đăng nhập")} <span className="text-slate-400 font-normal">{t("(tuỳ chọn)")}</span></label>
                   <div className="relative mt-1.5">
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     <input
                       type="text"
                       autoComplete="username"
                       className="w-full rounded-lg border border-slate-200 pl-10 pr-4 py-2.5 text-sm outline-none transition focus:border-[var(--primary)] bg-white"
-                      placeholder="vd: minh_hanoi"
+                      placeholder={t("vd: minh_hanoi")}
                       {...registerForm.register("username")}
                     />
                   </div>
@@ -324,7 +326,7 @@ export default function AuthPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Email</label>
+                  <label className="block text-sm font-medium text-slate-700">{t("Email")}</label>
                   <div className="relative mt-1.5">
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                     <input
@@ -342,7 +344,7 @@ export default function AuthPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Mật khẩu</label>
+                  <label className="block text-sm font-medium text-slate-700">{t("Mật khẩu")}</label>
                   <div className="relative mt-1.5">
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <input
@@ -358,8 +360,8 @@ export default function AuthPage() {
                       type="button"
                       className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
                       onClick={() => setShowRegisterPassword((prev) => !prev)}
-                      aria-label={showRegisterPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                      title={showRegisterPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                      aria-label={showRegisterPassword ? t("Ẩn mật khẩu") : t("Hiện mật khẩu")}
+                      title={showRegisterPassword ? t("Ẩn mật khẩu") : t("Hiện mật khẩu")}
                     >
                       {showRegisterPassword ? <EyeOffIcon /> : <EyeIcon />}
                     </button>
@@ -369,7 +371,7 @@ export default function AuthPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Xác nhận mật khẩu</label>
+                  <label className="block text-sm font-medium text-slate-700">{t("Xác nhận mật khẩu")}</label>
                   <div className="relative mt-1.5">
                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <input
@@ -385,8 +387,8 @@ export default function AuthPage() {
                       type="button"
                       className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
                       onClick={() => setShowRegisterConfirmPassword((prev) => !prev)}
-                      aria-label={showRegisterConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                      title={showRegisterConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                      aria-label={showRegisterConfirmPassword ? t("Ẩn mật khẩu") : t("Hiện mật khẩu")}
+                      title={showRegisterConfirmPassword ? t("Ẩn mật khẩu") : t("Hiện mật khẩu")}
                     >
                       {showRegisterConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
                     </button>
@@ -397,20 +399,20 @@ export default function AuthPage() {
                 </div>
                 <label className="flex items-start gap-2 text-sm text-slate-600">
                   <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[var(--primary)] focus:ring-[var(--primary)]" />
-                  <span>Tôi đồng ý với <a href="#" className="font-semibold text-[var(--primary)] hover:underline">Điều khoản & Điều kiện</a> và <a href="#" className="font-semibold text-[var(--primary)] hover:underline">Chính sách bảo mật</a> của Roomie.</span>
+                  <span>{t("Tôi đồng ý với")} <a href="#" className="font-semibold text-[var(--primary)] hover:underline">{t("Điều khoản & Điều kiện")}</a> {t("và")} <a href="#" className="font-semibold text-[var(--primary)] hover:underline">{t("Chính sách bảo mật")}</a> {t("của Roomie.")}</span>
                 </label>
                 <button
                   type="submit"
                   className="mt-1 w-full rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition"
                 >
-                  Đăng ký
+                  {t("Đăng ký")}
                 </button>
               </form>
             )}
 
             <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
               <span className="h-px flex-1 bg-slate-200" />
-              <span>{mode === "register" ? "Hoặc đăng ký bằng" : "Hoặc đăng nhập bằng"}</span>
+              <span>{mode === "register" ? t("Hoặc đăng ký bằng") : t("Hoặc đăng nhập bằng")}</span>
               <span className="h-px flex-1 bg-slate-200" />
             </div>
 
@@ -420,14 +422,14 @@ export default function AuthPage() {
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-              Tiếp tục với Google
+              {t("Tiếp tục với Google")}
             </button>
 
             <p className="mt-5 text-center text-sm text-slate-500">
               {mode === "login" ? (
-                <>Bạn đã có tài khoản? <button onClick={() => switchMode("register")} className="font-semibold text-[var(--primary)] hover:underline">Đăng ký</button></>
+                <>{t("Bạn đã có tài khoản?")} <button onClick={() => switchMode("register")} className="font-semibold text-[var(--primary)] hover:underline">{t("Đăng ký")}</button></>
               ) : (
-                <>Bạn đã có tài khoản? <button onClick={() => switchMode("login")} className="font-semibold text-[var(--primary)] hover:underline">Đăng nhập</button></>
+                <>{t("Bạn đã có tài khoản?")} <button onClick={() => switchMode("login")} className="font-semibold text-[var(--primary)] hover:underline">{t("Đăng nhập")}</button></>
               )}
             </p>
           </div>

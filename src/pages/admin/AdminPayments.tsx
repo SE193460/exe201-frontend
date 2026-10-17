@@ -138,7 +138,7 @@ export default function AdminPayments() {
                             className="w-56 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[var(--primary)]" />
                         <select value={filterPackage} onChange={(e) => setFilterPackage(e.target.value)}
                             className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[var(--primary)]">
-                            {PACKAGE_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                            {PACKAGE_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{t(opt.label)}</option>))}
                         </select>
                         {(searchCode || filterPackage) && (
                             <button onClick={() => { setSearchCode(""); setFilterPackage(""); }}

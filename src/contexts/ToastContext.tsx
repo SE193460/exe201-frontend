@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type PropsWithChildren } from "react";
+import { useTranslation } from "react-i18next";
 
 type ToastType = "success" | "error" | "warning";
 
@@ -35,6 +36,7 @@ function toastLabel(type: ToastType) {
 }
 
 export function ToastProvider({ children }: PropsWithChildren) {
+  const { t } = useTranslation();
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const removeToast = useCallback((id: number) => {
@@ -70,13 +72,13 @@ export function ToastProvider({ children }: PropsWithChildren) {
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide">{toastLabel(toast.type)}</p>
+                <p className="text-xs font-bold uppercase tracking-wide">{t(toastLabel(toast.type))}</p>
                 <p className="mt-1 text-sm font-semibold leading-snug">{toast.message}</p>
               </div>
               <button
                 onClick={() => removeToast(toast.id)}
                 className="text-lg leading-none opacity-60 transition hover:opacity-100"
-                aria-label="Đóng thông báo"
+                aria-label={t("Đóng thông báo")}
               >
                 x
               </button>

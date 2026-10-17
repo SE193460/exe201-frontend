@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { fetchUserDetail, fetchUsers, updateUserStatus, type AdminUser } from "../../api/services/admin";
 import { resolveAvatarUrl } from "../../api/services/user";
 import { logout } from "../../api/services/auth";
@@ -13,6 +14,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function AdminUsersPage() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [selected, setSelected] = useState<AdminUser | null>(null);
   const [query, setQuery] = useState("");
@@ -82,14 +84,14 @@ export default function AdminUsersPage() {
         <main className="flex-1 space-y-6">
           <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">Bảng điều khiển</p>
-              <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>Quản lý người dùng</h1>
-              <p className="mt-1 text-sm text-slate-500">{filteredLabel} · {users.length} tài khoản</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Bảng điều khiển")}</p>
+              <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>{t("Quản lý người dùng")}</h1>
+              <p className="mt-1 text-sm text-slate-500">{t(filteredLabel)} · {users.length} {t("tài khoản")}</p>
             </div>
             <form onSubmit={handleSearch} className="flex w-full max-w-md gap-2">
               <input value={query} onChange={(event) => setQuery(event.target.value)}
-                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[var(--primary)]" placeholder="Tìm theo email hoặc họ tên" />
-              <button className="rounded-full bg-[var(--primary)] px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition">Tìm</button>
+                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[var(--primary)]" placeholder={t("Tìm theo email hoặc họ tên")} />
+              <button className="rounded-full bg-[var(--primary)] px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition">{t("Tìm")}</button>
             </form>
           </section>
 
@@ -97,7 +99,7 @@ export default function AdminUsersPage() {
             {["all", "active", "inactive"].map((item) => (
               <button key={item} onClick={() => setStatus(item)}
                 className={`rounded-full px-4 py-2 text-xs font-semibold border transition ${status === item ? "bg-[var(--primary)] border-[var(--primary)] text-white" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
-                {statusLabels[item]}
+                {t(statusLabels[item])}
               </button>
             ))}
           </div>
@@ -105,8 +107,8 @@ export default function AdminUsersPage() {
           <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
             <div className="rounded-lg border border-slate-200 bg-white p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-slate-700">Danh sách người dùng</h2>
-                {loading && <span className="text-xs text-slate-400">Đang tải...</span>}
+                <h2 className="text-sm font-bold text-slate-700">{t("Danh sách người dùng")}</h2>
+                {loading && <span className="text-xs text-slate-400">{t("Đang tải...")}</span>}
               </div>
               <div className="mt-4 space-y-2">
                 {users.slice((userPage - 1) * USER_PAGE_SIZE, userPage * USER_PAGE_SIZE).map((user) => (
@@ -127,7 +129,7 @@ export default function AdminUsersPage() {
                     </div>
                     <div className="text-right">
                       <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${user.isActive ? "bg-green-50 text-green-700 border border-green-200" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
-                        {user.isActive ? "Đang hoạt động" : "Đã vô hiệu"}
+                        {user.isActive ? t("Đang hoạt động") : t("Đã vô hiệu")}
                       </span>
                       <p className="mt-1 text-xs text-slate-400">{user.roleName}</p>
                     </div>
@@ -138,7 +140,7 @@ export default function AdminUsersPage() {
             </div>
 
             <div className="rounded-lg border border-slate-200 bg-white p-6">
-              <h2 className="text-sm font-bold text-slate-700">Chi tiết</h2>
+              <h2 className="text-sm font-bold text-slate-700">{t("Chi tiết")}</h2>
               {selected ? (
                 <div className="mt-4 space-y-4 text-sm">
                   <div className="flex items-center gap-3">
@@ -155,22 +157,22 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
                   <div className="rounded-lg bg-slate-50 px-4 py-3 border border-slate-100">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Trạng thái</p>
-                    <p className="mt-1 font-semibold">{selected.isActive ? "Đang hoạt động" : "Đã vô hiệu"}</p>
-                    <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Xác thực email</p>
-                    <p className="mt-1 font-semibold">{selected.isEmailVerified ? "Đã xác thực" : "Chưa xác thực"}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t("Trạng thái")}</p>
+                    <p className="mt-1 font-semibold">{selected.isActive ? t("Đang hoạt động") : t("Đã vô hiệu")}</p>
+                    <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">{t("Xác thực email")}</p>
+                    <p className="mt-1 font-semibold">{selected.isEmailVerified ? t("Đã xác thực") : t("Chưa xác thực")}</p>
                   </div>
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>Vai trò</span>
+                    <span>{t("Vai trò")}</span>
                     <span className="font-bold text-slate-700">{selected.roleName}</span>
                   </div>
                   <button onClick={() => handleToggleActive(selected)}
                     className={`w-full rounded-full px-4 py-2.5 text-sm font-semibold text-white transition ${selected.isActive ? "bg-amber-500 hover:bg-amber-600" : "bg-green-500 hover:bg-green-600"}`}>
-                    {selected.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
+                    {selected.isActive ? t("Vô hiệu hóa") : t("Kích hoạt")}
                   </button>
                 </div>
               ) : (
-                <p className="mt-4 text-sm text-slate-400">Chọn một tài khoản để xem chi tiết.</p>
+                <p className="mt-4 text-sm text-slate-400">{t("Chọn một tài khoản để xem chi tiết.")}</p>
               )}
             </div>
           </section>

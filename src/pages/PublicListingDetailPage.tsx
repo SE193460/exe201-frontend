@@ -531,8 +531,8 @@ export default function PublicListingDetailPage() {
                         />
                         {listing.images.length > 1 && (
                           <>
-                            <button aria-label="Ảnh trước" onClick={(e) => { e.stopPropagation(); handlePrevImg(); }} className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">‹</button>
-                            <button aria-label="Ảnh sau" onClick={(e) => { e.stopPropagation(); handleNextImg(); }} className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">›</button>
+                            <button aria-label={t("Ảnh trước")} onClick={(e) => { e.stopPropagation(); handlePrevImg(); }} className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">‹</button>
+                            <button aria-label={t("Ảnh sau")} onClick={(e) => { e.stopPropagation(); handleNextImg(); }} className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">›</button>
                             <div className="absolute bottom-4 right-4 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur flex items-center gap-1.5">
                               <Camera className="h-3.5 w-3.5" /> {selectedImgIdx + 1}/{listing.images.length}
                             </div>
@@ -752,11 +752,11 @@ export default function PublicListingDetailPage() {
                         <div className="mt-3 grid gap-3 md:grid-cols-2">
                           <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
                             <div className="font-semibold text-slate-800">{t("Nên trao đổi")}</div>
-                            <p className="mt-1">{matchingSummary.caution[0] ? `${FIELD_FULL_LABELS[matchingSummary.caution[0].field] || matchingSummary.caution[0].field} là điểm bạn nên nói rõ trước khi quyết định.` : t("Hãy trao đổi trực tiếp về thói quen sinh hoạt để quá trình ở ghép trở nên thoải mái hơn.")}</p>
+                            <p className="mt-1">{matchingSummary.caution[0] ? t("{{field}} là điểm bạn nên nói rõ trước khi quyết định.", { field: FIELD_FULL_LABELS[matchingSummary.caution[0].field] || matchingSummary.caution[0].field }) : t("Hãy trao đổi trực tiếp về thói quen sinh hoạt để quá trình ở ghép trở nên thoải mái hơn.")}</p>
                           </div>
                           <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
                             <div className="font-semibold text-slate-800">{t("Điểm cộng lớn")}</div>
-                            <p className="mt-1">{matchingSummary.good[0] ? `${FIELD_FULL_LABELS[matchingSummary.good[0].field] || matchingSummary.good[0].field} là điểm cộng rất rõ ràng cho sự phù hợp này.` : t("Phòng này có nhiều yếu tố phù hợp với nhu cầu của bạn.")}</p>
+                            <p className="mt-1">{matchingSummary.good[0] ? t("{{field}} là điểm cộng rất rõ ràng cho sự phù hợp này.", { field: FIELD_FULL_LABELS[matchingSummary.good[0].field] || matchingSummary.good[0].field }) : t("Phòng này có nhiều yếu tố phù hợp với nhu cầu của bạn.")}</p>
                           </div>
                         </div>
                       </div>
@@ -1019,8 +1019,8 @@ export default function PublicListingDetailPage() {
                     <img src={resolveListingImageUrl(listing.images[selectedImgIdx].imageUrl)} alt={listing.title} className="h-full w-full object-contain" />
                     {listing.images.length > 1 && (
                       <>
-                        <button aria-label="Ảnh trước" onClick={handlePrevImg} className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">‹</button>
-                        <button aria-label="Ảnh sau" onClick={handleNextImg} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">›</button>
+                        <button aria-label={t("Ảnh trước")} onClick={handlePrevImg} className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">‹</button>
+                        <button aria-label={t("Ảnh sau")} onClick={handleNextImg} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">›</button>
                         <div className="absolute bottom-3 right-3 rounded-full bg-slate-900/75 px-3 py-1 text-xs font-semibold text-white">{selectedImgIdx + 1} / {listing.images.length}</div>
                       </>
                     )}

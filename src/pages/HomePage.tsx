@@ -43,8 +43,8 @@ export default function HomePage() {
   const [searchError, setSearchError] = useState("");
 
   const depositPackages = [
-    { key: "cv_5", amount: 5000, label: "Xem liên hệ 5", desc: "5 lượt xem liên hệ" },
-    { key: "cv_20", amount: 15000, label: "Xem liên hệ 20", desc: "20 lượt xem liên hệ" },
+    { key: "cv_5", amount: 5000, label: t("Xem liên hệ 5"), desc: t("5 lượt xem liên hệ") },
+    { key: "cv_20", amount: 15000, label: t("Xem liên hệ 20"), desc: t("20 lượt xem liên hệ") },
   ];
   const [listings, setListings] = useState<Listing[]>([]);
   const [searchQuery, setSearchQuery] = useState("");

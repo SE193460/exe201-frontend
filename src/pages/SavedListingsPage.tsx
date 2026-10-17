@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Heart, MapPinned, Search, SlidersHorizontal } from "lucide-react";
 import { fetchSavedListings, resolveListingImageUrl, toggleSaveListing } from "../api/services/listings";
@@ -25,6 +26,7 @@ function formatPrice(price: number) {
 }
 
 export default function SavedListingsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +37,7 @@ export default function SavedListingsPage() {
   useEffect(() => {
     fetchSavedListings()
       .then((data) => setListings(data))
-      .catch(() => setError("Không thể tải danh sách tin đã lưu. Vui lòng đăng nhập."))
+      .catch(() => setError(t("Không thể tải danh sách tin đã lưu. Vui lòng đăng nhập.")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -59,15 +61,15 @@ export default function SavedListingsPage() {
         <header className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-extrabold text-[var(--on-surface)] md:text-3xl" style={{ fontFamily: "var(--font-main)" }}>
-              Tin đã lưu
+              {t("Tin đã lưu")}
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Bạn đang quan tâm đến {listings.length} phòng ở ghép chất lượng.
+              {t("Bạn đang quan tâm đến {{count}} phòng ở ghép chất lượng.", { count: listings.length })}
             </p>
           </div>
           <button className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
             <SlidersHorizontal className="h-4 w-4" />
-            Lọc kết quả
+            {t("Lọc kết quả")}
           </button>
         </header>
 
@@ -92,14 +94,14 @@ export default function SavedListingsPage() {
               <Search className="h-7 w-7 text-[var(--primary)]" />
             </div>
             <p className="mt-4 text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>
-              Chưa có tin đã lưu
+              {t("Chưa có tin đã lưu")}
             </p>
-            <p className="mt-1 text-sm text-slate-500">Khám phá và lưu những phòng phù hợp với bạn.</p>
+            <p className="mt-1 text-sm text-slate-500">{t("Khám phá và lưu những phòng phù hợp với bạn.")}</p>
             <button
               onClick={() => navigate("/")}
               className="mt-5 rounded-full bg-[#8B5E34] px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
             >
-              Khám phá ngay
+              {t("Khám phá ngay")}
             </button>
           </div>
         )}
@@ -124,7 +126,7 @@ export default function SavedListingsPage() {
                       {thumbnail ? (
                         <img src={thumbnail} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-sm text-slate-300">Chưa có ảnh</div>
+                        <div className="flex h-full w-full items-center justify-center text-sm text-slate-300">{t("Chưa có ảnh")}</div>
                       )}
                       {/* Heart icon */}
                       <button
@@ -135,7 +137,7 @@ export default function SavedListingsPage() {
                       </button>
                       {/* Badge */}
                       <span className={`absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-xs font-bold text-white ${badge.color}`}>
-                        {badge.text}
+                        {t(badge.text)}
                       </span>
                     </div>
 
@@ -146,7 +148,7 @@ export default function SavedListingsPage() {
                       </h3>
                       <p className="mt-1.5 flex items-center gap-1 text-xs text-slate-500">
                         <MapPinned className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
-                        {location || "Chưa cập nhật"}
+                        {location || t("Chưa cập nhật")}
                       </p>
                       <div className="mt-1.5">
                         <PostedTimeTag variant="inline" postedAt={listing.publishedAt || listing.createdAt} />
@@ -166,10 +168,10 @@ export default function SavedListingsPage() {
                       {/* Price + link */}
                       <div className="mt-4 flex items-end justify-between border-t border-slate-100 pt-3">
                         <p className="text-base font-extrabold text-[var(--primary)]">
-                          {formatPrice(listing.rentPrice)}<span className="text-xs font-medium text-slate-400">đ/tháng</span>
+                          {formatPrice(listing.rentPrice)}<span className="text-xs font-medium text-slate-400">{t("đ/tháng")}</span>
                         </p>
                         <span className="text-xs font-semibold text-[var(--primary)] transition group-hover:underline">
-                          Chi tiết
+                          {t("Chi tiết")}
                         </span>
                       </div>
                     </div>
@@ -186,13 +188,13 @@ export default function SavedListingsPage() {
                   <Search className="h-7 w-7 text-[var(--primary)]" />
                 </div>
                 <p className="mt-4 text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>
-                  Tìm thêm phòng mới?
+                  {t("Tìm thêm phòng mới?")}
                 </p>
                 <p className="mt-1 text-sm text-slate-500 leading-relaxed">
-                  Khám phá hàng ngàn tin đăng<br />mới mỗi ngày phù hợp với tiêu<br />chí của bạn.
+                  {t("Khám phá hàng ngàn tin đăng mới mỗi ngày phù hợp với tiêu chí của bạn.")}
                 </p>
                 <button className="mt-5 rounded-full bg-[#8B5E34] px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90">
-                  Khám phá ngay
+                  {t("Khám phá ngay")}
                 </button>
               </div>
             </div>

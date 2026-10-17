@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { logout } from "../../api/services/auth";
 import {
     fetchAllReports,
@@ -11,6 +12,7 @@ import Pagination from "../../components/Pagination";
 import { useToast } from "../../contexts/ToastContext";
 
 export default function AdminReportsPage() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { showToast } = useToast();
     const [error, setError] = useState("");
@@ -27,7 +29,7 @@ export default function AdminReportsPage() {
             const data = await fetchAllReports();
             setReports(data);
         } catch {
-            setError("Không tải được báo cáo");
+            setError(t("Không tải được báo cáo"));
         }
     };
 
@@ -40,7 +42,7 @@ export default function AdminReportsPage() {
                 )
             );
         } catch {
-            showToast({ type: "error", message: "Cập nhật thất bại" });
+            showToast({ type: "error", message: t("Cập nhật thất bại") });
         }
     };
 
@@ -73,10 +75,10 @@ export default function AdminReportsPage() {
                 <main className="flex-1 space-y-6">
                     <section className="flex items-center justify-between gap-3">
                         <div>
-                            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">Quản lý báo cáo</p>
-                            <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>Lịch sử báo cáo</h1>
+                            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Quản lý báo cáo")}</p>
+                            <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>{t("Lịch sử báo cáo")}</h1>
                         </div>
-                        <span className="rounded-full bg-orange-50 px-4 py-2 text-xs font-bold text-[var(--primary)] border border-orange-200">{reports.length} báo cáo</span>
+                        <span className="rounded-full bg-orange-50 px-4 py-2 text-xs font-bold text-[var(--primary)] border border-orange-200">{t("{{count}} báo cáo", { count: reports.length })}</span>
                     </section>
 
                     {error && (
@@ -87,14 +89,14 @@ export default function AdminReportsPage() {
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                                    <th className="px-6 py-3 text-left">Người báo cáo</th>
-                                    <th className="px-6 py-3 text-left">Bài đăng</th>
-                                    <th className="px-6 py-3 text-left">Chủ bài</th>
-                                    <th className="px-6 py-3 text-left">Lý do</th>
-                                    <th className="px-6 py-3 text-left">Mô tả</th>
-                                    <th className="px-6 py-3 text-left">Ngày</th>
-                                    <th className="px-6 py-3 text-left">Trạng thái</th>
-                                    <th className="px-6 py-3 text-left">Thao tác</th>
+                                    <th className="px-6 py-3 text-left">{t("Người báo cáo")}</th>
+                                    <th className="px-6 py-3 text-left">{t("Bài đăng")}</th>
+                                    <th className="px-6 py-3 text-left">{t("Chủ bài")}</th>
+                                    <th className="px-6 py-3 text-left">{t("Lý do")}</th>
+                                    <th className="px-6 py-3 text-left">{t("Mô tả")}</th>
+                                    <th className="px-6 py-3 text-left">{t("Ngày")}</th>
+                                    <th className="px-6 py-3 text-left">{t("Trạng thái")}</th>
+                                    <th className="px-6 py-3 text-left">{t("Thao tác")}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -121,16 +123,16 @@ export default function AdminReportsPage() {
                                             {item.status === "PENDING" ? (
                                                 <div className="flex gap-2">
                                                     <button onClick={() => handleResolve(item.id, "RESOLVED")}
-                                                        className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700 border border-green-200 hover:bg-green-100">Duyệt</button>
+                                                        className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700 border border-green-200 hover:bg-green-100">{t("Duyệt")}</button>
                                                     <button onClick={() => handleResolve(item.id, "DISMISSED")}
-                                                        className="rounded-full bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-100">Bỏ qua</button>
+                                                        className="rounded-full bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-100">{t("Bỏ qua")}</button>
                                                 </div>
                                             ) : <span className="text-xs text-slate-400">—</span>}
                                         </td>
                                     </tr>
                                 ))}
                                 {reports.length === 0 && (
-                                    <tr><td colSpan={8} className="px-6 py-12 text-center text-sm text-slate-400">Chưa có báo cáo nào</td></tr>
+                                    <tr><td colSpan={8} className="px-6 py-12 text-center text-sm text-slate-400">{t("Chưa có báo cáo nào")}</td></tr>
                                 )}
                             </tbody>
                         </table>

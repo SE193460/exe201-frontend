@@ -106,25 +106,25 @@ export default function CreateListingPage() {
     setStatus(""); setError("");
 
     if (!form.title || !form.description || !form.rentPrice || !form.city || !form.district || !form.ward) {
-      const msg = "Vui lòng nhập đầy đủ tiêu đề, mô tả, giá và khu vực.";
+      const msg = t("Vui lòng nhập đầy đủ tiêu đề, mô tả, giá và khu vực.");
       showToast({ type: "error", message: msg }); setError(msg); return;
     }
     const rentPrice = parseCurrencyInput(form.rentPrice);
     if (Number.isNaN(rentPrice) || rentPrice <= 0) {
-      const msg = "Giá thuê không hợp lệ.";
+      const msg = t("Giá thuê không hợp lệ.");
       showToast({ type: "error", message: msg }); setError(msg); return;
     }
     if (!form.phoneNumber) {
-      const msg = "Vui lòng nhập Số điện thoại liên hệ.";
+      const msg = t("Vui lòng nhập Số điện thoại liên hệ.");
       showToast({ type: "error", message: msg }); setError(msg); return;
     }
     if (form.phoneNumber && !/^(\+?\d[\d\s.-]{7,20})$/.test(form.phoneNumber)) {
-      const msg = "Số điện thoại không hợp lệ.";
+      const msg = t("Số điện thoại không hợp lệ.");
       showToast({ type: "error", message: msg }); setError(msg); return;
     }
     const roomAreaSqm = form.roomAreaSqm ? Number(form.roomAreaSqm) : null;
     if (roomAreaSqm !== null && (Number.isNaN(roomAreaSqm) || roomAreaSqm <= 0)) {
-      const msg = "Diện tích phòng không hợp lệ.";
+      const msg = t("Diện tích phòng không hợp lệ.");
       showToast({ type: "error", message: msg }); setError(msg); return;
     }
 
@@ -141,10 +141,10 @@ export default function CreateListingPage() {
       if (form.phoneNumber && userFullName) {
         await updateProfile({ fullName: userFullName, phoneNumber: form.phoneNumber }).catch(() => {});
       }
-      setStatus("Tạo bài đăng thành công.");
+      setStatus(t("Tạo bài đăng thành công."));
       navigate(`/my-listings/${listing.id}`);
     } catch {
-      const msg = "Không thể tạo bài đăng. Vui lòng thử lại.";
+      const msg = t("Không thể tạo bài đăng. Vui lòng thử lại.");
       showToast({ type: "error", message: msg }); setError(msg);
     }
   };
@@ -156,10 +156,10 @@ export default function CreateListingPage() {
           <div className="mx-auto max-w-[1100px] px-4 md:px-6 py-3">
             <nav className="flex items-center gap-2 text-xs text-slate-500">
               <button onClick={() => navigate("/my-listings")} className="flex items-center gap-1 hover:text-[#a55b00] transition">
-                <Home className="h-3.5 w-3.5" /> Bài đăng của tôi
+                <Home className="h-3.5 w-3.5" /> {t("Bài đăng của tôi")}
               </button>
               <ChevronRight className="h-3 w-3" />
-              <span className="font-medium text-slate-800">Tạo mới</span>
+              <span className="font-medium text-slate-800">{t("Tạo mới")}</span>
             </nav>
           </div>
         </div>
@@ -169,9 +169,9 @@ export default function CreateListingPage() {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-extrabold text-[var(--on-surface)] md:text-3xl" style={{ fontFamily: "var(--font-main)" }}>
-                  Tạo bài đăng mới
+                  {t("Tạo bài đăng mới")}
                 </h1>
-                <p className="mt-1 text-sm text-slate-500">Bài đăng sẽ được lưu ở trạng thái bản nháp (DRAFT).</p>
+                <p className="mt-1 text-sm text-slate-500">{t("Bài đăng sẽ được lưu ở trạng thái bản nháp (DRAFT).")}</p>
               </div>
             </div>
           </header>
@@ -187,27 +187,27 @@ export default function CreateListingPage() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-container)]">
                     <FileText className="h-5 w-5 text-[var(--primary)]" />
                   </div>
-                  <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>Thông tin cơ bản</h2>
+                  <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>{t("Thông tin cơ bản")}</h2>
                 </div>
                 <div className="space-y-4">
                   <label className="block text-sm font-medium text-slate-700">
-                    Tiêu đề
+                    {t("Tiêu đề")}
                     <input type="text" value={form.title} onChange={(e) => handleChange("title", e.target.value)}
                       className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
-                      placeholder="Phòng trọ đầy đủ tiện nghi" />
+                      placeholder={t("Phòng trọ đầy đủ tiện nghi")} />
                   </label>
                   <label className="block text-sm font-medium text-slate-700">
-                    Mô tả
+                    {t("Mô tả")}
                     <textarea rows={4} value={form.description} onChange={(e) => handleChange("description", e.target.value)}
                       className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
-                      placeholder="Mô tả chi tiết về phòng, tiện ích, yêu cầu người ở ghép..." />
+                      placeholder={t("Mô tả chi tiết về phòng, tiện ích, yêu cầu người ở ghép...")} />
                   </label>
                   <label className="block text-sm font-medium text-slate-700">
-                    Số điện thoại liên hệ *
+                    {t("Số điện thoại liên hệ *")}
                     <input type="tel" value={form.phoneNumber} onChange={(e) => handleChange("phoneNumber", e.target.value)}
                       className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                       placeholder="VD: 0901234567" />
-                    <p className="mt-1 text-xs text-slate-500">Tự động lấy từ hồ sơ cá nhân nếu bạn đã cập nhật trước đó.</p>
+                    <p className="mt-1 text-xs text-slate-500">{t("Tự động lấy từ hồ sơ cá nhân nếu bạn đã cập nhật trước đó.")}</p>
                   </label>
                 </div>
               </section>
@@ -218,26 +218,26 @@ export default function CreateListingPage() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-container)]">
                     <MapPin className="h-5 w-5 text-[var(--primary)]" />
                   </div>
-                  <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>Vị trí</h2>
+                  <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>{t("Vị trí")}</h2>
                 </div>
                 <div className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-3">
                     <label className="block text-sm font-medium text-slate-700">
-                      Tỉnh/Thành phố
+                      {t("Tỉnh/Thành phố")}
                       <select value={form.city} onChange={(e) => handleChange("city", e.target.value)}
                         className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]">
                         {CITY_OPTIONS.map((city) => <option key={city} value={city}>{city}</option>)}
                       </select>
                     </label>
                     <label className="block text-sm font-medium text-slate-700">
-                      Quận
+                      {t("Quận")}
                       <select value={form.district} onChange={(e) => handleChange("district", e.target.value)}
                         className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]">
                         {DISTRICT_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
                       </select>
                     </label>
                     <label className="block text-sm font-medium text-slate-700">
-                      Phường
+                      {t("Phường")}
                       <select value={form.ward} onChange={(e) => handleChange("ward", e.target.value)}
                         className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]">
                         {(WARD_OPTIONS[form.district] || []).map((w) => <option key={w} value={w}>{w}</option>)}
@@ -245,7 +245,7 @@ export default function CreateListingPage() {
                     </label>
                   </div>
                   <label className="block text-sm font-medium text-slate-700">
-                    Địa chỉ cụ thể
+                    {t("Địa chỉ cụ thể")}
                     <input type="text" value={form.address} onChange={(e) => handleChange("address", e.target.value)}
                       className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                       placeholder="123 Đường ABC" />
@@ -259,19 +259,19 @@ export default function CreateListingPage() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-container)]">
                     <Sparkles className="h-5 w-5 text-[var(--primary)]" />
                   </div>
-                  <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>Giá & Thông tin phòng</h2>
+                  <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>{t("Giá & Thông tin phòng")}</h2>
                 </div>
                 <div className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block text-sm font-medium text-slate-700">
-                      Giá thuê (VND) *
+                      {t("Giá thuê (VND) *")}
                       <input type="text" inputMode="numeric" value={form.rentPrice}
                         onChange={(e) => handleChange("rentPrice", formatCurrencyInput(e.target.value))}
                         className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                         placeholder="3.000.000" />
                     </label>
                     <label className="block text-sm font-medium text-slate-700">
-                      Diện tích phòng (m²)
+                      {t("Diện tích phòng (m²)")}
                       <input type="number" value={form.roomAreaSqm} onChange={(e) => handleChange("roomAreaSqm", e.target.value)}
                         className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
                         placeholder="20" />
@@ -279,28 +279,28 @@ export default function CreateListingPage() {
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block text-sm font-medium text-slate-700">
-                      Giới tính ưu tiên
+                      {t("Giới tính ưu tiên")}
                       <input type="text" value={form.preferredGender} onChange={(e) => handleChange("preferredGender", e.target.value)}
                         className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
-                        placeholder="Nam / Nữ / Không yêu cầu" />
+                        placeholder={t("Nam / Nữ / Không yêu cầu")} />
                     </label>
                     <label className="block text-sm font-medium text-slate-700">
-                      Loại phòng
+                      {t("Loại phòng")}
                       <input type="text" value={form.roomType} onChange={(e) => handleChange("roomType", e.target.value)}
                         className="mt-2 w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]"
-                        placeholder="Phòng trọ / Căn hộ" />
+                        placeholder={t("Phòng trọ / Căn hộ")} />
                     </label>
                   </div>
                   <div className="flex flex-wrap items-center gap-4">
                     <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
                       <input type="checkbox" checked={form.smokingAllowed} onChange={(e) => handleChange("smokingAllowed", e.target.checked)}
                         className="h-4 w-4 rounded border-slate-300 text-[var(--primary)] accent-[var(--primary)]" />
-                      Cho phép hút thuốc
+                      {t("Cho phép hút thuốc")}
                     </label>
                     <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
                       <input type="checkbox" checked={form.petAllowed} onChange={(e) => handleChange("petAllowed", e.target.checked)}
                         className="h-4 w-4 rounded border-slate-300 text-[var(--primary)] accent-[var(--primary)]" />
-                      Cho phép thú cưng
+                      {t("Cho phép thú cưng")}
                     </label>
                   </div>
                 </div>
@@ -312,9 +312,9 @@ export default function CreateListingPage() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-container)]">
                     <Image className="h-5 w-5 text-[var(--primary)]" />
                   </div>
-                  <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>Hình ảnh phòng</h2>
+                  <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>{t("Hình ảnh phòng")}</h2>
                 </div>
-                <p className="text-xs text-slate-500 mb-3">Tối đa 20 ảnh, định dạng JPG/PNG.</p>
+                <p className="text-xs text-slate-500 mb-3">{t("Tối đa 20 ảnh, định dạng JPG/PNG.")}</p>
                 <input type="file" multiple accept="image/*" onChange={(e) => handleImagesChange(e.target.files)}
                   className="w-full rounded-[var(--radius-md)] border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--primary)]" />
                 {imagePreviews.length > 0 && (
@@ -336,12 +336,12 @@ export default function CreateListingPage() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-container)]">
                     <ShieldCheck className="h-5 w-5 text-[var(--primary)]" />
                   </div>
-                  <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>Tiện nghi</h2>
+                  <h2 className="text-lg font-bold text-[var(--on-surface)]" style={{ fontFamily: "var(--font-main)" }}>{t("Tiện nghi")}</h2>
                 </div>
                 {amenitiesError ? (
                   <p className="text-xs text-red-500">{amenitiesError}</p>
                 ) : amenities.length === 0 ? (
-                  <p className="text-xs text-slate-500">Chưa có tiện nghi nào.</p>
+                  <p className="text-xs text-slate-500">{t("Chưa có tiện nghi nào.")}</p>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {amenities.map((amenity) => (
@@ -359,12 +359,12 @@ export default function CreateListingPage() {
             {/* Right: sidebar */}
             <div className="space-y-5">
               <div className="rounded-[var(--radius-md)] bg-gradient-to-br from-[#8B5E34] to-[#6B3F1D] p-6 text-white">
-                <h3 className="text-xl font-bold" style={{ fontFamily: "var(--font-main)" }}>Mẹo đăng bài</h3>
+                <h3 className="text-xl font-bold" style={{ fontFamily: "var(--font-main)" }}>{t("Mẹo đăng bài")}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-white/80">
-                  Bài đăng có đầy đủ thông tin và hình ảnh sẽ được quan tâm nhiều hơn.
+                  {t("Bài đăng có đầy đủ thông tin và hình ảnh sẽ được quan tâm nhiều hơn.")}
                 </p>
                 <div className="mt-4 space-y-2">
-                  {["Thêm ít nhất 3 ảnh chất lượng cao", "Mô tả chi tiết tiện nghi phòng", "Nhập đúng giá và diện tích"].map((tip, i) => (
+                  {[t("Thêm ít nhất 3 ảnh chất lượng cao"), t("Mô tả chi tiết tiện nghi phòng"), t("Nhập đúng giá và diện tích")].map((tip, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-white/80">
                       <span className="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-white/60" />
                       {tip}
@@ -374,14 +374,14 @@ export default function CreateListingPage() {
               </div>
 
               <div className="rounded-[var(--radius-md)] border border-slate-200 bg-white p-5">
-                <h4 className="text-sm font-bold text-[var(--on-surface)]">Lưu ý quan trọng</h4>
+                <h4 className="text-sm font-bold text-[var(--on-surface)]">{t("Lưu ý quan trọng")}</h4>
                 <div className="mt-3 space-y-3">
                   <div className="flex gap-3">
                     <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[var(--primary-container)]">
                       <ShieldCheck className="h-3.5 w-3.5 text-[var(--primary)]" />
                     </div>
                     <p className="text-sm text-slate-600 leading-relaxed">
-                      Bài đăng sẽ ở trạng thái bản nháp và chờ admin phê duyệt.
+                      {t("Bài đăng sẽ ở trạng thái bản nháp và chờ admin phê duyệt.")}
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -389,16 +389,16 @@ export default function CreateListingPage() {
                       <ShieldCheck className="h-3.5 w-3.5 text-[var(--primary)]" />
                     </div>
                     <p className="text-sm text-slate-600 leading-relaxed">
-                      Không đăng tin trùng lặp hoặc vi phạm quy định.
+                      {t("Không đăng tin trùng lặp hoặc vi phạm quy định.")}
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="relative overflow-hidden rounded-[var(--radius-md)]">
-                <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=250&fit=crop" alt="Phòng trọ" className="h-44 w-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=250&fit=crop" alt={t("Phòng trọ")} className="h-44 w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <p className="absolute bottom-3 left-4 text-sm font-bold text-white">Đăng bài ngay</p>
+                <p className="absolute bottom-3 left-4 text-sm font-bold text-white">{t("Đăng bài ngay")}</p>
               </div>
             </div>
           </form>
@@ -406,11 +406,11 @@ export default function CreateListingPage() {
           <div className="flex flex-col items-center gap-4 border-t border-slate-100 pt-6 pb-4 sm:flex-row sm:justify-between">
             <button type="button" onClick={() => navigate("/my-listings")}
               className="text-sm font-semibold text-slate-500 transition hover:text-slate-700">
-              Quay lại danh sách
+              {t("Quay lại danh sách")}
             </button>
             <button type="submit" onClick={(e) => { e.preventDefault(); document.querySelector("form")?.requestSubmit(); }}
               className="w-full rounded-full bg-[var(--primary)] px-10 py-3.5 text-base font-bold text-white shadow-lg shadow-orange-200/50 transition hover:opacity-90 active:scale-[0.98] sm:w-auto">
-              Lưu bản nháp
+              {t("Lưu bản nháp")}
             </button>
           </div>
         </div>

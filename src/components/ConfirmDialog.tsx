@@ -1,4 +1,5 @@
 import { useCallback, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 type ConfirmOptions = {
   title?: string;
@@ -19,6 +20,7 @@ type ConfirmState = ConfirmOptions & { resolve: (value: boolean) => void };
  *   return <>{dialog}...</>;
  */
 export function useConfirm() {
+  const { t } = useTranslation();
   const [state, setState] = useState<ConfirmState | null>(null);
 
   const confirm = useCallback((options: ConfirmOptions | string) => {
@@ -50,7 +52,7 @@ export function useConfirm() {
         onClick={(event) => event.stopPropagation()}
       >
         <h2 className="text-lg font-bold text-[var(--on-surface)]">
-          {state.title ?? "Xác nhận"}
+          {state.title ?? t("Xác nhận")}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">{state.message}</p>
         <div className="mt-6 flex justify-end gap-3">
@@ -59,7 +61,7 @@ export function useConfirm() {
             onClick={() => close(false)}
             className="rounded-[var(--radius-md)] border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            {state.cancelLabel ?? "Hủy"}
+            {state.cancelLabel ?? t("Hủy")}
           </button>
           <button
             type="button"
@@ -69,7 +71,7 @@ export function useConfirm() {
               state.danger ? "bg-red-600" : "bg-[var(--primary)]"
             }`}
           >
-            {state.confirmLabel ?? "Đồng ý"}
+            {state.confirmLabel ?? t("Đồng ý")}
           </button>
         </div>
       </div>
