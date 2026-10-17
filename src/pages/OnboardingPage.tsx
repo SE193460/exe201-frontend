@@ -25,6 +25,14 @@ const sections = [
 ];
 
 function buildQuestions(userType: UserType, t: (key: string) => string) {
+  // Option labels look like "Label: explanation". Translate the whole string
+  // first so both halves render in the active language.
+  const splitOption = (label: string) => {
+    const translated = t(label);
+    const parts = translated.split(":");
+    const head = parts.shift() ?? "";
+    return { label: head.trim(), description: parts.join(":").trim() };
+  };
   if (userType === "HAS_ROOM") {
     return [
       {
@@ -33,7 +41,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Mức độ sạch sẽ"),
         helper: t("Bạn có xu hướng giữ phòng như thế nào?"),
         explanation: t("Độ sạch sẽ là một trong những nguyên nhân phổ biến nhất gây mâu thuẫn giữa các roommate."),
-        options: PROFILE_OPTIONS.cleanliness.map((option) => ({ value: option.value, label: option.label.split(":")[0], description: option.label.split(":")[1] || "" })),
+        options: PROFILE_OPTIONS.cleanliness.map((option) => ({ value: option.value, ...splitOption(option.label) })),
       },
       {
         key: "ac_usage",
@@ -41,7 +49,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Tần suất sử dụng điều hòa"),
         helper: t("Bạn thường bật điều hòa nhiều hay ít?"),
         explanation: t("Thói quen dùng điều hòa ảnh hưởng đến chi phí điện và sự thoải mái khi ở chung."),
-        options: PROFILE_OPTIONS.ac_usage.map((option) => ({ value: option.value, label: option.label.split(":")[0], description: option.label.split(":")[1] || "" })),
+        options: PROFILE_OPTIONS.ac_usage.map((option) => ({ value: option.value, ...splitOption(option.label) })),
       },
       {
         key: "pet_status",
@@ -49,7 +57,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Thú cưng"),
         helper: t("Bạn có nuôi thú cưng không?"),
         explanation: t("Thú cưng ảnh hưởng trực tiếp đến không gian sống và nhịp sinh hoạt của cả phòng."),
-        options: PROFILE_OPTIONS.binary.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+        options: PROFILE_OPTIONS.binary.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
       },
       {
         key: "smoking_status",
@@ -57,7 +65,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Hút thuốc"),
         helper: t("Bạn có hút thuốc không?"),
         explanation: t("Hút thuốc ảnh hưởng trực tiếp đến môi trường sống và là một nguồn xung đột phổ biến."),
-        options: PROFILE_OPTIONS.binary.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+        options: PROFILE_OPTIONS.binary.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
       },
       {
         key: "cooking",
@@ -65,7 +73,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Thói quen nấu ăn"),
         helper: t("Bạn có thường xuyên nấu ăn trong phòng không?"),
         explanation: t("Thói quen nấu ăn ảnh hưởng đến việc sử dụng bếp, vệ sinh và chi phí sinh hoạt."),
-        options: PROFILE_OPTIONS.cooking.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+        options: PROFILE_OPTIONS.cooking.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
       },
       {
         key: "guest",
@@ -73,7 +81,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Tần suất dẫn bạn bè về phòng"),
         helper: t("Bạn có thường mời bạn bè về phòng không?"),
         explanation: t("Tần suất tiếp khách ảnh hưởng đến không gian riêng và sự tiện nghi khi ở chung."),
-        options: PROFILE_OPTIONS.guest.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+        options: PROFILE_OPTIONS.guest.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
       },
       {
         key: "home_frequency",
@@ -81,7 +89,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Tần suất ở trong phòng"),
         helper: t("Bạn thường dành nhiều thời gian ở phòng hay bên ngoài?"),
         explanation: t("Mức độ ở trong phòng ảnh hưởng đến nhịp sống và sự thuận tiện trong việc chia sẻ không gian."),
-        options: PROFILE_OPTIONS.home_frequency.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+        options: PROFILE_OPTIONS.home_frequency.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
       },
       {
         key: "work_schedule",
@@ -89,7 +97,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Khung thời gian học tập / làm việc"),
         helper: t("Bạn chủ yếu học và làm việc vào thời gian nào?"),
         explanation: t("Lịch làm việc ảnh hưởng đến tiếng ồn, thời gian ở phòng và sự hòa hợp khi sống chung."),
-        options: PROFILE_OPTIONS.work_schedule.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+        options: PROFILE_OPTIONS.work_schedule.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
       },
       {
         key: "sharing",
@@ -97,7 +105,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Mức độ chia sẻ đồ dùng"),
         helper: t("Bạn có thoải mái cho roommate dùng chung đồ không?"),
         explanation: t("Mức độ chia sẻ đồ dùng ảnh hưởng đến sự thoải mái và sự tin tưởng khi sống chung."),
-        options: PROFILE_OPTIONS.sharing.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+        options: PROFILE_OPTIONS.sharing.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
       },
       {
         key: "noise",
@@ -105,7 +113,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Mức độ tạo tiếng ồn"),
         helper: t("Bạn có xu hướng yên tĩnh hay ồn ào?"),
         explanation: t("Mức độ tiếng ồn có thể là nguyên nhân lớn của xung đột khi sống cùng nhau."),
-        options: PROFILE_OPTIONS.noise.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+        options: PROFILE_OPTIONS.noise.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
       },
       {
         key: "call_frequency",
@@ -113,7 +121,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Tần suất gọi điện / video call"),
         helper: t("Bạn có thường xuyên gọi điện hoặc gọi video không?"),
         explanation: t("Nhịp gọi điện và video call ảnh hưởng đến mức độ yên tĩnh và sự thoải mái của phòng."),
-        options: PROFILE_OPTIONS.call_frequency.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+        options: PROFILE_OPTIONS.call_frequency.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
       },
       {
         key: "game_mic",
@@ -121,7 +129,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
         title: t("Mức độ chơi game dùng voice chat"),
         helper: t("Bạn có thường xuyên chơi game có dùng mic không?"),
         explanation: t("Hoạt động chơi game bằng mic có thể ảnh hưởng đến tiếng ồn và thời gian ở chung."),
-        options: PROFILE_OPTIONS.game_mic.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+        options: PROFILE_OPTIONS.game_mic.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
       },
     ];
   }
@@ -133,7 +141,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Mức độ sạch sẽ"),
       helper: t("Bạn muốn roommate có mức độ sạch sẽ như thế nào?"),
       explanation: t("Độ sạch sẽ là một trong những nguyên nhân phổ biến nhất gây mâu thuẫn giữa các roommate."),
-      options: [...FILTER_LINEAR_OPTIONS.cleanliness, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: [...FILTER_LINEAR_OPTIONS.cleanliness, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_ac_usage",
@@ -141,7 +149,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Tần suất sử dụng điều hòa"),
       helper: t("Bạn có ưu tiên roommate dùng điều hòa nhiều hay ít?"),
       explanation: t("Thói quen dùng điều hòa ảnh hưởng đến chi phí điện và sự thoải mái khi ở chung."),
-      options: [...FILTER_LINEAR_OPTIONS.ac_usage, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: [...FILTER_LINEAR_OPTIONS.ac_usage, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_pet",
@@ -149,7 +157,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Thú cưng"),
       helper: t("Bạn có thích roommate nuôi thú cưng không?"),
       explanation: t("Thú cưng ảnh hưởng trực tiếp đến không gian sống và nhịp sinh hoạt của cả phòng."),
-      options: PREF_OPTIONS.pet.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: PREF_OPTIONS.pet.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_smoking",
@@ -157,7 +165,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Hút thuốc"),
       helper: t("Bạn có mong muốn roommate có hút thuốc không?"),
       explanation: t("Hút thuốc ảnh hưởng trực tiếp đến môi trường sống và là một nguồn xung đột phổ biến."),
-      options: PREF_OPTIONS.smoking.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: PREF_OPTIONS.smoking.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_cooking",
@@ -165,7 +173,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Thói quen nấu ăn"),
       helper: t("Bạn có thích roommate thường xuyên nấu ăn không?"),
       explanation: t("Thói quen nấu ăn ảnh hưởng đến việc sử dụng bếp, vệ sinh và chi phí sinh hoạt."),
-      options: [...FILTER_LINEAR_OPTIONS.cooking, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: [...FILTER_LINEAR_OPTIONS.cooking, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_guest",
@@ -173,7 +181,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Tần suất dẫn bạn bè về phòng"),
       helper: t("Bạn có ưu tiên roommate có nhiều hay ít bạn bè ghé phòng?"),
       explanation: t("Tần suất tiếp khách ảnh hưởng đến không gian riêng và sự tiện nghi khi ở chung."),
-      options: [...FILTER_LINEAR_OPTIONS.guest, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: [...FILTER_LINEAR_OPTIONS.guest, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_home_frequency",
@@ -181,7 +189,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Tần suất ở trong phòng"),
       helper: t("Bạn muốn roommate dành nhiều thời gian ở phòng hay ít hơn?"),
       explanation: t("Mức độ ở trong phòng ảnh hưởng đến nhịp sống và sự thuận tiện trong việc chia sẻ không gian."),
-      options: [...FILTER_LINEAR_OPTIONS.home_frequency, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: [...FILTER_LINEAR_OPTIONS.home_frequency, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_work_schedule",
@@ -189,7 +197,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Khung thời gian học tập / làm việc"),
       helper: t("Bạn có ưu tiên roommate học tập vào thời gian nào?"),
       explanation: t("Lịch làm việc ảnh hưởng đến tiếng ồn, thời gian ở phòng và sự hòa hợp khi sống chung."),
-      options: PREF_OPTIONS.work_schedule.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: PREF_OPTIONS.work_schedule.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_sharing",
@@ -197,7 +205,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Mức độ chia sẻ đồ dùng"),
       helper: t("Bạn có mong muốn roommate thoải mái chia sẻ đồ dùng không?"),
       explanation: t("Mức độ chia sẻ đồ dùng ảnh hưởng đến sự thoải mái và sự tin tưởng khi sống chung."),
-      options: PREF_OPTIONS.sharing.map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: PREF_OPTIONS.sharing.map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_noise",
@@ -205,7 +213,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Mức độ tạo tiếng ồn"),
       helper: t("Bạn ưu tiên roommate yên tĩnh hay có thể ồn một chút?"),
       explanation: t("Mức độ tiếng ồn có thể là nguyên nhân lớn của xung đột khi sống cùng nhau."),
-      options: [...FILTER_LINEAR_OPTIONS.noise, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: [...FILTER_LINEAR_OPTIONS.noise, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_call_frequency",
@@ -213,7 +221,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Tần suất gọi điện / video call"),
       helper: t("Bạn muốn roommate gọi điện thường xuyên hay ít hơn?"),
       explanation: t("Nhịp gọi điện và video call ảnh hưởng đến mức độ yên tĩnh và sự thoải mái của phòng."),
-      options: [...FILTER_LINEAR_OPTIONS.call_frequency, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: [...FILTER_LINEAR_OPTIONS.call_frequency, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
     {
       key: "pref_game_mic",
@@ -221,7 +229,7 @@ function buildQuestions(userType: UserType, t: (key: string) => string) {
       title: t("Mức độ chơi game dùng voice chat"),
       helper: t("Bạn có ưu tiên roommate chơi game có dùng mic không?"),
       explanation: t("Hoạt động chơi game bằng mic có thể ảnh hưởng đến tiếng ồn và thời gian ở chung."),
-      options: [...FILTER_LINEAR_OPTIONS.game_mic, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: option.label, description: option.label })),
+      options: [...FILTER_LINEAR_OPTIONS.game_mic, PREF_OPTIONS.intAny].map((option) => ({ value: option.value, label: t(option.label), description: t(option.label) })),
     },
   ];
 }

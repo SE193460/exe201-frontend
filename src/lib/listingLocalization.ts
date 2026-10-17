@@ -13,7 +13,7 @@ export function contentLocaleFromLanguage(language?: string): ContentLocale {
 
 export type TranslatableListing = {
   id: string;
-  title: string;
+  title?: string;
   description?: string | null;
 };
 
@@ -77,4 +77,23 @@ export function useLocalizedListings<T extends TranslatableListing>(
   }, [key]);
 
   return { localized, loading };
+}
+
+/**
+ * Hook: same as {@link useLocalizedListings} but returns a lookup function so
+ * existing render code can do `localize(listing).title` without restructuring.
+ */
+export function useListingLocalizer<T extends TranslatableListing>(
+  listings: T[],
+  language: string
+): (listing: T) => T {
+  const { localized } = useLocalizedListings(listings, language);
+  const byId = useMemo(() => {
+    const map = new Map<string, T>();
+    for (const item of localized) {
+      if (item.id) map.set(item.id, item);
+    }
+    return map;
+  }, [localized]);
+  return (listing: T) => (listing?.id ? byId.get(listing.id) ?? listing : listing);
 }

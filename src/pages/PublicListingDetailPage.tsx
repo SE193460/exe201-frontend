@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SoftFilterResult } from "../api/services/lifestyle";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS, PROFILE_OPTIONS } from "./lifestyleOptions";
 import { useNavigate, useParams } from "react-router-dom";
@@ -12,6 +12,9 @@ import { trackEvent } from "../api/services/analytics";
 import { fetchLifestyleProfileAccess, fetchMyContactCredits, viewLifestyleProfile } from "../api/services/contactViews";
 import { useToast } from "../contexts/ToastContext";
 import PostedTimeTag from "../components/PostedTimeTag";
+import { useListingLocalizer } from "../lib/listingLocalization";
+import { contentLocaleFromLanguage } from "../lib/listingLocalization";
+import { provinceLabel } from "../i18n/contentLabels";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "";
@@ -43,7 +46,7 @@ function renderDescription(desc: string) {
 }
 
 export default function PublicListingDetailPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { id } = useParams();
@@ -95,6 +98,11 @@ export default function PublicListingDetailPage() {
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [phoneRevealed, setPhoneRevealed] = useState(false);
   const [similarListings, setSimilarListings] = useState<Listing[]>([]);
+  const localizableListings = useMemo(
+    () => (listing ? [listing, ...similarListings] : similarListings),
+    [listing, similarListings]
+  );
+  const localize = useListingLocalizer(localizableListings, i18n.language);
   const [contactCredits, setContactCredits] = useState<number | null>(null);
   const [ownerLifestyleProfile, setOwnerLifestyleProfile] = useState<Record<string, unknown> | null>(null);
   const [lifestyleProfileRevealed, setLifestyleProfileRevealed] = useState(false);
@@ -302,7 +310,7 @@ export default function PublicListingDetailPage() {
     setIsMediaModalOpen(true);
   };
 
-  const listingAddress = listing?.address || [listing?.ward, listing?.district, listing?.city].filter(Boolean).join(", ");
+  const listingAddress = listing?.address || [listing?.ward, listing?.district, provinceLabel(listing?.city, contentLocaleFromLanguage(i18n.language))].filter(Boolean).join(", ");
 
   useEffect(() => {
     if (!isMediaModalOpen) return;
@@ -772,7 +780,7 @@ export default function PublicListingDetailPage() {
                 <section className="rounded-[24px] bg-white px-5 py-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.18)] border border-slate-200">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h1 className="text-2xl md:text-[28px] font-extrabold leading-[1.2] text-slate-900">{listing.title}</h1>
+                      <h1 className="text-2xl md:text-[28px] font-extrabold leading-[1.2] text-slate-900">{localize(listing).title}</h1>
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                         <MapPinned className="h-4 w-4 text-[#a55b00]" />
                         <span>{listingAddress || t("Chưa cập nhật")}</span>
@@ -809,7 +817,7 @@ export default function PublicListingDetailPage() {
 
                   <div className="mt-5 border-t border-slate-100 pt-4">
                     <h3 className="text-base font-bold text-slate-900">{t("Mô tả chi tiết")}</h3>
-                    <div className="mt-2 text-[15px] leading-7 text-slate-600 whitespace-pre-wrap">{renderDescription(listing.description)}</div>
+                    <div className="mt-2 text-[15px] leading-7 text-slate-600 whitespace-pre-wrap">{renderDescription(localize(listing).description)}</div>
                   </div>
 
                   {!listing.source && (
@@ -978,7 +986,7 @@ export default function PublicListingDetailPage() {
                           </span>
                         </div>
                         <div className="p-4">
-                          <h4 className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-[#a55b00]">{item.title}</h4>
+                          <h4 className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-[#a55b00]">{localize(item).title}</h4>
                           <p className="mt-2 line-clamp-1 text-xs text-slate-500">{location || t("Chưa cập nhật địa chỉ")}</p>
                           <div className="mt-2">
                             <PostedTimeTag variant="inline" postedAt={item.publishedAt || item.createdAt} />

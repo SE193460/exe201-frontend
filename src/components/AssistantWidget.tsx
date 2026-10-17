@@ -8,7 +8,7 @@ const SUGGESTIONS = [
   "Làm sao để tìm phòng?",
   "Bộ lọc mềm hoạt động thế nào?",
   "Cách đăng tin cho thuê?",
-  "Mua lượt xem liên hệ ở đâu?",
+  "Mua lượt xem hồ sơ lối sống ở đâu?",
 ];
 
 /**

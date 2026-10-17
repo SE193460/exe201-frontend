@@ -24,6 +24,9 @@ import {
 import type { MapFocus } from "../components/ListingsMap";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS } from "./lifestyleOptions";
 import { trackEvent } from "../api/services/analytics";
+import { useListingLocalizer } from "../lib/listingLocalization";
+import { provinceLabel } from "../i18n/contentLabels";
+import { contentLocaleFromLanguage } from "../lib/listingLocalization";
 
 /** Canonical 2025 province of a listing, inferred from its stored location text. */
 function listingProvinceName(item: Listing): string | null {
@@ -34,7 +37,7 @@ function listingProvinceName(item: Listing): string | null {
 }
 
 export default function PublicListingsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,6 +46,8 @@ export default function PublicListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const localize = useListingLocalizer(listings, i18n.language);
+  const contentLocale = contentLocaleFromLanguage(i18n.language);
   const [province, setProvince] = useState(initialParams.get("province") || "all");
   const [district, setDistrict] = useState(initialParams.get("area") || "all");
   const [price, setPrice] = useState(initialParams.get("price") || "all");
@@ -805,13 +810,13 @@ export default function PublicListingsPage() {
                   {VIETNAM_PROVINCES.filter((p) => provincesInListings.has(p.name)).length > 0 && (
                     <optgroup label={t("Có tin đăng")}>
                       {VIETNAM_PROVINCES.filter((p) => provincesInListings.has(p.name)).map((p) => (
-                        <option key={p.name} value={p.name}>{p.name}</option>
+                        <option key={p.name} value={p.name}>{provinceLabel(p.name, contentLocale)}</option>
                       ))}
                     </optgroup>
                   )}
                   <optgroup label={t("Tỉnh/thành khác")}>
                     {VIETNAM_PROVINCES.filter((p) => !provincesInListings.has(p.name)).map((p) => (
-                      <option key={p.name} value={p.name}>{p.name}</option>
+                      <option key={p.name} value={p.name}>{provinceLabel(p.name, contentLocale)}</option>
                     ))}
                   </optgroup>
                 </select>
@@ -861,7 +866,7 @@ export default function PublicListingsPage() {
                   className="bg-transparent outline-none text-sm"
                 >
                   {PRICE_OPTIONS.map((option) => (
-                    <option key={option.id} value={option.id}>{option.label}</option>
+                    <option key={option.id} value={option.id}>{t(option.label)}</option>
                   ))}
                 </select>
               </div>
@@ -874,7 +879,7 @@ export default function PublicListingsPage() {
                   className="bg-transparent outline-none text-sm"
                 >
                   {AREA_OPTIONS.map((option) => (
-                    <option key={option.id} value={option.id}>{option.label}</option>
+                    <option key={option.id} value={option.id}>{t(option.label)}</option>
                   ))}
                 </select>
               </div>
@@ -944,8 +949,8 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_cleanliness ?? ""} onChange={(e) => setPrefNumber("pref_cleanliness", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {FILTER_LINEAR_OPTIONS.cleanliness.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
-                        <option value="99">{PREF_OPTIONS.intAny.label}</option>
+                        {FILTER_LINEAR_OPTIONS.cleanliness.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
+                        <option value="99">{t(PREF_OPTIONS.intAny.label)}</option>
                       </select>
                     </label>
                     <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
@@ -953,8 +958,8 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_ac_usage ?? ""} onChange={(e) => setPrefNumber("pref_ac_usage", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {FILTER_LINEAR_OPTIONS.ac_usage.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
-                        <option value="99">{PREF_OPTIONS.intAny.label}</option>
+                        {FILTER_LINEAR_OPTIONS.ac_usage.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
+                        <option value="99">{t(PREF_OPTIONS.intAny.label)}</option>
                       </select>
                     </label>
                     <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
@@ -962,7 +967,7 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_pet ?? ""} onChange={(e) => setPrefText("pref_pet", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {PREF_OPTIONS.pet.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
+                        {PREF_OPTIONS.pet.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
                       </select>
                     </label>
                     <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
@@ -970,7 +975,7 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_smoking ?? ""} onChange={(e) => setPrefText("pref_smoking", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {PREF_OPTIONS.smoking.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
+                        {PREF_OPTIONS.smoking.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
                       </select>
                     </label>
                   </div>
@@ -983,8 +988,8 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_cooking ?? ""} onChange={(e) => setPrefNumber("pref_cooking", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {FILTER_LINEAR_OPTIONS.cooking.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
-                        <option value="99">{PREF_OPTIONS.intAny.label}</option>
+                        {FILTER_LINEAR_OPTIONS.cooking.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
+                        <option value="99">{t(PREF_OPTIONS.intAny.label)}</option>
                       </select>
                     </label>
                     <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
@@ -992,8 +997,8 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_guest ?? ""} onChange={(e) => setPrefNumber("pref_guest", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {FILTER_LINEAR_OPTIONS.guest.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
-                        <option value="99">{PREF_OPTIONS.intAny.label}</option>
+                        {FILTER_LINEAR_OPTIONS.guest.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
+                        <option value="99">{t(PREF_OPTIONS.intAny.label)}</option>
                       </select>
                     </label>
                     <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
@@ -1001,8 +1006,8 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_home_frequency ?? ""} onChange={(e) => setPrefNumber("pref_home_frequency", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {FILTER_LINEAR_OPTIONS.home_frequency.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
-                        <option value="99">{PREF_OPTIONS.intAny.label}</option>
+                        {FILTER_LINEAR_OPTIONS.home_frequency.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
+                        <option value="99">{t(PREF_OPTIONS.intAny.label)}</option>
                       </select>
                     </label>
                     <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
@@ -1010,7 +1015,7 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_work_schedule ?? ""} onChange={(e) => setPrefText("pref_work_schedule", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {PREF_OPTIONS.work_schedule.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
+                        {PREF_OPTIONS.work_schedule.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
                       </select>
                     </label>
                   </div>
@@ -1023,7 +1028,7 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_sharing ?? ""} onChange={(e) => setPrefText("pref_sharing", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {PREF_OPTIONS.sharing.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
+                        {PREF_OPTIONS.sharing.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
                       </select>
                     </label>
                     <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
@@ -1031,8 +1036,8 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_noise ?? ""} onChange={(e) => setPrefNumber("pref_noise", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {FILTER_LINEAR_OPTIONS.noise.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
-                        <option value="99">{PREF_OPTIONS.intAny.label}</option>
+                        {FILTER_LINEAR_OPTIONS.noise.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
+                        <option value="99">{t(PREF_OPTIONS.intAny.label)}</option>
                       </select>
                     </label>
                     <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
@@ -1040,8 +1045,8 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_call_frequency ?? ""} onChange={(e) => setPrefNumber("pref_call_frequency", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {FILTER_LINEAR_OPTIONS.call_frequency.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
-                        <option value="99">{PREF_OPTIONS.intAny.label}</option>
+                        {FILTER_LINEAR_OPTIONS.call_frequency.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
+                        <option value="99">{t(PREF_OPTIONS.intAny.label)}</option>
                       </select>
                     </label>
                     <label className="block bg-white rounded-[var(--radius-md)] border border-slate-200 p-3">
@@ -1049,8 +1054,8 @@ export default function PublicListingsPage() {
                       <select value={softFilterPrefs.pref_game_mic ?? ""} onChange={(e) => setPrefNumber("pref_game_mic", e.target.value)}
                         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] transition">
                         <option value="">{t("Bỏ trống")}</option>
-                        {FILTER_LINEAR_OPTIONS.game_mic.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
-                        <option value="99">{PREF_OPTIONS.intAny.label}</option>
+                        {FILTER_LINEAR_OPTIONS.game_mic.map((option) => (<option key={option.value} value={option.value}>{t(option.label)}</option>))}
+                        <option value="99">{t(PREF_OPTIONS.intAny.label)}</option>
                       </select>
                     </label>
                   </div>
@@ -1111,7 +1116,7 @@ export default function PublicListingsPage() {
                   <ListingsMap
                     listings={filteredListings}
                     focus={mapFocus}
-                    focusProvinceName={mapFocusProvinceName}
+                    focusProvinceName={mapFocusProvinceName ? provinceLabel(mapFocusProvinceName, contentLocale) : null}
                     onSelect={(listing) => {
                       setIsMapModalOpen(false);
                       navigate(`/listings/${listing.id}`);
@@ -1202,7 +1207,7 @@ export default function PublicListingsPage() {
                           <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
                             <div className="flex items-start justify-between gap-3">
                               <h3 className="text-base font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>
-                                {listing.title}
+                                {localize(listing).title}
                               </h3>
                               <button
                                 onClick={(e) => handleToggleSave(e, listing.id)}
@@ -1334,7 +1339,7 @@ export default function PublicListingsPage() {
                           <div className="flex flex-1 flex-col p-4">
                             <div className="flex items-start justify-between gap-3">
                               <h3 className="text-base font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>
-                                {listing.title}
+                                {localize(listing).title}
                               </h3>
                               <button
                                 onClick={(e) => handleToggleSave(e, listing.id)}

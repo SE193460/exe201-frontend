@@ -13,6 +13,9 @@ import { isListingOld } from "../utils/listingTime";
 import PostedTimeTag from "../components/PostedTimeTag";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useListingLocalizer } from "../lib/listingLocalization";
+import { contentLocaleFromLanguage } from "../lib/listingLocalization";
+import { provinceLabel } from "../i18n/contentLabels";
 
 function formatPrice(price: number) {
   if (price >= 1000000) {
@@ -23,7 +26,7 @@ function formatPrice(price: number) {
 }
 
 export default function HomePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const GENDER_OPTIONS = [
     { id: "all", label: t("Tất cả") },
     { id: "FEMALE", label: t("Nữ") },
@@ -43,10 +46,12 @@ export default function HomePage() {
   const [searchError, setSearchError] = useState("");
 
   const depositPackages = [
-    { key: "cv_5", amount: 5000, label: t("Xem liên hệ 5"), desc: t("5 lượt xem liên hệ") },
-    { key: "cv_20", amount: 15000, label: t("Xem liên hệ 20"), desc: t("20 lượt xem liên hệ") },
+    { key: "cv_5", amount: 5000, label: t("Gói 5 lượt xem hồ sơ lối sống"), desc: t("5 lượt xem hồ sơ lối sống") },
+    { key: "cv_20", amount: 15000, label: t("Gói 20 lượt xem hồ sơ lối sống"), desc: t("20 lượt xem hồ sơ lối sống") },
   ];
   const [listings, setListings] = useState<Listing[]>([]);
+  const localize = useListingLocalizer(listings, i18n.language);
+  const contentLocale = contentLocaleFromLanguage(i18n.language);
   const [searchQuery, setSearchQuery] = useState("");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [selectedPrice, setSelectedPrice] = useState("all");
@@ -511,7 +516,7 @@ export default function HomePage() {
                           chip.value === opt.id ? "font-semibold text-[var(--primary)] bg-orange-50/50" : "text-slate-600"
                         }`}
                       >
-                        {opt.label}
+                        {t(opt.label)}
                       </button>
                     ))}
                   </div>
@@ -530,7 +535,7 @@ export default function HomePage() {
               </div>
               <div>
                 <p className="text-sm font-bold text-[var(--on-surface)]">{t("Nạp tiền nhanh")}</p>
-                <p className="text-xs text-slate-500">{t("Mua lượt xem liên hệ, gắn tin VIP")}</p>
+                <p className="text-xs text-slate-500">{t("Mua lượt xem hồ sơ lối sống, gắn tin VIP")}</p>
               </div>
             </div>
             {user ? (
@@ -673,7 +678,7 @@ export default function HomePage() {
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {featuredListings.map((listing) => {
               const thumbnail = resolveListingImageUrl(listing.images?.[0]?.imageUrl || "");
-              const location = [listing.ward, listing.district, listing.city].filter(Boolean).join(", ");
+              const location = [listing.ward, listing.district, provinceLabel(listing.city, contentLocale)].filter(Boolean).join(", ");
               const avatarUrl = resolveAvatarUrl(listing.ownerAvatar || "");
               const isSaved = savedIds.has(listing.id);
               const matchResult = softFilterResults[listing.id];
@@ -713,7 +718,7 @@ export default function HomePage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h3 className="text-sm font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>
-                          {listing.title}
+                          {localize(listing).title}
                         </h3>
                         <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
                           <MapPinned className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />

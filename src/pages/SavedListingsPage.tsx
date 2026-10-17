@@ -7,6 +7,7 @@ import type { Listing } from "../api/services/listings";
 import UserShell from "../layouts/UserShell";
 import Pagination from "../components/Pagination";
 import PostedTimeTag from "../components/PostedTimeTag";
+import { useListingLocalizer } from "../lib/listingLocalization";
 
 function getBadge(listing: Listing) {
   if (listing.roomType === "SINGLE") return { text: "Phòng đơn", color: "bg-amber-600" };
@@ -26,9 +27,10 @@ function formatPrice(price: number) {
 }
 
 export default function SavedListingsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
+  const localize = useListingLocalizer(listings, i18n.language);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
@@ -144,7 +146,7 @@ export default function SavedListingsPage() {
                     {/* Info */}
                     <div className="p-4">
                       <h3 className="text-base font-bold text-[var(--on-surface)] line-clamp-1" style={{ fontFamily: "var(--font-main)" }}>
-                        {listing.title}
+                        {localize(listing).title}
                       </h3>
                       <p className="mt-1.5 flex items-center gap-1 text-xs text-slate-500">
                         <MapPinned className="h-3 w-3 flex-shrink-0 text-[var(--primary)]" />
