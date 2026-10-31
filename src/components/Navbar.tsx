@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Bell, Bookmark, CreditCard, LayoutDashboard, LogOut, Search, SlidersHorizontal, UserRound, UsersRound, Menu, X } from "lucide-react";
 import { logout } from "../api/services/auth";
+import { clearSoftFilterCache, ACCESS_TOKEN_KEY } from "../api/services/session";
 import { fetchProfile } from "../api/services/user";
 import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from "../api/services/notifications";
 import LanguageToggle from "./LanguageToggle";
@@ -24,7 +25,7 @@ export default function Navbar() {
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
     setIsAuthed(Boolean(token));
     if (!token) {
       setIsAdmin(false);
@@ -80,7 +81,11 @@ export default function Navbar() {
     } catch {
       // ignore
     } finally {
-      localStorage.removeItem("access_token");
+      // Wipe every account-scoped cache so the match score ("điểm phù hợp")
+      // disappears from listing cards after logging out.
+      clearSoftFilterCache();
+      window.dispatchEvent(new CustomEvent("softFilterUpdated", { detail: [] }));
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
       setIsAuthed(false);
       setIsAdmin(false);
       setFullName("");

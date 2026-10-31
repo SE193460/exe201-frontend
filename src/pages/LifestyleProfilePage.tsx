@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { setAutoMatchEnabled } from "../api/services/session";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Lightbulb, Home, Users } from "lucide-react";
 import UserShell from "../layouts/UserShell";
@@ -19,7 +20,12 @@ export default function LifestyleProfilePage() {
 
   useEffect(() => {
     fetchLifestyleProfile()
-      .then((profile) => setForm(profile || {}))
+      .then((profile) => {
+        setForm(profile || {});
+        if (profile && typeof profile.auto_match_enabled === "boolean") {
+          setAutoMatchEnabled(profile.auto_match_enabled);
+        }
+      })
       .catch(() => setError(t("Không thể tải hồ sơ lối sống.")))
       .finally(() => setLoading(false));
   }, []);
@@ -40,6 +46,13 @@ export default function LifestyleProfilePage() {
   ];
   const filled = allFields.filter((v) => v !== null && v !== undefined).length;
   const progress = Math.round((filled / 12) * 100);
+  const autoMatchOn = form.auto_match_enabled !== false;
+
+  const handleToggleAutoMatch = () => {
+    const next = form.auto_match_enabled === false;
+    setForm((prev) => ({ ...prev, auto_match_enabled: next }));
+    setAutoMatchEnabled(next);
+  };
 
   const setNumberField = (field: keyof LifestyleProfile, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value === "" ? null : Number(value) }));
@@ -49,7 +62,7 @@ export default function LifestyleProfilePage() {
     setForm((prev) => ({ ...prev, [field]: value === "" ? null : value }));
   };
 
-  const hasValue = (value: number | string | null | undefined) => value !== null && value !== undefined && value !== "";
+  const hasValue = (value: unknown) => value !== null && value !== undefined && value !== "";
   const canShowBlankOption = (field: keyof LifestyleProfile) => !hasValue(form[field]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -311,6 +324,34 @@ export default function LifestyleProfilePage() {
                 </div>
                 <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">+12</span>
                 <span className="ml-1 text-xs text-white/70">{t("Đang chờ bạn kết nối")}</span>
+              </div>
+            </div>
+
+            {/* Tự động match */}
+            <div className="rounded-[var(--radius-md)] border border-slate-200 bg-white p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-bold text-[var(--on-surface)]">{t("Tự động match")}</h4>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {t("Tự động chấm điểm tương thích cho mọi tin đăng khi bạn xem danh sách.")}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={autoMatchOn}
+                  aria-label={t("Bật/tắt tự động match")}
+                  onClick={handleToggleAutoMatch}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition ${
+                    autoMatchOn ? "bg-[var(--primary)]" : "bg-slate-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
+                      autoMatchOn ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
               </div>
             </div>
 

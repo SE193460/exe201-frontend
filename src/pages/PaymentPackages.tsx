@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { generateQR, confirmTransfer } from "../api/services/payments";
 import UserShell from "@/layouts/UserShell";
+import { useToast } from "../contexts/ToastContext";
 import { Sparkles, Crown, CheckCircle, Copy, Phone, MessageCircleMore, AlertTriangle } from "lucide-react";
 
 const packages = [
@@ -32,6 +33,7 @@ export default function PaymentPackages() {
     const { t } = useTranslation();
     const { listingId } = useParams();
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [selected, setSelected] = useState<any>(null);
     const [qrData, setQrData] = useState<any>(null);
@@ -46,7 +48,7 @@ export default function PaymentPackages() {
             const data = await generateQR({ listingId: listingId!, amount: pkg.amount });
             setQrData(data);
         } catch {
-            alert("Không thể tạo mã QR");
+            showToast({ type: "error", message: "Không thể tạo mã QR" });
         }
     };
 
@@ -69,7 +71,7 @@ export default function PaymentPackages() {
             });
             setSubmitted(true);
         } catch {
-            alert("Xác nhận thất bại. Vui lòng thử lại.");
+            showToast({ type: "error", message: "Xác nhận thất bại. Vui lòng thử lại." });
         } finally {
             setLoading(false);
         }

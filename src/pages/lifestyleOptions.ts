@@ -3,10 +3,40 @@ export type SelectOption<T extends string | number> = {
   label: string;
 };
 
+// Every area the app can host listings in — all HCMC districts plus Hà Nội's,
+// so the area filters are never limited to a couple of hardcoded districts.
 export const DISTRICT_OPTIONS = [
-  "Quận 2",
-  "Quận 9",
+  // TP. Hồ Chí Minh
+  "Quận 1",
+  "Quận 3",
+  "Quận 4",
+  "Quận 5",
+  "Quận 6",
+  "Quận 7",
+  "Quận 8",
+  "Quận 10",
+  "Quận 11",
+  "Quận 12",
+  "Bình Tân",
+  "Bình Thạnh",
+  "Gò Vấp",
+  "Phú Nhuận",
+  "Tân Bình",
+  "Tân Phú",
   "Thủ Đức",
+  // Hà Nội
+  "Ba Đình",
+  "Hoàn Kiếm",
+  "Tây Hồ",
+  "Long Biên",
+  "Cầu Giấy",
+  "Đống Đa",
+  "Hai Bà Trưng",
+  "Hoàng Mai",
+  "Thanh Xuân",
+  "Bắc Từ Liêm",
+  "Nam Từ Liêm",
+  "Hà Đông",
 ];
 
 export const PROFILE_OPTIONS = {

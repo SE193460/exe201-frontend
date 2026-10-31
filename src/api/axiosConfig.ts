@@ -1,4 +1,5 @@
 import axios from "axios";
+import { ACCESS_TOKEN_KEY, clearSoftFilterCache } from "./services/session";
 
 // Determine API base URL: prioritize env var, fallback to current origin
 const getApiBaseUrl = () => {
@@ -15,7 +16,7 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token");
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -26,8 +27,13 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      localStorage.removeItem("access_token");
-      if (window.location.pathname !== "/auth") {
+      const hadToken = Boolean(localStorage.getItem(ACCESS_TOKEN_KEY));
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      clearSoftFilterCache();
+      // Only bounce to the login page when an authenticated session actually
+      // expired. Anonymous visitors hitting an auth-only endpoint must stay on
+      // the public page they are browsing instead of being forced to log in.
+      if (hadToken && window.location.pathname !== "/auth") {
         window.location.href = "/auth";
       }
     }

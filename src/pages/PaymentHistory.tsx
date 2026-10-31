@@ -4,8 +4,6 @@ import { useTranslation } from "react-i18next";
 import { Wallet, TrendingUp, Crown, Search, SlidersHorizontal, Download, Eye } from "lucide-react";
 import { fetchMyPaymentHistory, type PaymentTransaction } from "../api/services/payments";
 import UserShell from "@/layouts/UserShell";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 type StatusFilter = "all" | "COMPLETED" | "PENDING" | "FAILED";
 
@@ -82,7 +80,13 @@ export default function PaymentHistory() {
     return amount >= 0 ? "text-[var(--primary)]" : "text-[var(--primary)]";
   }
 
-  function handleExportPDF() {
+  async function handleExportPDF() {
+    // Loaded on demand so the PDF library stays out of the main bundle.
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
+
     const doc = new jsPDF();
     const title = `Roomie - ${t("Lịch sử thanh toán")}`;
     doc.setFontSize(16);

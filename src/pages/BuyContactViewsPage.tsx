@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../api/axiosConfig";
-import { purchaseContactViews } from "../api/services/contactViews";
+import { purchaseContactViews, confirmContactViewPurchase } from "../api/services/contactViews";
 import UserShell from "@/layouts/UserShell";
+import { useToast } from "../contexts/ToastContext";
 import { CheckCircle, Copy, Phone, MessageCircle, AlertTriangle, ShoppingCart, Crown } from "lucide-react";
 
 const MOMO_PHONE = "0704542270";
@@ -15,16 +15,18 @@ const packages = [
 
 export default function BuyContactViewsPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<any>(null);
   const [qrData, setQrData] = useState<any>(null);
+  const [transactionId, setTransactionId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
-      navigate("/login");
+      navigate("/auth");
       return;
     }
   }, [navigate]);
@@ -32,10 +34,12 @@ export default function BuyContactViewsPage() {
   const handleSelectPackage = async (pkg: any) => {
     setSelected(pkg);
     setQrData(null);
+    setTransactionId(null);
     setSubmitted(false);
 
     try {
       const data = await purchaseContactViews(pkg.amount, pkg.label);
+      setTransactionId(data.transactionId ?? null);
       setQrData({
         qrUrl: data.qrUrl,
         content: data.content,
@@ -45,7 +49,7 @@ export default function BuyContactViewsPage() {
       });
     } catch (err: any) {
       const msg = err?.response?.data?.error || err?.message || "Không thể tạo mã QR";
-      alert(msg);
+      showToast({ type: "error", message: msg });
     }
   };
 
@@ -58,17 +62,17 @@ export default function BuyContactViewsPage() {
   };
 
   const handleConfirmTransfer = async () => {
-    if (!selected) return;
+    if (!transactionId) {
+      showToast({ type: "error", message: "Chưa có giao dịch. Vui lòng chọn lại gói." });
+      return;
+    }
     try {
       setLoading(true);
-      await axiosInstance.post("/api/contact-views/confirm-purchase", {
-        amount: selected.amount,
-        packageName: selected.label,
-      });
+      await confirmContactViewPurchase(transactionId);
       setSubmitted(true);
     } catch (err: any) {
       const msg = err?.response?.data?.error || err?.message || "Vui lòng thử lại.";
-      alert(`Xác nhận thất bại. ${msg}`);
+      showToast({ type: "error", message: `Xác nhận thất bại. ${msg}` });
     } finally {
       setLoading(false);
     }

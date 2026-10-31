@@ -61,6 +61,14 @@ export default function AuthPage() {
   const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
+  const switchMode = (next: "login" | "register") => {
+    setMode(next);
+    // Clear any lingering "Đăng kí thành công." / error message from the
+    // previous form so it doesn't show on the other tab.
+    setStatus("");
+    setError("");
+  };
+
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
@@ -145,7 +153,12 @@ export default function AuthPage() {
         email: values.email,
         password: values.password,
       });
-      setStatus("Đăng kí thành công.");
+      // Registration succeeded — move the user to the login tab, prefill their
+      // email and show a confirmation so they can sign in immediately.
+      switchMode("login");
+      loginForm.setValue("email", values.email, { shouldValidate: true });
+      loginForm.setFocus("password");
+      setStatus("Đăng ký thành công. Vui lòng đăng nhập.");
     }catch (err: any) {
         console.error(err);
 
@@ -412,9 +425,9 @@ export default function AuthPage() {
 
             <p className="mt-5 text-center text-sm text-slate-500">
               {mode === "login" ? (
-                <>Bạn đã có tài khoản? <button onClick={() => setMode("register")} className="font-semibold text-[var(--primary)] hover:underline">Đăng ký</button></>
+                <>Bạn đã có tài khoản? <button onClick={() => switchMode("register")} className="font-semibold text-[var(--primary)] hover:underline">Đăng ký</button></>
               ) : (
-                <>Bạn đã có tài khoản? <button onClick={() => setMode("login")} className="font-semibold text-[var(--primary)] hover:underline">Đăng nhập</button></>
+                <>Bạn đã có tài khoản? <button onClick={() => switchMode("login")} className="font-semibold text-[var(--primary)] hover:underline">Đăng nhập</button></>
               )}
             </p>
           </div>
