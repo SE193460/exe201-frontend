@@ -4,8 +4,10 @@ import Sidebar from "../../components/Sidebar";
 import { logout } from "../../api/services/auth";
 import { fetchAdminFeedbacks, type FeedbackItem } from "../../api/services/feedback";
 import Pagination from "../../components/Pagination";
+import { useTranslation } from "react-i18next";
 
 export default function AdminFeedbacksPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [items, setItems] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,7 @@ export default function AdminFeedbacksPage() {
         const data = await fetchAdminFeedbacks();
         setItems(data);
       } catch {
-        setError("Không tải được danh sách feedback");
+        setError(t("Không tải được danh sách feedback"));
       } finally {
         setLoading(false);
       }
@@ -47,8 +49,8 @@ export default function AdminFeedbacksPage() {
         <main className="flex-1 space-y-6">
           <section className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">Quản lý phản hồi</p>
-              <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>Danh sách feedback người dùng</h1>
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Quản lý phản hồi")}</p>
+              <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>{t("Danh sách feedback người dùng")}</h1>
             </div>
             <span className="rounded-full bg-orange-50 px-4 py-2 text-xs font-bold text-[var(--primary)] border border-orange-200">{items.length} feedback</span>
           </section>
@@ -61,29 +63,29 @@ export default function AdminFeedbacksPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  <th className="px-6 py-3 text-left">Người gửi</th>
-                  <th className="px-6 py-3 text-left">Vai trò</th>
-                  <th className="px-6 py-3 text-left">Liên hệ</th>
-                  <th className="px-6 py-3 text-left">Nội dung</th>
-                  <th className="px-6 py-3 text-left">Thời gian</th>
+                  <th className="px-6 py-3 text-left">{t("Người gửi")}</th>
+                  <th className="px-6 py-3 text-left">{t("Vai trò")}</th>
+                  <th className="px-6 py-3 text-left">{t("Liên hệ")}</th>
+                  <th className="px-6 py-3 text-left">{t("Nội dung")}</th>
+                  <th className="px-6 py-3 text-left">{t("Thời gian")}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-sm text-slate-400">Đang tải feedback...</td></tr>
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-sm text-slate-400">{t("Đang tải feedback...")}</td></tr>
                 )}
                 {!loading && pagedItems.map((item) => (
                   <tr key={item.id} className="border-b border-slate-50 last:border-0 align-top hover:bg-slate-50 transition">
                     <td className="px-6 py-3">
                       <p className="font-semibold text-slate-800">{item.displayName}</p>
-                      <p className="text-xs text-slate-400">{item.isAnonymous ? "Khách chưa đăng nhập" : item.userId}</p>
+                      <p className="text-xs text-slate-400">{item.isAnonymous ? t("Khách chưa đăng nhập") : item.userId}</p>
                     </td>
-                    <td className="px-6 py-3 text-sm text-slate-600">{item.isAnonymous ? "Ẩn danh" : item.roleName || "user"}</td>
+                    <td className="px-6 py-3 text-sm text-slate-600">{item.isAnonymous ? t("Ẩn danh") : item.roleName || "user"}</td>
                     <td className="px-6 py-3 text-sm text-slate-600">
-                      {item.isAnonymous ? <span className="text-slate-400">Không có</span> : (
+                      {item.isAnonymous ? <span className="text-slate-400">{t("Không có")}</span> : (
                         <div className="space-y-0.5">
-                          <p>{item.email || "Không có email"}</p>
-                          <p className="text-xs text-slate-500">{item.phoneNumber || "Không có SĐT"}</p>
+                          <p>{item.email || t("Không có email")}</p>
+                          <p className="text-xs text-slate-500">{item.phoneNumber || t("Không có SĐT")}</p>
                         </div>
                       )}
                     </td>
@@ -92,7 +94,7 @@ export default function AdminFeedbacksPage() {
                   </tr>
                 ))}
                 {!loading && items.length === 0 && (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-sm text-slate-400">Chưa có feedback nào</td></tr>
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-sm text-slate-400">{t("Chưa có feedback nào")}</td></tr>
                 )}
               </tbody>
             </table>

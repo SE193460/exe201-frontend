@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SoftFilterResult } from "../api/services/lifestyle";
 import { FILTER_LINEAR_OPTIONS, PREF_OPTIONS, PROFILE_OPTIONS } from "./lifestyleOptions";
 import { useNavigate, useParams } from "react-router-dom";
@@ -12,6 +12,9 @@ import { trackEvent } from "../api/services/analytics";
 import { fetchLifestyleProfileAccess, fetchMyContactCredits, viewLifestyleProfile } from "../api/services/contactViews";
 import { useToast } from "../contexts/ToastContext";
 import PostedTimeTag from "../components/PostedTimeTag";
+import { useListingLocalizer } from "../lib/listingLocalization";
+import { contentLocaleFromLanguage } from "../lib/listingLocalization";
+import { provinceLabel } from "../i18n/contentLabels";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "";
@@ -43,7 +46,7 @@ function renderDescription(desc: string) {
 }
 
 export default function PublicListingDetailPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { id } = useParams();
@@ -95,6 +98,11 @@ export default function PublicListingDetailPage() {
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [phoneRevealed, setPhoneRevealed] = useState(false);
   const [similarListings, setSimilarListings] = useState<Listing[]>([]);
+  const localizableListings = useMemo(
+    () => (listing ? [listing, ...similarListings] : similarListings),
+    [listing, similarListings]
+  );
+  const localize = useListingLocalizer(localizableListings, i18n.language);
   const [contactCredits, setContactCredits] = useState<number | null>(null);
   const [ownerLifestyleProfile, setOwnerLifestyleProfile] = useState<Record<string, unknown> | null>(null);
   const [lifestyleProfileRevealed, setLifestyleProfileRevealed] = useState(false);
@@ -302,7 +310,7 @@ export default function PublicListingDetailPage() {
     setIsMediaModalOpen(true);
   };
 
-  const listingAddress = listing?.address || [listing?.ward, listing?.district, listing?.city].filter(Boolean).join(", ");
+  const listingAddress = listing?.address || [listing?.ward, listing?.district, provinceLabel(listing?.city, contentLocaleFromLanguage(i18n.language))].filter(Boolean).join(", ");
 
   useEffect(() => {
     if (!isMediaModalOpen) return;
@@ -531,8 +539,8 @@ export default function PublicListingDetailPage() {
                         />
                         {listing.images.length > 1 && (
                           <>
-                            <button aria-label="Ảnh trước" onClick={(e) => { e.stopPropagation(); handlePrevImg(); }} className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">‹</button>
-                            <button aria-label="Ảnh sau" onClick={(e) => { e.stopPropagation(); handleNextImg(); }} className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">›</button>
+                            <button aria-label={t("Ảnh trước")} onClick={(e) => { e.stopPropagation(); handlePrevImg(); }} className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">‹</button>
+                            <button aria-label={t("Ảnh sau")} onClick={(e) => { e.stopPropagation(); handleNextImg(); }} className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-slate-700 shadow-lg backdrop-blur hover:bg-white transition">›</button>
                             <div className="absolute bottom-4 right-4 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur flex items-center gap-1.5">
                               <Camera className="h-3.5 w-3.5" /> {selectedImgIdx + 1}/{listing.images.length}
                             </div>
@@ -752,11 +760,11 @@ export default function PublicListingDetailPage() {
                         <div className="mt-3 grid gap-3 md:grid-cols-2">
                           <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
                             <div className="font-semibold text-slate-800">{t("Nên trao đổi")}</div>
-                            <p className="mt-1">{matchingSummary.caution[0] ? `${FIELD_FULL_LABELS[matchingSummary.caution[0].field] || matchingSummary.caution[0].field} là điểm bạn nên nói rõ trước khi quyết định.` : t("Hãy trao đổi trực tiếp về thói quen sinh hoạt để quá trình ở ghép trở nên thoải mái hơn.")}</p>
+                            <p className="mt-1">{matchingSummary.caution[0] ? t("{{field}} là điểm bạn nên nói rõ trước khi quyết định.", { field: FIELD_FULL_LABELS[matchingSummary.caution[0].field] || matchingSummary.caution[0].field }) : t("Hãy trao đổi trực tiếp về thói quen sinh hoạt để quá trình ở ghép trở nên thoải mái hơn.")}</p>
                           </div>
                           <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
                             <div className="font-semibold text-slate-800">{t("Điểm cộng lớn")}</div>
-                            <p className="mt-1">{matchingSummary.good[0] ? `${FIELD_FULL_LABELS[matchingSummary.good[0].field] || matchingSummary.good[0].field} là điểm cộng rất rõ ràng cho sự phù hợp này.` : t("Phòng này có nhiều yếu tố phù hợp với nhu cầu của bạn.")}</p>
+                            <p className="mt-1">{matchingSummary.good[0] ? t("{{field}} là điểm cộng rất rõ ràng cho sự phù hợp này.", { field: FIELD_FULL_LABELS[matchingSummary.good[0].field] || matchingSummary.good[0].field }) : t("Phòng này có nhiều yếu tố phù hợp với nhu cầu của bạn.")}</p>
                           </div>
                         </div>
                       </div>
@@ -772,7 +780,7 @@ export default function PublicListingDetailPage() {
                 <section className="rounded-[24px] bg-white px-5 py-5 shadow-[0_18px_45px_-35px_rgba(0,0,0,0.18)] border border-slate-200">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h1 className="text-2xl md:text-[28px] font-extrabold leading-[1.2] text-slate-900">{listing.title}</h1>
+                      <h1 className="text-2xl md:text-[28px] font-extrabold leading-[1.2] text-slate-900">{localize(listing).title}</h1>
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                         <MapPinned className="h-4 w-4 text-[#a55b00]" />
                         <span>{listingAddress || t("Chưa cập nhật")}</span>
@@ -809,7 +817,7 @@ export default function PublicListingDetailPage() {
 
                   <div className="mt-5 border-t border-slate-100 pt-4">
                     <h3 className="text-base font-bold text-slate-900">{t("Mô tả chi tiết")}</h3>
-                    <div className="mt-2 text-[15px] leading-7 text-slate-600 whitespace-pre-wrap">{renderDescription(listing.description)}</div>
+                    <div className="mt-2 text-[15px] leading-7 text-slate-600 whitespace-pre-wrap">{renderDescription(localize(listing).description)}</div>
                   </div>
 
                   {!listing.source && (
@@ -978,7 +986,7 @@ export default function PublicListingDetailPage() {
                           </span>
                         </div>
                         <div className="p-4">
-                          <h4 className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-[#a55b00]">{item.title}</h4>
+                          <h4 className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-[#a55b00]">{localize(item).title}</h4>
                           <p className="mt-2 line-clamp-1 text-xs text-slate-500">{location || t("Chưa cập nhật địa chỉ")}</p>
                           <div className="mt-2">
                             <PostedTimeTag variant="inline" postedAt={item.publishedAt || item.createdAt} />
@@ -1019,8 +1027,8 @@ export default function PublicListingDetailPage() {
                     <img src={resolveListingImageUrl(listing.images[selectedImgIdx].imageUrl)} alt={listing.title} className="h-full w-full object-contain" />
                     {listing.images.length > 1 && (
                       <>
-                        <button aria-label="Ảnh trước" onClick={handlePrevImg} className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">‹</button>
-                        <button aria-label="Ảnh sau" onClick={handleNextImg} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">›</button>
+                        <button aria-label={t("Ảnh trước")} onClick={handlePrevImg} className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">‹</button>
+                        <button aria-label={t("Ảnh sau")} onClick={handleNextImg} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/70 text-2xl text-white hover:bg-slate-800">›</button>
                         <div className="absolute bottom-3 right-3 rounded-full bg-slate-900/75 px-3 py-1 text-xs font-semibold text-white">{selectedImgIdx + 1} / {listing.images.length}</div>
                       </>
                     )}

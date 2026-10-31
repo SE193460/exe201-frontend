@@ -209,9 +209,9 @@ function buildBarChart(values: number[], width = 320, height = 130, gap = 8) {
   });
 }
 
-function renderAnalyticsBarChart(values: number[], labels: string[]) {
+function renderAnalyticsBarChart(values: number[], labels: string[], t: (key: string) => string) {
   if (values.length === 0) {
-    return <div className="flex h-40 items-center justify-center text-sm text-slate-500">Chưa có dữ liệu</div>;
+    return <div className="flex h-40 items-center justify-center text-sm text-slate-500">{t("Chưa có dữ liệu")}</div>;
   }
 
   return (
@@ -489,7 +489,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <span className="text-xs text-slate-400">{t("Năm")} 2026</span>
                 </div>
-                {renderAnalyticsBarChart(analyticsActiveUsers, analyticsMonths)}
+                {renderAnalyticsBarChart(analyticsActiveUsers, analyticsMonths, t)}
               </div>
 
               <div className="grid gap-4">
@@ -678,8 +678,8 @@ export default function AdminDashboardPage() {
               {quickLinks.map((link) => (
                 <button key={link.title} onClick={() => navigate(link.path)}
                   className="rounded-lg border border-slate-200 bg-white border-t-2 border-t-[var(--primary)] px-4 py-4 text-left transition hover:-translate-y-0.5 hover:shadow-md">
-                  <p className="text-sm font-bold text-slate-800">{link.title}</p>
-                  <p className="mt-1 text-xs text-slate-500">{link.description}</p>
+                  <p className="text-sm font-bold text-slate-800">{t(link.title)}</p>
+                  <p className="mt-1 text-xs text-slate-500">{t(link.description)}</p>
                 </button>
               ))}
             </div>

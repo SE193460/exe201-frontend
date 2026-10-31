@@ -16,7 +16,8 @@ import { resolveListingImageUrl } from "../../api/services/listings";
 import { logout } from "../../api/services/auth";
 import { CITY_OPTIONS, DISTRICT_OPTIONS, WARD_OPTIONS } from "../listingFormOptions";
 import Pagination from "../../components/Pagination";
-import Sidebar from "../../components/Sidebar";
+import Sidebar from "../../components/Sidebar";
+import { useTranslation } from "react-i18next";
 
 type FormMode = "create" | "edit";
 
@@ -59,7 +60,8 @@ const STATUS_LABELS: Record<string, { text: string; cls: string }> = {
 
 export default function AdminImportedListingsPage() {
   const MAX_LISTING_IMAGES = 20;
-  const navigate = useNavigate();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [listings, setListings] = useState<ImportedListing[]>([]);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
@@ -85,7 +87,7 @@ export default function AdminImportedListingsPage() {
       const data = await fetchImportedListings();
       setListings(data);
     } catch {
-      setError("Không thể tải danh sách bài đăng.");
+      setError(t("Không thể tải danh sách bài đăng."));
     } finally {
       setLoading(false);
     }
@@ -115,7 +117,7 @@ export default function AdminImportedListingsPage() {
           }
           return (listing.source || "").trim().toLowerCase() === normalizedSource;
         });
-        setSourceDuplicateMessage(duplicateSource ? "Link bài đăng gốc đã tồn tại trong hệ thống." : "");
+        setSourceDuplicateMessage(duplicateSource ? t("Link bài đăng gốc đã tồn tại trong hệ thống.") : "");
       }
     }
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -194,7 +196,7 @@ export default function AdminImportedListingsPage() {
     setFormError("");
 
     if (!form.title || !form.description || !form.rentPrice || !form.district || !form.source) {
-      setFormError("Vui lòng điền đầy đủ tiêu đề, mô tả, giá, quận/huyện và link nguồn.");
+      setFormError(t("Vui lòng điền đầy đủ tiêu đề, mô tả, giá, quận/huyện và link nguồn."));
       return;
     }
 
@@ -205,11 +207,11 @@ export default function AdminImportedListingsPage() {
 
     const rentPrice = parseCurrencyInput(form.rentPrice);
     if (Number.isNaN(rentPrice) || rentPrice <= 0) {
-      setFormError("Giá thuê không hợp lệ.");
+      setFormError(t("Giá thuê không hợp lệ."));
       return;
     }
     if (!form.source.startsWith("http://") && !form.source.startsWith("https://")) {
-      setFormError("Link nguồn phải bắt đầu bằng http:// hoặc https://");
+      setFormError(t("Link nguồn phải bắt đầu bằng http:// hoặc https://"));
       return;
     }
 
@@ -221,7 +223,7 @@ export default function AdminImportedListingsPage() {
       return (listing.source || "").trim().toLowerCase() === normalizedSource;
     });
     if (duplicateSource) {
-      setFormError("Link bài đăng gốc đã tồn tại trong hệ thống.");
+      setFormError(t("Link bài đăng gốc đã tồn tại trong hệ thống."));
       return;
     }
 
@@ -231,13 +233,13 @@ export default function AdminImportedListingsPage() {
         .filter((u: string) => u.startsWith("http://") || u.startsWith("https://"));
 
     if (formMode === "create" && urlLines.length > MAX_LISTING_IMAGES) {
-      setFormError(`Chỉ được nhập tối đa ${MAX_LISTING_IMAGES} URLs hình ảnh.`);
+      setFormError(t("Chỉ được nhập tối đa {{max}} URLs hình ảnh.", { max: MAX_LISTING_IMAGES }));
       return;
     }
 
     if (formMode === "edit" && existingImageCount + urlLines.length > MAX_LISTING_IMAGES) {
       const available = Math.max(0, MAX_LISTING_IMAGES - existingImageCount);
-      setFormError(`Bài đăng hiện có ${existingImageCount} ảnh. Bạn chỉ có thể thêm tối đa ${available} URLs nữa.`);
+      setFormError(t("Bài đăng hiện có {{current}} ảnh. Bạn chỉ có thể thêm tối đa {{available}} URLs nữa.", { current: existingImageCount, available }));
       return;
     }
 
@@ -291,7 +293,7 @@ export default function AdminImportedListingsPage() {
       await load();
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setFormError(msg || "Không thể lưu bài đăng.");
+      setFormError(msg || t("Không thể lưu bài đăng."));
     } finally {
       setActionLoading(false);
     }
@@ -332,22 +334,22 @@ export default function AdminImportedListingsPage() {
 
           <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">Bảng điều khiển</p>
-              <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>Quản lý nguồn bài đăng</h1>
-              <p className="mt-1 text-sm text-slate-500">Import và quản lý bài đăng từ các nền tảng bên ngoài.</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)]">{t("Bảng điều khiển")}</p>
+              <h1 className="mt-1 text-2xl font-extrabold text-slate-900" style={{ fontFamily: "var(--font-main)" }}>{t("Quản lý nguồn bài đăng")}</h1>
+              <p className="mt-1 text-sm text-slate-500">{t("Import và quản lý bài đăng từ các nền tảng bên ngoài.")}</p>
             </div>
             <div className="flex items-center gap-3">
               <input
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="w-full max-w-xs rounded-full border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-[var(--primary)]"
-                placeholder="Tìm kiếm tiêu đề, link nguồn..."
+                placeholder={t("Tìm kiếm tiêu đề, link nguồn...")}
               />
               <button
                 onClick={openCreate}
                 className="shrink-0 rounded-full bg-[var(--primary)] px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition"
               >
-                + Thêm bài đăng
+                {t("+ Thêm bài đăng")}
               </button>
             </div>
           </section>
@@ -362,7 +364,7 @@ export default function AdminImportedListingsPage() {
             <section className="rounded-lg border border-slate-200 bg-white p-6">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-lg font-bold text-slate-800">
-                  {formMode === "create" ? "Thêm bài đăng từ nguồn bên ngoài" : "Chỉnh sửa bài đăng"}
+                  {formMode === "create" ? t("Thêm bài đăng từ nguồn bên ngoài") : t("Chỉnh sửa bài đăng")}
                 </h2>
                 <button onClick={() => closeForm()} className="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
               </div>
@@ -373,9 +375,9 @@ export default function AdminImportedListingsPage() {
 
               <form onSubmit={handleSubmitForm} className="grid gap-4 md:grid-cols-2">
                 <div className="md:col-span-2 rounded-lg border border-blue-200 bg-blue-50 px-5 py-4">
-                  <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600 mb-3">🔗 Nguồn bài đăng</h3>
+                  <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600 mb-3">🔗 {t("Nguồn bài đăng")}</h3>
                   <label className="block text-sm font-medium text-slate-700">
-                    Link bài đăng gốc <span className="text-red-400">*</span>
+                    {t("Link bài đăng gốc")} <span className="text-red-400">*</span>
                     <input
                       type="url"
                       value={form.source}
@@ -386,13 +388,13 @@ export default function AdminImportedListingsPage() {
                     {sourceDuplicateMessage && (
                       <p className="mt-2 text-xs font-semibold text-red-600">{sourceDuplicateMessage}</p>
                     )}
-                    <p className="mt-1 text-xs text-slate-400">Link gốc được lưu để đảm bảo tính minh bạch pháp lý và không được trùng trong hệ thống.</p>
+                    <p className="mt-1 text-xs text-slate-400">{t("Link gốc được lưu để đảm bảo tính minh bạch pháp lý và không được trùng trong hệ thống.")}</p>
                   </label>
                   <label className="mt-4 block text-sm font-medium text-slate-700">
-                    URLs hình ảnh từ nguồn gốc
+                    {t("URLs hình ảnh từ nguồn gốc")}
                     {formMode === "edit" && existingImages.length > 0 && (
                       <div className="mt-3 mb-4">
-                        <p className="text-xs font-semibold text-slate-600 mb-2">Hình ảnh hiện có ({existingImages.length}):</p>
+                        <p className="text-xs font-semibold text-slate-600 mb-2">{t("Hình ảnh hiện có ({{count}}):", { count: existingImages.length })}</p>
                         <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
                           {existingImages.map((img) => (
                             <div key={img.id} className="relative group border border-slate-200 rounded-lg overflow-hidden bg-slate-50 hover:border-red-300 transition">
@@ -430,18 +432,18 @@ export default function AdminImportedListingsPage() {
                       className="mt-2 w-full rounded-lg border border-blue-200 bg-white px-4 py-3 text-sm font-mono outline-none focus:border-blue-400"
                       placeholder={"https://cdn.example.com/img1.jpg\nhttps://cdn.example.com/img2.jpg"}
                     />
-                    <p className="mt-1 text-xs text-slate-400">Mỗi URL một dòng. Ảnh tham chiếu trực tiếp, không tải về server.</p>
+                    <p className="mt-1 text-xs text-slate-400">{t("Mỗi URL một dòng. Ảnh tham chiếu trực tiếp, không tải về server.")}</p>
                     {formMode === "create" && (
-                      <p className="mt-1 text-xs text-slate-400">Tối đa 20 URLs ảnh cho mỗi bài đăng.</p>
+                      <p className="mt-1 text-xs text-slate-400">{t("Tối đa 20 URLs ảnh cho mỗi bài đăng.")}</p>
                     )}
                     {formMode === "edit" && (
                       <p className="mt-1 text-xs text-slate-400">
-                        Bài đăng hiện có {existingImages.length} ảnh. 
+                        {t("Bài đăng hiện có {{count}} ảnh.", { count: existingImages.length })} 
                         {existingImages.length < MAX_LISTING_IMAGES && (
-                          <> Bạn có thể thêm tối đa {MAX_LISTING_IMAGES - existingImages.length} URLs mới.</>
+                          <> {t("Bạn có thể thêm tối đa {{max}} URLs mới.", { max: MAX_LISTING_IMAGES - existingImages.length })}</>
                         )}
                         {existingImages.length === MAX_LISTING_IMAGES && (
-                          <> Bài đăng đã đạt giới hạn tối đa 20 ảnh.</>
+                          <> {t("Bài đăng đã đạt giới hạn tối đa 20 ảnh.")}</>
                         )}
                       </p>
                     )}
@@ -449,51 +451,51 @@ export default function AdminImportedListingsPage() {
                 </div>
 
                 <label className="block md:col-span-2 text-sm font-medium text-slate-700">
-                  Tiêu đề <span className="text-red-400">*</span>
+                  {t("Tiêu đề")} <span className="text-red-400">*</span>
                   <input type="text" value={form.title} onChange={(e) => handleChange("title", e.target.value)}
                     className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[var(--primary)]"
-                    placeholder="Phòng trọ đầy đủ tiện nghi" />
+                    placeholder={t("Phòng trọ đầy đủ tiện nghi")} />
                 </label>
 
                 <label className="block md:col-span-2 text-sm font-medium text-slate-700">
-                  Mô tả <span className="text-red-400">*</span>
+                  {t("Mô tả")} <span className="text-red-400">*</span>
                   <textarea rows={4} value={form.description} onChange={(e) => handleChange("description", e.target.value)}
                     className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[var(--primary)]"
-                    placeholder="Mô tả chi tiết..." />
+                    placeholder={t("Mô tả chi tiết...")} />
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  Giá thuê (VND) <span className="text-red-400">*</span>
+                  {t("Giá thuê (VND)")} <span className="text-red-400">*</span>
                   <input type="text" inputMode="numeric" value={form.rentPrice} onChange={(e) => handleChange("rentPrice", formatCurrencyInput(e.target.value))}
                     className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[var(--primary)]"
                     placeholder="3.000.000" />
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  Diện tích (m²)
+                  {t("Diện tích (m²)")}
                   <input type="number" value={form.roomAreaSqm} onChange={(e) => handleChange("roomAreaSqm", e.target.value)}
                     className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[var(--primary)]" />
                 </label>
 
                 <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 px-5 py-4">
-                  <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)] mb-3">Vị trí</h3>
+                  <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)] mb-3">{t("Vị trí")}</h3>
                   <div className="grid gap-4 md:grid-cols-3">
                     <label className="block text-sm font-medium text-slate-700">
-                      Tỉnh/Thành phố
+                      {t("Tỉnh/Thành phố")}
                       <select value={form.city} onChange={(e) => handleChange("city", e.target.value)}
                         className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
                         {CITY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </label>
                     <label className="block text-sm font-medium text-slate-700">
-                      Quận/Huyện <span className="text-red-400">*</span>
+                      {t("Quận/Huyện")} <span className="text-red-400">*</span>
                       <select value={form.district} onChange={(e) => handleChange("district", e.target.value)}
                         className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
                         {DISTRICT_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
                       </select>
                     </label>
                     <label className="block text-sm font-medium text-slate-700">
-                      Phường/Xã
+                      {t("Phường/Xã")}
                       <select value={form.ward} onChange={(e) => handleChange("ward", e.target.value)}
                         className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
                         {(WARD_OPTIONS[form.district] || []).map((w) => <option key={w} value={w}>{w}</option>)}
@@ -501,29 +503,29 @@ export default function AdminImportedListingsPage() {
                     </label>
                   </div>
                   <label className="mt-4 block text-sm font-medium text-slate-700">
-                    Địa chỉ cụ thể
+                    {t("Địa chỉ cụ thể")}
                     <input type="text" value={form.address} onChange={(e) => handleChange("address", e.target.value)}
                       className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none" />
                   </label>
                 </div>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  Loại phòng
+                  {t("Loại phòng")}
                   <input type="text" value={form.roomType} onChange={(e) => handleChange("roomType", e.target.value)}
                     className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
-                    placeholder="Phòng trọ / Căn hộ" />
+                    placeholder={t("Phòng trọ / Căn hộ")} />
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700">
-                  Giới tính ưu tiên
+                  {t("Giới tính ưu tiên")}
                   <input type="text" value={form.preferredGender} onChange={(e) => handleChange("preferredGender", e.target.value)}
                     className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
-                    placeholder="Nam / Nữ / Không yêu cầu" />
+                    placeholder={t("Nam / Nữ / Không yêu cầu")} />
                 </label>
 
                 {amenities.length > 0 && (
                   <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 px-5 py-4">
-                    <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)] mb-3">Tiện nghi</h3>
+                    <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--primary)] mb-3">{t("Tiện nghi")}</h3>
                     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {amenities.map((a) => (
                         <label key={a.id} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
@@ -544,11 +546,11 @@ export default function AdminImportedListingsPage() {
                 <div className="md:col-span-2 flex gap-3">
                   <button type="submit" disabled={actionLoading}
                     className="flex-1 rounded-lg bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition">
-                    {actionLoading ? "Đang lưu..." : formMode === "create" ? "Lưu bản nháp" : "Cập nhật"}
+                    {actionLoading ? t("Đang lưu...") : formMode === "create" ? t("Lưu bản nháp") : t("Cập nhật")}
                   </button>
                   <button type="button" onClick={() => closeForm()}
                     className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                    Hủy
+                    {t("Hủy")}
                   </button>
                 </div>
               </form>
@@ -558,14 +560,14 @@ export default function AdminImportedListingsPage() {
           <section className="rounded-lg border border-slate-200 bg-white overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <h2 className="text-sm font-bold text-slate-700">
-                Danh sách bài đăng nguồn ngoài ({filtered.length})
+                {t("Danh sách bài đăng nguồn ngoài ({{count}})", { count: filtered.length })}
               </h2>
-              {loading && <span className="text-xs text-slate-400">Đang tải...</span>}
+              {loading && <span className="text-xs text-slate-400">{t("Đang tải...")}</span>}
             </div>
 
             {filtered.length === 0 && !loading ? (
               <div className="py-16 text-center text-sm text-slate-400">
-                Chưa có bài đăng nào từ nguồn bên ngoài.
+                {t("Chưa có bài đăng nào từ nguồn bên ngoài.")}
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -587,7 +589,7 @@ export default function AdminImportedListingsPage() {
 
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-slate-800 line-clamp-1">{listing.title}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{listing.rentPrice.toLocaleString("vi-VN")} đ/tháng · {listing.district}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{listing.rentPrice.toLocaleString("vi-VN")} {t("đ/tháng")} · {listing.district}</p>
                         <a href={listing.source || ""} target="_blank" rel="noopener noreferrer"
                           className="text-[11px] text-blue-500 hover:underline mt-0.5 block truncate">
                           🔗 {sourceDomain}
@@ -595,27 +597,27 @@ export default function AdminImportedListingsPage() {
                       </div>
 
                       <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold ${badge.cls}`}>
-                        {badge.text}
+                        {t(badge.text)}
                       </span>
 
                       <div className="flex shrink-0 items-center gap-2">
                         <button onClick={() => navigate(`/listings/${listing.id}`)}
                           className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
-                          Xem bài đăng
+                          {t("Xem bài đăng")}
                         </button>
                         <button onClick={() => openEdit(listing)}
                           className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
-                          Sửa
+                          {t("Sửa")}
                         </button>
                         {listing.status !== "APPROVED" ? (
                           <button onClick={() => handlePublish(listing.id)} disabled={actionLoading}
                             className="rounded-full bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-xs font-semibold disabled:opacity-50 transition">
-                            ↑ Đăng
+                            ↑ {t("Đăng")}
                           </button>
                         ) : (
                           <button onClick={() => handleUnpublish(listing.id)} disabled={actionLoading}
                             className="rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 text-xs font-semibold disabled:opacity-50 transition">
-                            ↓ Gỡ
+                            ↓ {t("Gỡ")}
                           </button>
                         )}
                       </div>

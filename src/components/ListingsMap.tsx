@@ -7,6 +7,9 @@ import type { FeatureCollection } from "geojson";
 import type { Listing } from "../api/services/listings";
 import { resolveListingImageUrl } from "../api/services/listings";
 import { PROVINCE_GEOJSON_URL, normalizeRegionText } from "../data/vietnamRegions";
+import { useListingLocalizer } from "../lib/listingLocalization";
+import { contentLocaleFromLanguage } from "../lib/listingLocalization";
+import { provinceLabel } from "../i18n/contentLabels";
 
 // Custom pin so we don't depend on Leaflet's bundler-fragile default icon assets.
 const pinIcon = L.divIcon({
@@ -98,7 +101,9 @@ export default function ListingsMap({
   /** Canonical province name to highlight in the boundaries overlay. */
   focusProvinceName?: string | null;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const localize = useListingLocalizer(listings, i18n.language);
+  const contentLocale = contentLocaleFromLanguage(i18n.language);
   const [geo, setGeo] = useState<FeatureCollection | null>(null);
 
   useEffect(() => {
@@ -158,14 +163,14 @@ export default function ListingsMap({
                   {listing.images?.[0]?.imageUrl && (
                     <img
                       src={resolveListingImageUrl(listing.images[0].imageUrl)}
-                      alt={listing.title}
+                      alt={localize(listing).title}
                       referrerPolicy="no-referrer"
                       className="mb-2 h-24 w-full rounded-md object-cover"
                     />
                   )}
-                  <p className="text-sm font-bold text-slate-800">{listing.title}</p>
+                  <p className="text-sm font-bold text-slate-800">{localize(listing).title}</p>
                   <p className="mt-0.5 text-xs text-slate-500">
-                    {[listing.address, listing.ward, listing.district, listing.city].filter(Boolean).join(", ") ||
+                    {[listing.address, listing.ward, listing.district, provinceLabel(localize(listing).city, contentLocale)].filter(Boolean).join(", ") ||
                       t("Chưa cập nhật")}
                   </p>
                   <p className="mt-1 text-sm font-bold text-[#ff8c00]">
@@ -200,12 +205,12 @@ export default function ListingsMap({
           </p>
           <ul className="space-y-1.5">
             {withoutCoords.map((listing) => {
-              const address = [listing.address, listing.ward, listing.district, listing.city]
+              const address = [listing.address, listing.ward, listing.district, provinceLabel(localize(listing).city, contentLocale)]
                 .filter(Boolean)
                 .join(", ");
               return (
                 <li key={listing.id} className="flex items-start justify-between gap-3 text-xs">
-                  <span className="min-w-0 flex-1 truncate text-slate-700">{listing.title}</span>
+                  <span className="min-w-0 flex-1 truncate text-slate-700">{localize(listing).title}</span>
                   {address ? (
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}

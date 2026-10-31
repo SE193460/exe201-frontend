@@ -1,8 +1,10 @@
 import { CheckCircle2, Clock3, Copy, Headset, Mail, MessageCircleMore, Phone } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import UserShell from "../layouts/UserShell";
 
 export default function SupportContactPage() {
+  const { t } = useTranslation();
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
 
   const handleCopyPhone = async (phone: string) => {
@@ -29,15 +31,15 @@ export default function SupportContactPage() {
                 </span>
                 <p className="mt-5 text-lg font-semibold text-slate-700">ROOMIE Support Team</p>
                 <p className="mt-2 max-w-sm text-sm text-slate-500">
-                  Luôn sẵn sàng đồng hành và hỗ trợ bạn trong quá trình đăng tin, tìm phòng và kết nối ở ghép.
+                  {t("Luôn sẵn sàng đồng hành và hỗ trợ bạn trong quá trình đăng tin, tìm phòng và kết nối ở ghép.")}
                 </p>
               </div>
             </div>
 
             <div className="text-center lg:text-left">
               <Headset className="mx-auto h-7 w-7 text-slate-800 lg:mx-0" />
-              <h1 className="mt-3 text-3xl font-bold text-slate-900">Hỗ trợ chủ nhà đăng tin</h1>
-              <p className="mt-4 text-xl text-slate-700">Nếu bạn cần hỗ trợ đăng tin, vui lòng liên hệ số điện thoại bên dưới:</p>
+              <h1 className="mt-3 text-3xl font-bold text-slate-900">{t("Hỗ trợ chủ nhà đăng tin")}</h1>
+              <p className="mt-4 text-xl text-slate-700">{t("Nếu bạn cần hỗ trợ đăng tin, vui lòng liên hệ số điện thoại bên dưới:")}</p>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
                 <button
@@ -69,8 +71,8 @@ export default function SupportContactPage() {
         </section>
 
         <section className="rounded-[26px] border border-orange-100 bg-white p-6 shadow-[0_24px_60px_-40px_rgba(255,120,0,0.45)] sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-orange-600">Thông tin chi tiết</p>
-          <h2 className="mt-2 text-2xl font-bold text-slate-800">Liên hệ hỗ trợ ROOMIE</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-orange-600">{t("Thông tin chi tiết")}</p>
+          <h2 className="mt-2 text-2xl font-bold text-slate-800">{t("Liên hệ hỗ trợ ROOMIE")}</h2>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4">
@@ -102,7 +104,7 @@ export default function SupportContactPage() {
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-orange-600 shadow-sm">
                 <Clock3 className="h-5 w-5" />
               </div>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Thời gian hỗ trợ</p>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("Thời gian hỗ trợ")}</p>
               <p className="mt-1 text-sm font-semibold text-slate-800">8:00 - 20:00</p>
             </div>
           </div>

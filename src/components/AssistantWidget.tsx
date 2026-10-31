@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Bot, Send, Sparkles, X } from "lucide-react";
-import { askAssistant, type AssistantMessage } from "../api/services/assistant";
+import { askAssistant, toAssistantLanguage, type AssistantMessage } from "../api/services/assistant";
 
 const SUGGESTIONS = [
   "Làm sao để tìm phòng?",
   "Bộ lọc mềm hoạt động thế nào?",
   "Cách đăng tin cho thuê?",
-  "Mua lượt xem liên hệ ở đâu?",
+  "Mua lượt xem hồ sơ lối sống ở đâu?",
 ];
 
 /**
@@ -16,7 +16,7 @@ const SUGGESTIONS = [
  * assistant endpoint (LLM when configured, offline FAQ otherwise).
  */
 export default function AssistantWidget() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -61,7 +61,7 @@ export default function AssistantWidget() {
     setSending(true);
 
     try {
-      const { reply } = await askAssistant(next);
+      const { reply } = await askAssistant(next, toAssistantLanguage(i18n.language));
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch {
       setError(t("Không kết nối được trợ lý. Vui lòng thử lại."));

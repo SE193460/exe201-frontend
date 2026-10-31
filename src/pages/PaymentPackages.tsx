@@ -48,7 +48,7 @@ export default function PaymentPackages() {
             const data = await generateQR({ listingId: listingId!, amount: pkg.amount });
             setQrData(data);
         } catch {
-            showToast({ type: "error", message: "Không thể tạo mã QR" });
+            showToast({ type: "error", message: t("Không thể tạo mã QR") });
         }
     };
 
@@ -71,7 +71,7 @@ export default function PaymentPackages() {
             });
             setSubmitted(true);
         } catch {
-            showToast({ type: "error", message: "Xác nhận thất bại. Vui lòng thử lại." });
+            showToast({ type: "error", message: t("Xác nhận thất bại. Vui lòng thử lại.") });
         } finally {
             setLoading(false);
         }
@@ -112,13 +112,13 @@ export default function PaymentPackages() {
                                         >
                                             <div className="flex items-center gap-3 mb-3">
                                                 <Icon className={`h-6 w-6 ${isSelected ? "text-[var(--primary)]" : "text-slate-400"}`} />
-                                                <h2 className="font-bold text-xl text-[var(--on-surface)]">{pkg.name}</h2>
+                                                <h2 className="font-bold text-xl text-[var(--on-surface)]">{t(pkg.name)}</h2>
                                             </div>
                                             <p className="text-3xl font-extrabold text-[var(--primary)]">{pkg.amount.toLocaleString()}đ</p>
-                                            <p className="text-sm text-slate-500 mt-2">{t("Hiệu lực:")} {pkg.duration}</p>
+                                            <p className="text-sm text-slate-500 mt-2">{t("Hiệu lực:")} {t(pkg.duration)}</p>
                                             <div className="mt-5 space-y-1">
                                                 {pkg.benefits.map((item: string, i: number) => (
-                                                    <p key={i} className="text-sm text-slate-600">✓ {item}</p>
+                                                    <p key={i} className="text-sm text-slate-600">✓ {t(item)}</p>
                                                 ))}
                                             </div>
                                         </div>
@@ -133,7 +133,7 @@ export default function PaymentPackages() {
 
                                         <div className="flex flex-col md:flex-row items-center justify-center gap-8">
                                             <div className="rounded-[var(--radius-md)] border-2 border-[var(--primary-container)] p-2 bg-white">
-                                                <img src={qrData.qrUrl} alt="QR chuyển khoản" className="w-56 h-56 object-contain" />
+                                                <img src={qrData.qrUrl} alt={t("QR chuyển khoản")} className="w-56 h-56 object-contain" />
                                             </div>
 
                                             <div className="space-y-3 text-sm">

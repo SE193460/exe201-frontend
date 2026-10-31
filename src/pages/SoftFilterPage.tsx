@@ -9,6 +9,7 @@ import {
   updateRoommatePreferences,
 } from "../api/services/lifestyle";
 import type { RoommatePreferences, SoftFilterResult } from "../api/services/lifestyle";
+import { useListingLocalizer } from "../lib/listingLocalization";
 import {
   AREA_OPTIONS,
   areaRangeToBounds,
@@ -53,11 +54,12 @@ function selectClassName() {
 }
 
 export default function SoftFilterPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [step, setStep] = useState<2 | 3>(2);
   const [prefs, setPrefs] = useState<RoommatePreferences>({});
   const [hardFilters, setHardFilters] = useState<HardFiltersForm>({ district: "", price_range: "all", area_range: "all" });
   const [results, setResults] = useState<SoftFilterResult[]>([]);
+  const localizeResult = useListingLocalizer(results, i18n.language);
   const [loading, setLoading] = useState(false);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -167,7 +169,7 @@ export default function SoftFilterPage() {
         {result.title ? (
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">{result.title}</h3>
+              <h3 className="text-lg font-semibold text-slate-900">{localizeResult(result).title}</h3>
               <p className="text-sm text-slate-500">{result.district || "-"} {result.address ? `• ${result.address}` : ""}</p>
               <p className="mt-1 text-sm">{t("Giá:")} <span className="font-semibold">{result.rent_price?.toLocaleString("vi-VN") || 0}đ</span></p>
               <p className="text-sm">{t("Chủ phòng:")} {result.owner?.name || "-"}</p>
@@ -179,7 +181,7 @@ export default function SoftFilterPage() {
               </button>
             </div>
             {result.image_url ? (
-              <img src={resolveListingImageUrl(result.image_url)} alt={result.title} className="h-24 w-full rounded-lg object-cover md:w-40" />
+              <img src={resolveListingImageUrl(result.image_url)} alt={localizeResult(result).title} className="h-24 w-full rounded-lg object-cover md:w-40" />
             ) : null}
           </div>
         ) : (
